@@ -287,6 +287,95 @@ EOF;
 
             break;
 
+        case 'job_history':
+            $contents .= "<h2>Jobs</h2>";
+
+            # Filter options:
+            # - cluster (CSV list)
+            # - account (CSV list)
+            # - job_name (CSV list)
+            # - constraints (CSV list)
+            # - exit_code (numeric)
+            # - partition (CSV list)
+            # - state (CSV state list)
+            # - start_time (UNIX timestamp)
+            # - end_time (UNIX timestamp)
+            # - node (node string)
+            # - users (CSV user list)
+
+            $accounts = $dao->get_account_list();
+            $account_list = '';
+            foreach ($accounts as $account){
+                $account_list .= '<option value="' . $account . '">'. $account . '</option>';
+            }
+
+            $users = $dao->get_users_list();
+            $users_list = '';
+            foreach ($users as $user){
+                $users_list .= '<option value="' . $user . '">'. $user . '</option>';
+            }
+
+            $templateBuilder = new TemplateLoader("job_filter_form.html");
+            $templateBuilder->setParam("CLUSTER", CLUSTER_NAME);
+            $templateBuilder->setParam("ACCOUNT_SELECTS", $account_list);
+            $templateBuilder->setParam("JOB_NAME", '');
+            $templateBuilder->setParam("CONSTRAINTS", '');
+            $templateBuilder->setParam("USER_SELECTS", $users_list);
+            $templateBuilder->setParam("ACTION", '?action=job_history&do=search');
+            $contents .= $templateBuilder->build();
+
+            if( isset($_POST['do']) && $_POST['do'] == 'search' ){
+                $start_date = $_POST['form_time_min'] ?? '';
+                $end_date = $_POST['form_time_max'] ?? '';
+            }
+
+            $contents .= <<<EOF
+<table class="tableFixHead">
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Name</th>
+            <th>Account</th>
+            <th>Partition</th>
+            <th>User</th>
+            <th>State</th>
+            <th>Start time</th>
+            <th>Time elapsed</th>
+            <th>Time limit</th>
+            <th>Nodelist</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+EOF;
+            $jobs = $dao->get_jobs_from_slurmdb();
+            foreach( $jobs['jobs'] as $job ) {
+
+                $contents .= "<tr>";
+                $contents .=    "<td>" . $job['job_id'] . "</td>";
+                $contents .=    "<td>" . $job['name'] . "</td>";
+                $contents .=    "<td>" . $job['account'] . "</td>";
+                $contents .=    "<td>" . $job['partition'] . "</td>";
+                $contents .=    "<td>" . $job['user'] . "</td>";
+
+                $contents .=    "<td>" . \utils\get_job_state_view($job, 'state', 'current') . "</td>";
+
+
+                $contents .=    "<td>" . \utils\get_date_from_unix($job['time'], 'start') . "</td>";
+                $contents .=    "<td>" . \utils\get_time_from_unix($job['time'], 'elapsed') . "</td>";
+                $contents .=    "<td>" . \utils\get_date_from_unix_if_defined($job['time'], 'limit', 'inf') . "</td>";
+
+                $contents .=    "<td>" . $job['nodes'] . "</td>";
+                $contents .=    '<td><a href="?action=job&job_id=' . $job['job_id'] . '">[Details]</a></td>';
+
+            }
+            $contents .= <<<EOF
+    </tbody>
+</table>
+EOF;
+
+            break;
+
         default:
             http_response_code(404);
             $contents .= "404 Not Found.";

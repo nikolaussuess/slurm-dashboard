@@ -1,0 +1,85 @@
+<form method="post" action="?{{ACTION}}">
+    <fieldset class="border p-2">
+        <legend class="w-auto">Filter jobs:</legend>
+
+        <div class="form-outline mb-4">
+            <label for="time_min">Show jobs between</label>
+            <input
+                    type="datetime-local"
+                    id="time_min"
+                    name="form_time_min"
+                    value=""
+                    min="2024-05-01T00:00"
+            />
+            <label for="time_max">and</label>
+            <input
+                    type="datetime-local"
+                    id="time_max"
+                    name="form_time_max"
+                    value=""
+                    min="2024-05-01T00:00"
+            />
+        </div>
+
+        <button class="btn btn-primary" type="button" data-bs-toggle="collapse" data-bs-target="#collapse{{NODENAME}}"
+                aria-expanded="false" aria-controls="collapse{{NODENAME}}">
+            Show/Hide more
+        </button>
+
+        <div class="collapse" id="collapse{{NODENAME}}">
+            <div class="card card-body">
+
+                <div class="form-outline mb-4">
+                    <label for="form_cluster">Cluster:</label>
+                    <input type="text"
+                           name="form_cluster"
+                           id="form_cluster"
+                           class="form-control"
+                           value="{{CLUSTER}}"
+                           readonly>
+                </div>
+
+                <div class="form-outline mb-4">
+                    <label for="form_account">Account:</label>
+                    <select class="form-multi-select form-control" name="form_account" id="form_account">
+                        <option selected></option>
+                        {{ACCOUNT_SELECTS}}
+                    </select>
+                </div>
+
+                <div class="form-outline mb-4">
+                    <label for="job_name">Job name:</label>
+                    <input type="text"
+                           name="form_job_name"
+                           id="job_name"
+                           class="form-control"
+                           value="{{JOB_NAME}}">
+                </div>
+
+                <div class="form-outline mb-4">
+                    <label for="constraints">Constraints:</label>
+                    <input type="text"
+                           name="form_constraints"
+                           id="constraints"
+                           class="form-control"
+                           value="{{CONSTRAINTS}}">
+                </div>
+
+                <div class="form-outline mb-4">
+                    <label for="form_user">Users:</label>
+                    <select class="form-multi-select form-control" name="form_user" id="form_user">
+                        <option selected></option>
+                        {{USER_SELECTS}}
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <div class="row mb-3">
+            <button type="reset" class="btn btn-secondary col-sm-4" data-dismiss="modal" style="margin-top: 1em">Cancel</button>
+            <div class="col-sm-1"></div>
+            <button type="submit" class="btn btn-primary col-sm-7" style="margin-top: 1em">Filter</button>
+        </div>
+
+    </fieldset>
+</form>

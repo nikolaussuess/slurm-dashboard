@@ -63,9 +63,9 @@ class Request {
 class Client {
 
     function getNodeList(){
-        # Endpoint /node crashes ...
-        #return ["dgx1", "dgx-h100-em2"];
-        return ["lavender", "daisy"];
+        $request = new Request();
+        $json = $request->request_json("nodes");
+        return array_column($json['nodes'], 'name');
     }
 
     function get_jobs(){

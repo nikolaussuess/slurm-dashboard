@@ -12,10 +12,6 @@ namespace {
      * @return bool True if authentication was successful, False otherwise
      */
     function auth($username, $password){
-        if( count_chars($username) < 8 && $username != "test" ){
-            addError("Username invalid.");
-            return FALSE;
-        }
         if( count_chars($password) < 8 ){
             addError("Password too short.");
             return FALSE;
@@ -29,7 +25,7 @@ namespace {
             return FALSE;
         }
 
-        # TODO: LDAP
+        # Authenticate with LDAP
         if(\auth\ldap_auth($username, $password)){
             $_SESSION['USER_OBJ'] = $associations;
             return TRUE;
@@ -38,7 +34,8 @@ namespace {
             return FALSE;
         }
 
-        # For the Testserver
+        # For the Testserver only (where no LDAP is set up)
+        # Comment the LDAP section above to use this ...
         if ( $username == "suessn98" && $password == "testtest"){
             $_SESSION['USER_OBJ'] = $associations;
             return TRUE;

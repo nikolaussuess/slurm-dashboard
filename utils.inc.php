@@ -28,6 +28,14 @@ function read_exit_code($job_arr){
     }
 }
 
+function get_date_from_unix($job_arr, $param){
+    if(! isset($job_arr[$param])){
+        return "?";
+    }
+
+    return date('Y-m-d H:i:s', $job_arr[$param]);
+}
+
 function get_date_from_unix_if_defined($job_arr, $param, $default = 'undefined'){
     if(! isset($job_arr[$param])){
         return "?";
@@ -37,6 +45,17 @@ function get_date_from_unix_if_defined($job_arr, $param, $default = 'undefined')
         return date('Y-m-d H:i:s', $job_arr[$param]['number']);
     else
         return $default;
+}
+
+function get_time_from_unix($job_arr, $param){
+    if(! isset($job_arr[$param])){
+        return "?";
+    }
+
+    $days = floor($job_arr[$param] / 1440); // 1440 minutes in a day
+    $hours = floor(($job_arr[$param] % 1440) / 60); // 60 minutes in an hour
+    $remainingMinutes = $job_arr[$param] % 60; // Remaining minutes
+    return sprintf('%d-%02d:%02d', $days, $hours, $remainingMinutes);
 }
 
 function get_time_from_unix_if_defined($job_arr, $param, $default = 'undefined'){
@@ -55,8 +74,11 @@ function get_time_from_unix_if_defined($job_arr, $param, $default = 'undefined')
     }
 }
 
-function get_job_state_view($job){
-    $job_state_array = $job['job_state'];
+function get_job_state_view($job, $param_name = 'job_state', $param2 = NULL){
+    $job_state_array = $job[$param_name];
+    if($param2 != null)
+        $job_state_array = $job_state_array[$param2];
+
     $job_state_text = '';
     foreach($job_state_array as $job_state) {
         $state_color = "#ffc107"; # orange

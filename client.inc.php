@@ -2,6 +2,10 @@
 
 // Proof of concept!
 
+/**
+ * API documentation can be found at:
+ * https://slurm.schedmd.com/rest_api.html
+ */
 class Request {
     // Path to the Unix socket
     const socketPath = '/run/slurmrestd/slurmrestd.socket';
@@ -73,6 +77,27 @@ class Client {
         $request = new Request();
         $json = $request->request_json("jobs");
         return $json;
+    }
+
+    function get_jobs_from_slurmdb(){
+        # curl --unix-socket /run/slurmrestd/slurmrestd.socket http://slurm/slurmdb/v0.0.40/jobs
+        $request = new Request();
+        $json = $request->request_json("jobs", 'slurmdb');
+        return $json;
+    }
+
+    function get_account_list(){
+        # curl --unix-socket /run/slurmrestd/slurmrestd.socket http://slurm/slurmdb/v0.0.40/accounts
+        $request = new Request();
+        $json = $request->request_json("accounts", 'slurmdb');
+        return array_column($json['accounts'], 'name');
+    }
+
+    function get_users_list(){
+        # curl --unix-socket /run/slurmrestd/slurmrestd.socket http://slurm/slurmdb/v0.0.40/users
+        $request = new Request();
+        $json = $request->request_json("users", 'slurmdb');
+        return array_column($json['users'], 'name');
     }
 
     function get_job($id){

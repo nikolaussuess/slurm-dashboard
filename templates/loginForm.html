@@ -1,0 +1,41 @@
+
+<form method="post" action="?action={{action}}">
+    <fieldset class="border p-2">
+        <legend class="w-auto">{{buttontext}}:</legend>
+        <div class="form-outline mb-4">
+            <label for="username">Benutzername:</label>
+            <input      type="text"
+                        name="username"
+                        id="username"
+                        class="form-control"
+                        value=""
+                        required>
+        </div>
+
+        <div class="form-outline mb-4">
+            <label for="password">Password:</label>
+            <input      type="password"
+                        name="password"
+                        id="password"
+                        minlength="8"
+                        class="form-control"
+                        value=""
+                        required>
+        </div>
+
+        <div class="form-outline mb-4">
+            <label for="method">Login method:</label>
+            <select     name="method"
+                        id="method"
+                        class="form-control"
+                        required>
+                <option value="ldap" selected>LDAP</option>
+                <option value="local" disabled>local</option>
+            </select>
+        </div>
+
+        <div class="modal-footer">
+            <button type="submit" class="btn btn-primary">{{buttontext}}</button>
+        </div>
+    </fieldset>
+</form>

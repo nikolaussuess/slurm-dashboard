@@ -79,10 +79,26 @@ class Client {
         return $json;
     }
 
-    function get_jobs_from_slurmdb(){
+    function get_jobs_from_slurmdb($filter = NULL){
+        $query_string = '?';
+        if($filter != NULL){
+            if(isset($filter['start_time'])){
+                $query_string .= '&start_time=uts' . (int)$filter['start_time'];
+            }
+            if(isset($filter['end_time'])){
+                $query_string .= '&end_time=uts' . (int)$filter['end_time'];
+            }
+            if(isset($filter['users'])){
+                $query_string .= '&users=' . $filter['users'];
+            }
+            if(isset($filter['account'])){
+                $query_string .= '&account=' . $filter['account'];
+            }
+        }
+
         # curl --unix-socket /run/slurmrestd/slurmrestd.socket http://slurm/slurmdb/v0.0.40/jobs
         $request = new Request();
-        $json = $request->request_json("jobs", 'slurmdb');
+        $json = $request->request_json("jobs" . $query_string, 'slurmdb');
         return $json;
     }
 

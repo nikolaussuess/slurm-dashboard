@@ -321,12 +321,36 @@ EOF;
             $templateBuilder->setParam("JOB_NAME", '');
             $templateBuilder->setParam("CONSTRAINTS", '');
             $templateBuilder->setParam("USER_SELECTS", $users_list);
-            $templateBuilder->setParam("ACTION", '?action=job_history&do=search');
+            $templateBuilder->setParam("ACTION", 'action=job_history&do=search');
             $contents .= $templateBuilder->build();
 
-            if( isset($_POST['do']) && $_POST['do'] == 'search' ){
-                $start_date = $_POST['form_time_min'] ?? '';
-                $end_date = $_POST['form_time_max'] ?? '';
+            $filter = NULL;
+            if( isset($_GET['do']) && $_GET['do'] == 'search' ){
+                $filter = array();
+
+                $start_time = $_POST['form_time_min'] ?? '';
+                if($start_time != ''){
+                    $dateTimeObject = new DateTime($start_time);
+                    $start_time = $dateTimeObject->getTimestamp();
+                    $filter['start_time'] = $start_time;
+                }
+
+                $end_time = $_POST['form_time_max'] ?? '';
+                if($end_time != ''){
+                    $dateTimeObject = new DateTime($end_time);
+                    $end_time = $dateTimeObject->getTimestamp();
+                    $filter['end_time'] = $end_time;
+                }
+
+                $user = $_POST['form_user'] ?? '';
+                if($user != ''){
+                    $filter['users'] = $user;
+                }
+
+                $account = $_POST['form_account'] ?? '';
+                if($account != ''){
+                    $filter['account'] = $account;
+                }
             }
 
             $contents .= <<<EOF
@@ -348,7 +372,7 @@ EOF;
     </thead>
     <tbody>
 EOF;
-            $jobs = $dao->get_jobs_from_slurmdb();
+            $jobs = $dao->get_jobs_from_slurmdb($filter);
             foreach( $jobs['jobs'] as $job ) {
 
                 $contents .= "<tr>";

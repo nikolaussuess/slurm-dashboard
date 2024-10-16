@@ -9,7 +9,8 @@
                     id="time_min"
                     name="form_time_min"
                     value=""
-                    min="2024-05-01T00:00"
+                    min="1970-01-01T00:00"
+                    max="2033-12-31T23:59"
             />
             <label for="time_max">and</label>
             <input
@@ -17,16 +18,17 @@
                     id="time_max"
                     name="form_time_max"
                     value=""
-                    min="2024-05-01T00:00"
+                    min="1970-01-01T00:00"
+                    max="2033-12-31T23:59"
             />
         </div>
 
-        <button class="btn btn-primary" type="button" data-bs-toggle="collapse" data-bs-target="#collapse{{NODENAME}}"
-                aria-expanded="false" aria-controls="collapse{{NODENAME}}">
+        <button class="btn btn-primary" type="button" data-bs-toggle="collapse" data-bs-target="#collapsefilter"
+                aria-expanded="false" aria-controls="collapsefilter">
             Show/Hide more
         </button>
 
-        <div class="collapse" id="collapse{{NODENAME}}">
+        <div class="collapse" id="collapsefilter">
             <div class="card card-body">
 
                 <div class="form-outline mb-4">
@@ -53,7 +55,8 @@
                            name="form_job_name"
                            id="job_name"
                            class="form-control"
-                           value="{{JOB_NAME}}">
+                           placeholder="currently unsupported"
+                           value="{{JOB_NAME}}" readonly>
                 </div>
 
                 <div class="form-outline mb-4">
@@ -62,11 +65,12 @@
                            name="form_constraints"
                            id="constraints"
                            class="form-control"
-                           value="{{CONSTRAINTS}}">
+                           placeholder="currently unsupported"
+                           value="{{CONSTRAINTS}}" readonly>
                 </div>
 
                 <div class="form-outline mb-4">
-                    <label for="form_user">Users:</label>
+                    <label for="form_user">User:</label>
                     <select class="form-multi-select form-control" name="form_user" id="form_user">
                         <option selected></option>
                         {{USER_SELECTS}}

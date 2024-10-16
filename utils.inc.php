@@ -52,6 +52,7 @@ function get_time_from_unix($job_arr, $param){
         return "?";
     }
 
+    # TODO: FIX BUG: elapsed is in seconds, not minutes!
     $days = floor($job_arr[$param] / 1440); // 1440 minutes in a day
     $hours = floor(($job_arr[$param] % 1440) / 60); // 60 minutes in an hour
     $remainingMinutes = $job_arr[$param] % 60; // Remaining minutes

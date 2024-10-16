@@ -94,6 +94,18 @@ class Client {
             if(isset($filter['account'])){
                 $query_string .= '&account=' . $filter['account'];
             }
+            if(isset($filter['node'])){
+                $query_string .= '&node=' . $filter['node'];
+            }
+            if(isset($filter['job_name'])){
+                $query_string .= '&job_name=' . $filter['job_name'];
+            }
+            if(isset($filter['constraints'])){
+                $query_string .= '&constraints=' . $filter['constraints'];
+            }
+            if(isset($filter['state'])){
+                $query_string .= '&state=' . $filter['state'];
+            }
         }
 
         # curl --unix-socket /run/slurmrestd/slurmrestd.socket http://slurm/slurmdb/v0.0.40/jobs

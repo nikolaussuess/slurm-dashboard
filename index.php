@@ -315,12 +315,19 @@ EOF;
                 $users_list .= '<option value="' . $user . '">'. $user . '</option>';
             }
 
+            $nodes = $dao->getNodeList();
+            $node_list = '';
+            foreach ($nodes as $node){
+                $node_list .= '<option value="' . $node . '">'. $node . '</option>';
+            }
+
             $templateBuilder = new TemplateLoader("job_filter_form.html");
             $templateBuilder->setParam("CLUSTER", CLUSTER_NAME);
             $templateBuilder->setParam("ACCOUNT_SELECTS", $account_list);
             $templateBuilder->setParam("JOB_NAME", '');
             $templateBuilder->setParam("CONSTRAINTS", '');
             $templateBuilder->setParam("USER_SELECTS", $users_list);
+            $templateBuilder->setParam("NODE_SELECTS", $node_list);
             $templateBuilder->setParam("ACTION", 'action=job_history&do=search');
             $contents .= $templateBuilder->build();
 
@@ -350,6 +357,26 @@ EOF;
                 $account = $_POST['form_account'] ?? '';
                 if($account != ''){
                     $filter['account'] = $account;
+                }
+
+                $node = $_POST['form_nodename'] ?? '';
+                if($node != ''){
+                    $filter['node'] = $node;
+                }
+
+                $job_name = $_POST['form_job_name'] ?? '';
+                if($job_name != ''){
+                    $filter['job_name'] = $job_name;
+                }
+
+                $constraints = $_POST['form_constraints'] ?? '';
+                if($constraints != ''){
+                    $filter['constraints'] = $constraints;
+                }
+
+                $state = $_POST['form_state'] ?? '';
+                if($state != ''){
+                    $filter['state'] = $state;
                 }
             }
 
@@ -434,6 +461,9 @@ EOF;
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="?action=jobs">Queue</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="?action=job_history">Job history</a>
                     </li>
                 </ul>
                 <div class="text-end">

@@ -226,6 +226,97 @@ if( isset($_SESSION['USER']) ){
                 $contents .= $templateBuilder->build();
             }
 
+
+            # SLURMDB information
+            $query = $dao->get_job_from_slurmdb($_GET['job_id']);
+            if(count($query['jobs']) == 0){
+                $contents .= "<p>Job " . $_GET['job_id'] . " not found in <kbd>slurmdb</kbd>.</p>";
+            }
+            else {
+                $contents .= '<h3>Slurmdb information</h3>';
+
+                $job_id = $query['jobs'][0]['job_id'];
+                $job_name = $query['jobs'][0]['name'];
+                $job_state_text = \utils\get_job_state_view($query['jobs'][0], 'state', 'current');
+
+                $user = $query['jobs'][0]['user'];
+                $group = $query['jobs'][0]['group'];
+                $account = $query['jobs'][0]['account'];
+                $partitions = $query['jobs'][0]['partition'];
+                $priority = \utils\get_number_if_defined($query['jobs'][0]['priority']);
+                $submit_line = $query['jobs'][0]['submit_line'];
+                $working_directory = $query['jobs'][0]['current_working_directory'] ?? "";
+
+                $comment = '<ul>';
+                if($query['jobs'][0]['comment']['administrator'] != '')
+                    $comment .= '<li><b>Admin comment:</b> ' .$query['jobs'][0]['comment']['administrator'] . '</li>';
+                if($query['jobs'][0]['comment']['job'] != '')
+                    $comment .= '<li><b>Job comment:</b> ' .$query['jobs'][0]['comment']['job'] . '</li>';
+                if($query['jobs'][0]['comment']['system'] != '')
+                    $comment .= '<li><b>System comment:</b> ' .$query['jobs'][0]['comment']['system'] . '</li>';
+                $comment .= '</ul>';
+
+                $exit_code = \utils\read_exit_code($query['jobs'][0]);
+                $nodes = $query['jobs'][0]['nodes'];
+                $qos = $query['jobs'][0]['qos'];
+                $container = $query['jobs'][0]['container'];
+                $flags = $query['jobs'][0]['flags'] ?? "undefined";
+
+                $gres_detail = isset($query['jobs'][0]['used_gres']) ? $query['jobs'][0]['used_gres'] : "none";
+                $tres_detail = '';
+                if(isset($query['jobs'][0]['tres']) && isset($query['jobs'][0]['tres']['allocated'])){
+                    $tres_detail .= '<b>Allocated:</b><ul>';
+                    foreach($query['jobs'][0]['tres']['allocated'] as $tres){
+                        $tres_detail .= '<li>Name: ' . $tres['name'] . ', type: ' . $tres['type'] . ', count: ' . $tres['count'] . '</li>';
+                    }
+                    $tres_detail .= '</ul>';
+                }
+                if(isset($query['jobs'][0]['tres']) && isset($query['jobs'][0]['tres']['requested'])){
+                    $tres_detail .= '<b>Requested:</b><ul>';
+                    foreach($query['jobs'][0]['tres']['requested'] as $tres){
+                        $tres_detail .= '<li>Name: ' . $tres['name'] . ', type: ' . $tres['type'] . ', count: ' . $tres['count'] . '</li>';
+                    }
+                    $tres_detail .= '</ul>';
+                }
+
+                $submit_time = \utils\get_date_from_unix($query['jobs'][0]['time'], 'submission');
+                $time_limit = \utils\get_time_from_unix_if_defined($query['jobs'][0]['time'], 'limit');
+                $time_elapsed = \utils\get_time_from_unix($query['jobs'][0]['time'], 'elapsed');
+                $time_start = \utils\get_date_from_unix($query['jobs'][0]['time'], 'start');
+                $time_end = \utils\get_date_from_unix($query['jobs'][0]['time'], 'end');
+                $time_eligible = \utils\get_date_from_unix($query['jobs'][0]['time'], 'eligible');
+
+                $templateBuilder = new TemplateLoader("jobinfo_slurmdb.html");
+                $templateBuilder->setParam("JOBID", $job_id);
+                $templateBuilder->setParam("JOBNAME", $job_name);
+                $templateBuilder->setParam("USER", $user);
+                $templateBuilder->setParam("GROUP", $group);
+                $templateBuilder->setParam("ACCOUNT", $account);
+                $templateBuilder->setParam("PARTITIONS", $partitions);
+                $templateBuilder->setParam("PRIORITY", $priority);
+                $templateBuilder->setParam("SUBMIT_LINE", $submit_line);
+                $templateBuilder->setParam("WORKING_DIRECTORY", $working_directory);
+                $templateBuilder->setParam("COMMENT", $comment);
+                $templateBuilder->setParam("EXIT_CODE", $exit_code);
+                $templateBuilder->setParam("NODES", $nodes);
+                $templateBuilder->setParam("QOS", $qos);
+                $templateBuilder->setParam("CONTAINER", $container);
+                $templateBuilder->setParam("FLAGS", implode(',', $flags));
+                $templateBuilder->setParam("GRES_DETAIL", $gres_detail);
+                $templateBuilder->setParam("TRES_DETAIL", $tres_detail);
+
+                $templateBuilder->setParam("SUBMIT_TIME", $submit_time);
+                $templateBuilder->setParam("TIME_LIMIT", $time_limit);
+                $templateBuilder->setParam("TIME_ELAPSED", $time_elapsed);
+                $templateBuilder->setParam("START_TIME", $time_start);
+                $templateBuilder->setParam("END_TIME", $time_end);
+                $templateBuilder->setParam("TIME_ELIGIBLE", $time_eligible);
+
+                $templateBuilder->setParam("JOB_STATE", $job_state_text);
+
+                $contents .= $templateBuilder->build();
+            }
+
             break;
 
         case "jobs":
@@ -287,6 +378,185 @@ EOF;
 
             break;
 
+        case 'job_history':
+
+            // BEGIN evaluate filter form
+            $filter = array();
+            if( isset($_GET['do']) && $_GET['do'] == 'search' ){
+
+                $start_time = $_POST['form_time_min'] ?? '';
+                if($start_time != ''){
+                    $filter['start_time_value'] = $start_time;
+                    $dateTimeObject = new DateTime($start_time);
+                    $start_time = $dateTimeObject->getTimestamp();
+                    $filter['start_time'] = $start_time;
+                }
+
+                $end_time = $_POST['form_time_max'] ?? '';
+                if($end_time != ''){
+                    $filter['end_time_value'] = $end_time;
+                    $dateTimeObject = new DateTime($end_time);
+                    $end_time = $dateTimeObject->getTimestamp();
+                    $filter['end_time'] = $end_time;
+                }
+
+                $user = $_POST['form_user'] ?? '';
+                if($user != ''){
+                    $filter['users'] = $user;
+                }
+
+                $account = $_POST['form_account'] ?? '';
+                if($account != ''){
+                    $filter['account'] = $account;
+                }
+
+                $node = $_POST['form_nodename'] ?? '';
+                if($node != ''){
+                    $filter['node'] = $node;
+                }
+
+                $job_name = $_POST['form_job_name'] ?? '';
+                if($job_name != ''){
+                    $filter['job_name'] = $job_name;
+                }
+
+                $constraints = $_POST['form_constraints'] ?? '';
+                if($constraints != ''){
+                    $filter['constraints'] = $constraints;
+                }
+
+                $state = $_POST['form_state'] ?? '';
+                if($state != ''){
+                    $filter['state'] = $state;
+                }
+            }
+            // END evaluate filter form
+
+            $contents .= "<h2>Jobs</h2>";
+
+            # Filter options:
+            # - cluster (CSV list)
+            # - account (CSV list)
+            # - job_name (CSV list)
+            # - constraints (CSV list)
+            # - exit_code (numeric)
+            # - partition (CSV list)
+            # - state (CSV state list)
+            # - start_time (UNIX timestamp)
+            # - end_time (UNIX timestamp)
+            # - node (node string)
+            # - users (CSV user list)
+
+            $accounts = $dao->get_account_list();
+            $account_list = '';
+            $selected = FALSE;
+            foreach ($accounts as $account){
+                if(isset($filter['account']) && $filter['account'] == $account) {
+                    $account_list .= '<option value="' . $account . '" selected>' . $account . '</option>';
+                    $selected = TRUE;
+                }
+                else {
+                    $account_list .= '<option value="' . $account . '">'. $account . '</option>';
+                }
+            }
+            if(! $selected)
+                $account_list = '<option selected></option>' . $account_list;
+            else
+                $account_list = '<option></option>' . $account_list;
+
+            $users = $dao->get_users_list();
+            $users_list = '';
+            $selected = FALSE;
+            foreach ($users as $user){
+                if(isset($filter['users']) && $filter['users'] == $user) {
+                    $users_list .= '<option value="' . $user . '" selected>'. $user . '</option>';
+                    $selected = TRUE;
+                }
+                else {
+                    $users_list .= '<option value="' . $user . '">'. $user . '</option>';
+                }
+            }
+            if(! $selected)
+                $users_list = '<option selected></option>' . $users_list;
+            else
+                $users_list = '<option></option>' . $users_list;
+
+            $nodes = $dao->getNodeList();
+            $node_list = '';
+            $selected = FALSE;
+            foreach ($nodes as $node){
+                if(isset($filter['node']) && $filter['node'] == $node) {
+                    $node_list .= '<option value="' . $node . '" selected>' . $node . '</option>';
+                    $selected = TRUE;
+                }
+                else {
+                    $node_list .= '<option value="' . $node . '">'. $node . '</option>';
+                }
+            }
+            if(! $selected)
+                $node_list = '<option selected></option>' . $node_list;
+            else
+                $node_list = '<option></option>' . $node_list;
+
+            $templateBuilder = new TemplateLoader("job_filter_form.html");
+            $templateBuilder->setParam("CLUSTER", CLUSTER_NAME);
+            $templateBuilder->setParam("ACCOUNT_SELECTS", $account_list);
+            $templateBuilder->setParam("JOB_NAME", $filter['job_name'] ?? '');
+            $templateBuilder->setParam("CONSTRAINTS", $filter['constraints'] ?? '');
+            $templateBuilder->setParam("USER_SELECTS", $users_list);
+            $templateBuilder->setParam("NODE_SELECTS", $node_list);
+            $templateBuilder->setParam("ACTION", 'action=job_history&do=search');
+            $templateBuilder->setParam("TIME_MIN_VALUE", $filter['start_time_value'] ?? '');
+            $templateBuilder->setParam("TIME_MAX_VALUE", $filter['end_time_value'] ?? '');
+            $contents .= $templateBuilder->build();
+
+            $contents .= <<<EOF
+<table class="tableFixHead">
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Name</th>
+            <th>Account</th>
+            <th>Partition</th>
+            <th>User</th>
+            <th>State</th>
+            <th>Start time</th>
+            <th>Time elapsed</th>
+            <th>Time limit</th>
+            <th>Nodelist</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+EOF;
+            $jobs = $dao->get_jobs_from_slurmdb($filter);
+            foreach( $jobs['jobs'] as $job ) {
+
+                $contents .= "<tr>";
+                $contents .=    "<td>" . $job['job_id'] . "</td>";
+                $contents .=    "<td>" . $job['name'] . "</td>";
+                $contents .=    "<td>" . $job['account'] . "</td>";
+                $contents .=    "<td>" . $job['partition'] . "</td>";
+                $contents .=    "<td>" . $job['user'] . "</td>";
+
+                $contents .=    "<td>" . \utils\get_job_state_view($job, 'state', 'current') . "</td>";
+
+
+                $contents .=    "<td>" . \utils\get_date_from_unix($job['time'], 'start') . "</td>";
+                $contents .=    "<td>" . \utils\get_time_from_unix($job['time'], 'elapsed') . "</td>";
+                $contents .=    "<td>" . \utils\get_date_from_unix_if_defined($job['time'], 'limit', 'inf') . "</td>";
+
+                $contents .=    "<td>" . $job['nodes'] . "</td>";
+                $contents .=    '<td><a href="?action=job&job_id=' . $job['job_id'] . '">[Details]</a></td>';
+
+            }
+            $contents .= <<<EOF
+    </tbody>
+</table>
+EOF;
+
+            break;
+
         default:
             http_response_code(404);
             $contents .= "404 Not Found.";
@@ -321,6 +591,9 @@ EOF;
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="?action=jobs">Queue</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="?action=job_history">Job history</a>
                     </li>
                 </ul>
                 <div class="text-end">

@@ -544,7 +544,7 @@ EOF;
 
                 $contents .=    "<td>" . \utils\get_date_from_unix($job['time'], 'start') . "</td>";
                 $contents .=    "<td>" . \utils\get_time_from_unix($job['time'], 'elapsed') . "</td>";
-                $contents .=    "<td>" . \utils\get_date_from_unix_if_defined($job['time'], 'limit', 'inf') . "</td>";
+                $contents .=    "<td>" . \utils\get_time_from_unix_if_defined($job['time'], 'limit', 'inf') . "</td>";
 
                 $contents .=    "<td>" . $job['nodes'] . "</td>";
                 $contents .=    '<td><a href="?action=job&job_id=' . $job['job_id'] . '">[Details]</a></td>';

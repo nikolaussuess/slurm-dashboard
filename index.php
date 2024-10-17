@@ -206,7 +206,7 @@ if( isset($_SESSION['USER']) ){
                 $templateBuilder->setParam("CONTAINER", $container);
                 $templateBuilder->setParam("CONTAINER_ID", $container_id);
                 $templateBuilder->setParam("ALLOCATING_NODE", $allocating_node);
-                $templateBuilder->setParam("FLAGS", implode(',', $flags));
+                $templateBuilder->setParam("FLAGS", implode('<br>', $flags));
                 $templateBuilder->setParam("CORES_PER_SOCKET", $cores_per_socket);
                 $templateBuilder->setParam("CPUS_PER_TASK", $cpus_per_task);
                 $templateBuilder->setParam("DEADLINE", $deadline);
@@ -301,7 +301,7 @@ if( isset($_SESSION['USER']) ){
                 $templateBuilder->setParam("NODES", $nodes);
                 $templateBuilder->setParam("QOS", $qos);
                 $templateBuilder->setParam("CONTAINER", $container);
-                $templateBuilder->setParam("FLAGS", implode(',', $flags));
+                $templateBuilder->setParam("FLAGS", implode('<br>', $flags));
                 $templateBuilder->setParam("GRES_DETAIL", $gres_detail);
                 $templateBuilder->setParam("TRES_DETAIL", $tres_detail);
 

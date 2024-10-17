@@ -29,7 +29,7 @@ function read_exit_code($job_arr){
 }
 
 function get_date_from_unix($job_arr, $param){
-    if(! isset($job_arr[$param])){
+    if(! isset($job_arr[$param]) || $job_arr[$param] == 0){
         return "?";
     }
 

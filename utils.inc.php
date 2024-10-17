@@ -48,7 +48,7 @@ function get_date_from_unix_if_defined($job_arr, $param, $default = 'undefined')
 }
 
 function get_time_from_unix($job_arr, $param){
-    if(! isset($job_arr[$param])){
+    if(! isset($job_arr[$param]) || $job_arr[$param] == 0 ){
         return "?";
     }
 

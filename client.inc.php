@@ -135,6 +135,13 @@ class Client {
         return $json;
     }
 
+    function get_job_from_slurmdb($id){
+        # curl --unix-socket /run/slurmrestd/slurmrestd.socket http://slurm/slurmdb/v0.0.39/job/id
+        $request = new Request();
+        $json = $request->request_json("job/".$id, 'slurmdb');
+        return $json;
+    }
+
     function get_user($user_name){
         # curl --unix-socket /run/slurmrestd/slurmrestd.socket http://slurm/slurmdb/v0.0.40/user/username?with_assocs
         $request = new Request();

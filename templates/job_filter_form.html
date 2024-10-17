@@ -8,7 +8,7 @@
                     type="datetime-local"
                     id="time_min"
                     name="form_time_min"
-                    value=""
+                    value="{{TIME_MIN_VALUE}}"
                     min="1970-01-01T00:00"
                     max="2033-12-31T23:59"
             />
@@ -17,7 +17,7 @@
                     type="datetime-local"
                     id="time_max"
                     name="form_time_max"
-                    value=""
+                    value="{{TIME_MAX_VALUE}}"
                     min="1970-01-01T00:00"
                     max="2033-12-31T23:59"
             /> (default: today midnight to now)
@@ -44,7 +44,6 @@
                 <div class="form-outline mb-4">
                     <label for="form_account">Account:</label>
                     <select class="form-multi-select form-control" name="form_account" id="form_account">
-                        <option selected></option>
                         {{ACCOUNT_SELECTS}}
                     </select>
                 </div>
@@ -70,7 +69,6 @@
                 <div class="form-outline mb-4">
                     <label for="form_user">User:</label>
                     <select class="form-multi-select form-control" name="form_user" id="form_user">
-                        <option selected></option>
                         {{USER_SELECTS}}
                     </select>
                 </div>
@@ -78,7 +76,6 @@
                 <div class="form-outline mb-4">
                     <label for="form_nodename">Node name:</label>
                     <select class="form-multi-select form-control" name="form_nodename" id="form_nodename">
-                        <option selected></option>
                         {{NODE_SELECTS}}
                     </select>
                 </div>
@@ -114,7 +111,7 @@
         </div>
 
         <div class="row mb-3">
-            <button type="reset" class="btn btn-secondary col-sm-4" data-dismiss="modal" style="margin-top: 1em">Cancel</button>
+            <button type="reset" class="btn btn-secondary col-sm-4" style="margin-top: 1em">Cancel</button>
             <div class="col-sm-1"></div>
             <button type="submit" class="btn btn-primary col-sm-7" style="margin-top: 1em">Filter</button>
         </div>

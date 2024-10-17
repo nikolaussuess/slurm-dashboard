@@ -288,55 +288,14 @@ EOF;
             break;
 
         case 'job_history':
-            $contents .= "<h2>Jobs</h2>";
 
-            # Filter options:
-            # - cluster (CSV list)
-            # - account (CSV list)
-            # - job_name (CSV list)
-            # - constraints (CSV list)
-            # - exit_code (numeric)
-            # - partition (CSV list)
-            # - state (CSV state list)
-            # - start_time (UNIX timestamp)
-            # - end_time (UNIX timestamp)
-            # - node (node string)
-            # - users (CSV user list)
-
-            $accounts = $dao->get_account_list();
-            $account_list = '';
-            foreach ($accounts as $account){
-                $account_list .= '<option value="' . $account . '">'. $account . '</option>';
-            }
-
-            $users = $dao->get_users_list();
-            $users_list = '';
-            foreach ($users as $user){
-                $users_list .= '<option value="' . $user . '">'. $user . '</option>';
-            }
-
-            $nodes = $dao->getNodeList();
-            $node_list = '';
-            foreach ($nodes as $node){
-                $node_list .= '<option value="' . $node . '">'. $node . '</option>';
-            }
-
-            $templateBuilder = new TemplateLoader("job_filter_form.html");
-            $templateBuilder->setParam("CLUSTER", CLUSTER_NAME);
-            $templateBuilder->setParam("ACCOUNT_SELECTS", $account_list);
-            $templateBuilder->setParam("JOB_NAME", '');
-            $templateBuilder->setParam("CONSTRAINTS", '');
-            $templateBuilder->setParam("USER_SELECTS", $users_list);
-            $templateBuilder->setParam("NODE_SELECTS", $node_list);
-            $templateBuilder->setParam("ACTION", 'action=job_history&do=search');
-            $contents .= $templateBuilder->build();
-
-            $filter = NULL;
+            // BEGIN evaluate filter form
+            $filter = array();
             if( isset($_GET['do']) && $_GET['do'] == 'search' ){
-                $filter = array();
 
                 $start_time = $_POST['form_time_min'] ?? '';
                 if($start_time != ''){
+                    $filter['start_time_value'] = $start_time;
                     $dateTimeObject = new DateTime($start_time);
                     $start_time = $dateTimeObject->getTimestamp();
                     $filter['start_time'] = $start_time;
@@ -344,6 +303,7 @@ EOF;
 
                 $end_time = $_POST['form_time_max'] ?? '';
                 if($end_time != ''){
+                    $filter['end_time_value'] = $end_time;
                     $dateTimeObject = new DateTime($end_time);
                     $end_time = $dateTimeObject->getTimestamp();
                     $filter['end_time'] = $end_time;
@@ -379,6 +339,85 @@ EOF;
                     $filter['state'] = $state;
                 }
             }
+            // END evaluate filter form
+
+            $contents .= "<h2>Jobs</h2>";
+
+            # Filter options:
+            # - cluster (CSV list)
+            # - account (CSV list)
+            # - job_name (CSV list)
+            # - constraints (CSV list)
+            # - exit_code (numeric)
+            # - partition (CSV list)
+            # - state (CSV state list)
+            # - start_time (UNIX timestamp)
+            # - end_time (UNIX timestamp)
+            # - node (node string)
+            # - users (CSV user list)
+
+            $accounts = $dao->get_account_list();
+            $account_list = '';
+            $selected = FALSE;
+            foreach ($accounts as $account){
+                if(isset($filter['account']) && $filter['account'] == $account) {
+                    $account_list .= '<option value="' . $account . '" selected>' . $account . '</option>';
+                    $selected = TRUE;
+                }
+                else {
+                    $account_list .= '<option value="' . $account . '">'. $account . '</option>';
+                }
+            }
+            if(! $selected)
+                $account_list = '<option selected></option>' . $account_list;
+            else
+                $account_list = '<option></option>' . $account_list;
+
+            $users = $dao->get_users_list();
+            $users_list = '';
+            $selected = FALSE;
+            foreach ($users as $user){
+                if(isset($filter['users']) && $filter['users'] == $user) {
+                    $users_list .= '<option value="' . $user . '" selected>'. $user . '</option>';
+                    $selected = TRUE;
+                }
+                else {
+                    $users_list .= '<option value="' . $user . '">'. $user . '</option>';
+                }
+            }
+            if(! $selected)
+                $users_list = '<option selected></option>' . $users_list;
+            else
+                $users_list = '<option></option>' . $users_list;
+
+            $nodes = $dao->getNodeList();
+            $node_list = '';
+            $selected = FALSE;
+            foreach ($nodes as $node){
+                if(isset($filter['node']) && $filter['node'] == $node) {
+                    $node_list .= '<option value="' . $node . '" selected>' . $node . '</option>';
+                    $selected = TRUE;
+                }
+                else {
+                    $node_list .= '<option value="' . $node . '">'. $node . '</option>';
+                }
+            }
+            if(! $selected)
+                $node_list = '<option selected></option>' . $node_list;
+            else
+                $node_list = '<option></option>' . $node_list;
+
+            $templateBuilder = new TemplateLoader("job_filter_form.html");
+            $templateBuilder->setParam("CLUSTER", CLUSTER_NAME);
+            $templateBuilder->setParam("ACCOUNT_SELECTS", $account_list);
+            $templateBuilder->setParam("JOB_NAME", $filter['job_name'] ?? '');
+            $templateBuilder->setParam("CONSTRAINTS", $filter['constraints'] ?? '');
+            $templateBuilder->setParam("USER_SELECTS", $users_list);
+            $templateBuilder->setParam("NODE_SELECTS", $node_list);
+            $templateBuilder->setParam("ACTION", 'action=job_history&do=search');
+            $templateBuilder->setParam("TIME_MIN_VALUE", $filter['start_time_value'] ?? '');
+            $templateBuilder->setParam("TIME_MAX_VALUE", $filter['end_time_value'] ?? '');
+            $contents .= $templateBuilder->build();
 
             $contents .= <<<EOF
 <table class="tableFixHead">

@@ -301,7 +301,7 @@ if( isset($_SESSION['USER']) ){
                 $templateBuilder->setParam("NODES", $nodes);
                 $templateBuilder->setParam("QOS", $qos);
                 $templateBuilder->setParam("CONTAINER", $container);
-                $templateBuilder->setParam("FLAGS", count($flags) > 0 ? '<li class="monospaced">' . implode('</li><li class="monospaced">', $flags) . '</li>' : '');
+                $templateBuilder->setParam("FLAGS", count($flags) > 0 ? '<li><span class="monospaced">' . implode('</li><li><span class="monospaced">', $flags) . '</span></li>' : '');
                 $templateBuilder->setParam("GRES_DETAIL", $gres_detail);
                 $templateBuilder->setParam("TRES_DETAIL", $tres_detail);
 

@@ -33,6 +33,7 @@ namespace {
         else {
             return FALSE;
         }
+        # END Authenticate with LDAP
 
         # For the Testserver only (where no LDAP is set up)
         # Comment the LDAP section above to use this ...

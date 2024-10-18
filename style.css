@@ -97,5 +97,7 @@ footer {
 }
 
 kbd {
-    background: none;
+    background-color: #eff0f1;
+    border-radius: 4px;
+    font-family: monospace;
 }

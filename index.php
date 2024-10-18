@@ -260,7 +260,7 @@ if( isset($_SESSION['USER']) ){
                 $nodes = $query['jobs'][0]['nodes'];
                 $qos = $query['jobs'][0]['qos'];
                 $container = $query['jobs'][0]['container'];
-                $flags = $query['jobs'][0]['flags'] ?? array("undefined");
+                $flags = $query['jobs'][0]['flags'] ?? array();
 
                 $gres_detail = isset($query['jobs'][0]['used_gres']) ? $query['jobs'][0]['used_gres'] : "none";
                 $tres_detail = '';

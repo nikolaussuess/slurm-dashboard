@@ -260,7 +260,7 @@ if( isset($_SESSION['USER']) ){
                 $nodes = $query['jobs'][0]['nodes'];
                 $qos = $query['jobs'][0]['qos'];
                 $container = $query['jobs'][0]['container'];
-                $flags = $query['jobs'][0]['flags'] ?? "undefined";
+                $flags = $query['jobs'][0]['flags'] ?? array("undefined");
 
                 $gres_detail = isset($query['jobs'][0]['used_gres']) ? $query['jobs'][0]['used_gres'] : "none";
                 $tres_detail = '';
@@ -301,7 +301,7 @@ if( isset($_SESSION['USER']) ){
                 $templateBuilder->setParam("NODES", $nodes);
                 $templateBuilder->setParam("QOS", $qos);
                 $templateBuilder->setParam("CONTAINER", $container);
-                $templateBuilder->setParam("FLAGS", implode('<br>', $flags));
+                $templateBuilder->setParam("FLAGS", count($flags) > 0 ? '<li><kbd>' . implode('</kbd></li><li><kbd>', $flags) . '</kbd></li>' : '');
                 $templateBuilder->setParam("GRES_DETAIL", $gres_detail);
                 $templateBuilder->setParam("TRES_DETAIL", $tres_detail);
 

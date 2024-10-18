@@ -185,7 +185,7 @@ if( isset($_SESSION['USER']) ){
                 $memory_per_node = \utils\get_number_if_defined($query['jobs'][0]['memory_per_node']);
                 $requeue = $query['jobs'][0]['requeue'] ? 'yes' : 'no';
                 $submit_time = \utils\get_date_from_unix_if_defined($query['jobs'][0], 'submit_time');
-                $time_limit = \utils\get_time_from_unix_if_defined($query['jobs'][0], 'time_limit');
+                $time_limit = \utils\get_timelimit_if_defined($query['jobs'][0], 'time_limit');
 
                 $templateBuilder = new TemplateLoader("jobinfo.html");
                 $templateBuilder->setParam("JOBID", $job_id);
@@ -280,8 +280,8 @@ if( isset($_SESSION['USER']) ){
                 }
 
                 $submit_time = \utils\get_date_from_unix($query['jobs'][0]['time'], 'submission');
-                $time_limit = \utils\get_time_from_unix_if_defined($query['jobs'][0]['time'], 'limit');
-                $time_elapsed = \utils\get_time_from_unix($query['jobs'][0]['time'], 'elapsed');
+                $time_limit = \utils\get_timelimit_if_defined($query['jobs'][0]['time'], 'limit');
+                $time_elapsed = \utils\get_elapsed_time($query['jobs'][0]['time'], 'elapsed');
                 $time_start = \utils\get_date_from_unix($query['jobs'][0]['time'], 'start');
                 $time_end = \utils\get_date_from_unix($query['jobs'][0]['time'], 'end');
                 $time_eligible = \utils\get_date_from_unix($query['jobs'][0]['time'], 'eligible');
@@ -530,7 +530,8 @@ EOF;
     <tbody>
 EOF;
             $jobs = $dao->get_jobs_from_slurmdb($filter);
-            foreach( $jobs['jobs'] as $job ) {
+            $jobs = array_reverse($jobs['jobs']); // newest entry first
+            foreach( $jobs as $job ) {
 
                 $contents .= "<tr>";
                 $contents .=    "<td>" . $job['job_id'] . "</td>";
@@ -543,8 +544,8 @@ EOF;
 
 
                 $contents .=    "<td>" . \utils\get_date_from_unix($job['time'], 'start') . "</td>";
-                $contents .=    "<td>" . \utils\get_time_from_unix($job['time'], 'elapsed') . "</td>";
-                $contents .=    "<td>" . \utils\get_time_from_unix_if_defined($job['time'], 'limit', 'inf') . "</td>";
+                $contents .=    "<td>" . \utils\get_elapsed_time($job['time'], 'elapsed') . "</td>";
+                $contents .=    "<td>" . \utils\get_timelimit_if_defined($job['time'], 'limit', 'inf') . "</td>";
 
                 $contents .=    "<td>" . $job['nodes'] . "</td>";
                 $contents .=    '<td><a href="?action=job&job_id=' . $job['job_id'] . '">[Details]</a></td>';

@@ -90,13 +90,7 @@ footer {
     color: black;
 }
 
-.feature {
-    background-color: #eff0f1;
-    border-radius: 4px;
-    font-family: monospace;
-}
-
-kbd {
+.feature, .monospaced {
     background-color: #eff0f1;
     border-radius: 4px;
     font-family: monospace;

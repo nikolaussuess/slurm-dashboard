@@ -230,7 +230,7 @@ if( isset($_SESSION['USER']) ){
             # SLURMDB information
             $query = $dao->get_job_from_slurmdb($_GET['job_id']);
             if(count($query['jobs']) == 0){
-                $contents .= "<p>Job " . $_GET['job_id'] . " not found in <kbd>slurmdb</kbd>.</p>";
+                $contents .= "<p>Job " . $_GET['job_id'] . " not found in <span class='monospaced'>slurmdb</span>.</p>";
             }
             else {
                 $contents .= '<h3>Slurmdb information</h3>';
@@ -301,7 +301,7 @@ if( isset($_SESSION['USER']) ){
                 $templateBuilder->setParam("NODES", $nodes);
                 $templateBuilder->setParam("QOS", $qos);
                 $templateBuilder->setParam("CONTAINER", $container);
-                $templateBuilder->setParam("FLAGS", count($flags) > 0 ? '<li><kbd>' . implode('</kbd></li><li><kbd>', $flags) . '</kbd></li>' : '');
+                $templateBuilder->setParam("FLAGS", count($flags) > 0 ? '<li class="monospaced">' . implode('</li><li class="monospaced">', $flags) . '</li>' : '');
                 $templateBuilder->setParam("GRES_DETAIL", $gres_detail);
                 $templateBuilder->setParam("TRES_DETAIL", $tres_detail);
 

@@ -74,6 +74,9 @@ footer {
 .nav-link {
     color: black;
 }
+.nav-item:hover {
+    background-color: #B9B9B9;
+}
 
 .feature, .monospaced {
     background-color: #eff0f1;

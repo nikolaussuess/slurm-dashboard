@@ -580,6 +580,7 @@ EOF;
     <script src="/lib/bootstrap/js/bootstrap.min.js" integrity="sha384-0pUGZvbkm6XF6gxjEnlmuGrJXVbNuzT9qBBavbLwCsOGabYfZo0T0to5eqruptLy" crossorigin="anonymous"></script>
 
     <link rel="stylesheet" href="/style.css" crossorigin="anonymous">
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
 </head>
 <body>
 

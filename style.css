@@ -27,11 +27,8 @@ h1, h2, h3, h4 {
 }
 
 body {
-    padding-left: 10px;
-    padding-right: 10px;
     font-size: 14pt;
-    padding-top: 10px;
-    padding-bottom: 10px;
+    padding: 10px;
 }
 
 #content {
@@ -47,24 +44,15 @@ select {
     width: 100%;
 }
 
-#headerimg {
-    max-width: 1400px;
-    width: auto;
-    height: auto;
-    display: block;
-    margin: auto;
-    margin-top: 25px;
-    margin-bottom: 25px;
-}
-
 @media (max-width: 1140px) {
     body {
-        font-size: 20pt;
+        font-size: 1.5em;
+        padding: 5px;
     }
     #content {
         max-width: 100%;
-        margin-left: 25px;
-        margin-right: 25px;
+        margin-left: 10px;
+        margin-right: 10px;
     }
     h1, h2, h3, h4 {
         margin-left: 25px;
@@ -74,9 +62,6 @@ select {
         max-width: 100%;
         margin-left: 25px;
         margin-right: 25px;
-    }
-    #headerimg {
-        max-width: 100%;
     }
 }
 
@@ -98,4 +83,9 @@ footer {
 
 .feature:empty, .monospaced:empty {
     display: none;
+}
+
+button, input, select {
+    padding: 10px; /* Make them easier to tap */
+    font-size: 1rem; /* Ensure readability */
 }

@@ -1,167 +1,169 @@
-<table>
-    <tr>
-        <td>Job ID</td>
-        <td>{{JOBID}}</td>
-    </tr>
-    <tr>
-        <td>Job name</td>
-        <td>{{JOBNAME}}</td>
-    </tr>
-    <tr>
-        <td>
-            State:
-        </td>
-        <td>{{JOB_STATE}}</td>
-    </tr>
-    <tr>
-        <td>User</td>
-        <td>{{USER}}</td>
-    </tr>
-    <tr>
-        <td>Group</td>
-        <td>{{GROUP}}</td>
-    </tr>
-    <tr>
-        <td>Account</td>
-        <td>{{ACCOUNT}}</td>
-    </tr>
-    <tr>
-        <td>Partitions</td>
-        <td>{{PARTITIONS}}</td>
-    </tr>
-    <tr>
-        <td>Submit line</td>
-        <td><span class="monospaced">{{SUBMIT_LINE}}</span></td>
-    </tr>
-    <tr>
-        <td>Working directory</td>
-        <td><span class="monospaced">{{WORKING_DIRECTORY}}</span></td>
-    </tr>
-    <tr>
-        <td>Comment</td>
-        <td>{{COMMENT}}</td>
-    </tr>
-    <tr>
-        <td>Exit code</td>
-        <td>{{EXIT_CODE}}</td>
-    </tr>
+<div class="table-responsive">
+    <table class="table">
+        <tr>
+            <td>Job ID</td>
+            <td>{{JOBID}}</td>
+        </tr>
+        <tr>
+            <td>Job name</td>
+            <td>{{JOBNAME}}</td>
+        </tr>
+        <tr>
+            <td>
+                State:
+            </td>
+            <td>{{JOB_STATE}}</td>
+        </tr>
+        <tr>
+            <td>User</td>
+            <td>{{USER}}</td>
+        </tr>
+        <tr>
+            <td>Group</td>
+            <td>{{GROUP}}</td>
+        </tr>
+        <tr>
+            <td>Account</td>
+            <td>{{ACCOUNT}}</td>
+        </tr>
+        <tr>
+            <td>Partitions</td>
+            <td>{{PARTITIONS}}</td>
+        </tr>
+        <tr>
+            <td>Submit line</td>
+            <td><span class="monospaced">{{SUBMIT_LINE}}</span></td>
+        </tr>
+        <tr>
+            <td>Working directory</td>
+            <td><span class="monospaced">{{WORKING_DIRECTORY}}</span></td>
+        </tr>
+        <tr>
+            <td>Comment</td>
+            <td>{{COMMENT}}</td>
+        </tr>
+        <tr>
+            <td>Exit code</td>
+            <td>{{EXIT_CODE}}</td>
+        </tr>
 
 
-    <tr></tr>
-    <tr>
-        <th colspan="2">Nodes</th>
-    </tr>
-    <tr>
-        <td>Scheduled Nodes</td>
-        <td>{{SCHEDNODES}}</td>
-    </tr>
-    <tr>
-        <td>Required Nodes</td>
-        <td>{{REQNODES}}</td>
-    </tr>
-    <tr>
-        <td>Nodes</td>
-        <td>{{NODES}}</td>
-    </tr>
-    <tr>
-        <td>Allocating node</td>
-        <td>{{ALLOCATING_NODE}}</td>
-    </tr>
+        <tr></tr>
+        <tr>
+            <th colspan="2">Nodes</th>
+        </tr>
+        <tr>
+            <td>Scheduled Nodes</td>
+            <td>{{SCHEDNODES}}</td>
+        </tr>
+        <tr>
+            <td>Required Nodes</td>
+            <td>{{REQNODES}}</td>
+        </tr>
+        <tr>
+            <td>Nodes</td>
+            <td>{{NODES}}</td>
+        </tr>
+        <tr>
+            <td>Allocating node</td>
+            <td>{{ALLOCATING_NODE}}</td>
+        </tr>
 
-    <tr></tr>
-    <tr>
-        <th colspan="2">Container settings</th>
-    </tr>
-    <tr>
-        <td>Container</td>
-        <td><span class="monospaced">{{CONTAINER}}</span></td>
-    </tr>
-    <tr>
-        <td>Container ID</td>
-        <td><span class="monospaced">{{CONTAINER_ID}}</span></td>
-    </tr>
+        <tr></tr>
+        <tr>
+            <th colspan="2">Container settings</th>
+        </tr>
+        <tr>
+            <td>Container</td>
+            <td><span class="monospaced">{{CONTAINER}}</span></td>
+        </tr>
+        <tr>
+            <td>Container ID</td>
+            <td><span class="monospaced">{{CONTAINER_ID}}</span></td>
+        </tr>
 
 
-    <tr></tr>
-    <tr>
-        <th colspan="2">Resources</th>
-    </tr>
-    <tr>
-        <td>Cores per socket</td>
-        <td>{{CORES_PER_SOCKET}}</td>
-    </tr>
-    <tr>
-        <td>CPUs per task</td>
-        <td>{{CPUS_PER_TASK}}</td>
-    </tr>
-    <tr>
-        <td>GRES detail</td>
-        <td><span class="monospaced">{{GRES_DETAIL}}</span></td>
-    </tr>
-    <tr>
-        <td>CPUs</td>
-        <td>{{CPUS}}</td>
-    </tr>
-    <tr>
-        <td>Node count</td>
-        <td>{{NODE_COUNT}}</td>
-    </tr>
-    <tr>
-        <td>Tasks</td>
-        <td>{{TASKS}}</td>
-    </tr>
-    <tr>
-        <td>Memory per CPU</td>
-        <td>{{MEMORY_PER_CPU}}</td>
-    </tr>
-    <tr>
-        <td>Memory per node</td>
-        <td>{{MEMORY_PER_NODE}}</td>
-    </tr>
+        <tr></tr>
+        <tr>
+            <th colspan="2">Resources</th>
+        </tr>
+        <tr>
+            <td>Cores per socket</td>
+            <td>{{CORES_PER_SOCKET}}</td>
+        </tr>
+        <tr>
+            <td>CPUs per task</td>
+            <td>{{CPUS_PER_TASK}}</td>
+        </tr>
+        <tr>
+            <td>GRES detail</td>
+            <td><span class="monospaced">{{GRES_DETAIL}}</span></td>
+        </tr>
+        <tr>
+            <td>CPUs</td>
+            <td>{{CPUS}}</td>
+        </tr>
+        <tr>
+            <td>Node count</td>
+            <td>{{NODE_COUNT}}</td>
+        </tr>
+        <tr>
+            <td>Tasks</td>
+            <td>{{TASKS}}</td>
+        </tr>
+        <tr>
+            <td>Memory per CPU</td>
+            <td>{{MEMORY_PER_CPU}}</td>
+        </tr>
+        <tr>
+            <td>Memory per node</td>
+            <td>{{MEMORY_PER_NODE}}</td>
+        </tr>
 
-    <tr></tr>
-    <tr>
-        <th colspan="2">Time</th>
-    </tr>
-    <tr>
-        <td>Submit time</td>
-        <td>{{SUBMIT_TIME}}</td>
-    </tr>
-    <tr>
-        <td>Time limit</td>
-        <td>{{TIME_LIMIT}}</td>
-    </tr>
-    <tr>
-        <td>Deadline</td>
-        <td>{{DEADLINE}}</td>
-    </tr>
+        <tr></tr>
+        <tr>
+            <th colspan="2">Time</th>
+        </tr>
+        <tr>
+            <td>Submit time</td>
+            <td>{{SUBMIT_TIME}}</td>
+        </tr>
+        <tr>
+            <td>Time limit</td>
+            <td>{{TIME_LIMIT}}</td>
+        </tr>
+        <tr>
+            <td>Deadline</td>
+            <td>{{DEADLINE}}</td>
+        </tr>
 
-    <tr></tr>
-    <tr>
-        <th colspan="2">Other information</th>
-    </tr>
-    <tr>
-        <td>Features</td>
-        <td><span class="monospaced">{{FEATURES}}</span></td>
-    </tr>
-    <tr>
-        <td>Flags</td>
-        <td><span class="monospaced">{{FLAGS}}</span></td>
-    </tr>
-    <tr>
-        <td>Requeue</td>
-        <td>{{REQUEUE}}</td>
-    </tr>
-    <tr>
-        <td>Dependency</td>
-        <td><span class="monospaced">{{DEPENDENCY}}</span></td>
-    </tr>
-    <tr>
-        <td>Priority</td>
-        <td>{{PRIORITY}}</td>
-    </tr>
-    <tr>
-        <td>QOS</td>
-        <td>{{QOS}}</td>
-    </tr>
-</table>
+        <tr></tr>
+        <tr>
+            <th colspan="2">Other information</th>
+        </tr>
+        <tr>
+            <td>Features</td>
+            <td><span class="monospaced">{{FEATURES}}</span></td>
+        </tr>
+        <tr>
+            <td>Flags</td>
+            <td><span class="monospaced">{{FLAGS}}</span></td>
+        </tr>
+        <tr>
+            <td>Requeue</td>
+            <td>{{REQUEUE}}</td>
+        </tr>
+        <tr>
+            <td>Dependency</td>
+            <td><span class="monospaced">{{DEPENDENCY}}</span></td>
+        </tr>
+        <tr>
+            <td>Priority</td>
+            <td>{{PRIORITY}}</td>
+        </tr>
+        <tr>
+            <td>QOS</td>
+            <td>{{QOS}}</td>
+        </tr>
+    </table>
+</div>

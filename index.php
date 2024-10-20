@@ -323,23 +323,24 @@ if( isset($_SESSION['USER']) ){
             $contents .= "<h2>Jobs</h2>";
 
             $contents .= <<<EOF
-<table class="tableFixHead">
-    <thead>
-        <tr>
-            <th>ID</th>
-            <th>Name</th>
-            <th>Partition</th>
-            <th>User</th>
-            <th>State</th>
-            <th>Start time</th>
-            <th>Time (Running)</th>
-            <th>Time limit</th>
-            <th># Nodes</th>
-            <th>Nodelist</th>
-            <th></th>
-        </tr>
-    </thead>
-    <tbody>
+<div class="table-responsive">
+    <table class="tableFixHead table">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Partition</th>
+                <th>User</th>
+                <th>State</th>
+                <th>Start time</th>
+                <th>Time (Running)</th>
+                <th>Time limit</th>
+                <th># Nodes</th>
+                <th>Nodelist</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
 EOF;
             $jobs = $dao->get_jobs();
             foreach( $jobs['jobs'] as $job ) {
@@ -372,8 +373,9 @@ EOF;
 
             }
             $contents .= <<<EOF
-    </tbody>
-</table>
+        </tbody>
+    </table>
+</div>
 EOF;
 
             break;
@@ -511,23 +513,24 @@ EOF;
             $contents .= $templateBuilder->build();
 
             $contents .= <<<EOF
-<table class="tableFixHead">
-    <thead>
-        <tr>
-            <th>ID</th>
-            <th>Name</th>
-            <th>Account</th>
-            <th>Partition</th>
-            <th>User</th>
-            <th>State</th>
-            <th>Start time</th>
-            <th>Time elapsed</th>
-            <th>Time limit</th>
-            <th>Nodelist</th>
-            <th></th>
-        </tr>
-    </thead>
-    <tbody>
+<div class="table-responsive">
+    <table class="tableFixHead table">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Account</th>
+                <th>Partition</th>
+                <th>User</th>
+                <th>State</th>
+                <th>Start time</th>
+                <th>Time elapsed</th>
+                <th>Time limit</th>
+                <th>Nodelist</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
 EOF;
             $jobs = $dao->get_jobs_from_slurmdb($filter);
             $jobs = array_reverse($jobs['jobs']); // newest entry first
@@ -552,8 +555,9 @@ EOF;
 
             }
             $contents .= <<<EOF
-    </tbody>
-</table>
+        </tbody>
+    </table>
+</div>
 EOF;
 
             break;
@@ -586,7 +590,7 @@ EOF;
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarNavDropdown">
-                <ul class="nav col-12 col-lg-auto me-lg-auto mb-2 justify-content-center mb-md-0">
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0 justify-content-center">
                     <li class="nav-item">
                         <a class="nav-link" href="?action=usage">Cluster Usage</a>
                     </li>

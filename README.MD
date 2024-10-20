@@ -5,18 +5,19 @@ This is a small dashboard that displays some information about a slurm cluster. 
 - display cluster usage information (state, CPUs, memory, gpus per node)
 - display the current job queue, including a job detail page
 - authentication via LDAP, and it additionally checks whether the user exists in the accounting database
-- communication with slurmrestd via unix socket
-- caching of the slurmrestd responses (using APCu)
+- communication with `slurmrestd` via unix socket
+- caching of the `slurmrestd` responses (using APCu)
+- display and filter job history (from `slurmdbd`)
 
 ### Planned features
-- Display job history (from `slurmdbd`).
 - Allow administrators to requeue / cancel / ... jobs.
 - Allow users to requeue and cancel their own jobs.
+- Allow users to submit jobs via a web interface.
 
 ## Requirements
 - PHP (currently only tested with PHP 8.2)<br>
   including
-  - `php_ldap` for LDAPA authentication
+  - `php_ldap` for LDAP authentication
   - `php-apcu` for caching `slurmrestd` responses
 - Apache2<br>
   including

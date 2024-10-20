@@ -185,7 +185,7 @@ if( isset($_SESSION['USER']) ){
                 $memory_per_node = \utils\get_number_if_defined($query['jobs'][0]['memory_per_node']);
                 $requeue = $query['jobs'][0]['requeue'] ? 'yes' : 'no';
                 $submit_time = \utils\get_date_from_unix_if_defined($query['jobs'][0], 'submit_time');
-                $time_limit = \utils\get_time_from_unix_if_defined($query['jobs'][0], 'time_limit');
+                $time_limit = \utils\get_timelimit_if_defined($query['jobs'][0], 'time_limit');
 
                 $templateBuilder = new TemplateLoader("jobinfo.html");
                 $templateBuilder->setParam("JOBID", $job_id);
@@ -230,7 +230,7 @@ if( isset($_SESSION['USER']) ){
             # SLURMDB information
             $query = $dao->get_job_from_slurmdb($_GET['job_id']);
             if(count($query['jobs']) == 0){
-                $contents .= "<p>Job " . $_GET['job_id'] . " not found in <kbd>slurmdb</kbd>.</p>";
+                $contents .= "<p>Job " . $_GET['job_id'] . " not found in <span class='monospaced'>slurmdb</span>.</p>";
             }
             else {
                 $contents .= '<h3>Slurmdb information</h3>';
@@ -260,7 +260,7 @@ if( isset($_SESSION['USER']) ){
                 $nodes = $query['jobs'][0]['nodes'];
                 $qos = $query['jobs'][0]['qos'];
                 $container = $query['jobs'][0]['container'];
-                $flags = $query['jobs'][0]['flags'] ?? "undefined";
+                $flags = $query['jobs'][0]['flags'] ?? array();
 
                 $gres_detail = isset($query['jobs'][0]['used_gres']) ? $query['jobs'][0]['used_gres'] : "none";
                 $tres_detail = '';
@@ -280,8 +280,8 @@ if( isset($_SESSION['USER']) ){
                 }
 
                 $submit_time = \utils\get_date_from_unix($query['jobs'][0]['time'], 'submission');
-                $time_limit = \utils\get_time_from_unix_if_defined($query['jobs'][0]['time'], 'limit');
-                $time_elapsed = \utils\get_time_from_unix($query['jobs'][0]['time'], 'elapsed');
+                $time_limit = \utils\get_timelimit_if_defined($query['jobs'][0]['time'], 'limit');
+                $time_elapsed = \utils\get_elapsed_time($query['jobs'][0]['time'], 'elapsed');
                 $time_start = \utils\get_date_from_unix($query['jobs'][0]['time'], 'start');
                 $time_end = \utils\get_date_from_unix($query['jobs'][0]['time'], 'end');
                 $time_eligible = \utils\get_date_from_unix($query['jobs'][0]['time'], 'eligible');
@@ -301,7 +301,7 @@ if( isset($_SESSION['USER']) ){
                 $templateBuilder->setParam("NODES", $nodes);
                 $templateBuilder->setParam("QOS", $qos);
                 $templateBuilder->setParam("CONTAINER", $container);
-                $templateBuilder->setParam("FLAGS", implode('<br>', $flags));
+                $templateBuilder->setParam("FLAGS", count($flags) > 0 ? '<li><span class="monospaced">' . implode('</li><li><span class="monospaced">', $flags) . '</span></li>' : '');
                 $templateBuilder->setParam("GRES_DETAIL", $gres_detail);
                 $templateBuilder->setParam("TRES_DETAIL", $tres_detail);
 
@@ -323,23 +323,24 @@ if( isset($_SESSION['USER']) ){
             $contents .= "<h2>Jobs</h2>";
 
             $contents .= <<<EOF
-<table class="tableFixHead">
-    <thead>
-        <tr>
-            <th>ID</th>
-            <th>Name</th>
-            <th>Partition</th>
-            <th>User</th>
-            <th>State</th>
-            <th>Start time</th>
-            <th>Time (Running)</th>
-            <th>Time limit</th>
-            <th># Nodes</th>
-            <th>Nodelist</th>
-            <th></th>
-        </tr>
-    </thead>
-    <tbody>
+<div class="table-responsive">
+    <table class="tableFixHead table">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Partition</th>
+                <th>User</th>
+                <th>State</th>
+                <th>Start time</th>
+                <th>Time (Running)</th>
+                <th>Time limit</th>
+                <th># Nodes</th>
+                <th>Nodelist</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
 EOF;
             $jobs = $dao->get_jobs();
             foreach( $jobs['jobs'] as $job ) {
@@ -372,8 +373,9 @@ EOF;
 
             }
             $contents .= <<<EOF
-    </tbody>
-</table>
+        </tbody>
+    </table>
+</div>
 EOF;
 
             break;
@@ -511,26 +513,28 @@ EOF;
             $contents .= $templateBuilder->build();
 
             $contents .= <<<EOF
-<table class="tableFixHead">
-    <thead>
-        <tr>
-            <th>ID</th>
-            <th>Name</th>
-            <th>Account</th>
-            <th>Partition</th>
-            <th>User</th>
-            <th>State</th>
-            <th>Start time</th>
-            <th>Time elapsed</th>
-            <th>Time limit</th>
-            <th>Nodelist</th>
-            <th></th>
-        </tr>
-    </thead>
-    <tbody>
+<div class="table-responsive">
+    <table class="tableFixHead table">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Account</th>
+                <th>Partition</th>
+                <th>User</th>
+                <th>State</th>
+                <th>Start time</th>
+                <th>Time elapsed</th>
+                <th>Time limit</th>
+                <th>Nodelist</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
 EOF;
             $jobs = $dao->get_jobs_from_slurmdb($filter);
-            foreach( $jobs['jobs'] as $job ) {
+            $jobs = array_reverse($jobs['jobs']); // newest entry first
+            foreach( $jobs as $job ) {
 
                 $contents .= "<tr>";
                 $contents .=    "<td>" . $job['job_id'] . "</td>";
@@ -543,16 +547,17 @@ EOF;
 
 
                 $contents .=    "<td>" . \utils\get_date_from_unix($job['time'], 'start') . "</td>";
-                $contents .=    "<td>" . \utils\get_time_from_unix($job['time'], 'elapsed') . "</td>";
-                $contents .=    "<td>" . \utils\get_time_from_unix_if_defined($job['time'], 'limit', 'inf') . "</td>";
+                $contents .=    "<td>" . \utils\get_elapsed_time($job['time'], 'elapsed') . "</td>";
+                $contents .=    "<td>" . \utils\get_timelimit_if_defined($job['time'], 'limit', 'inf') . "</td>";
 
                 $contents .=    "<td>" . $job['nodes'] . "</td>";
                 $contents .=    '<td><a href="?action=job&job_id=' . $job['job_id'] . '">[Details]</a></td>';
 
             }
             $contents .= <<<EOF
-    </tbody>
-</table>
+        </tbody>
+    </table>
+</div>
 EOF;
 
             break;
@@ -585,7 +590,7 @@ EOF;
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarNavDropdown">
-                <ul class="nav col-12 col-lg-auto me-lg-auto mb-2 justify-content-center mb-md-0">
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0 justify-content-center">
                     <li class="nav-item">
                         <a class="nav-link" href="?action=usage">Cluster Usage</a>
                     </li>

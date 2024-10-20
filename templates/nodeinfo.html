@@ -1,47 +1,49 @@
 <h3>Node {{NODENAME}}</h3>
-<table border="0" class="nodeinfo">
+<div class="table-responsive">
+    <table class="nodeinfo table table-borderless">
 
-    <tr style="width: 100px">
-        <td style="width: 100px">
-            State:
-        </td>
-        <td style="background-color: {{STATE_COLOR}}">{{STATE}}</td>
-    </tr>
+        <tr style="width: 100px">
+            <td style="width: 100px">
+                State:
+            </td>
+            <td style="background-color: {{STATE_COLOR}}">{{STATE}}</td>
+        </tr>
 
-    <tr>
-        <td style="width: 100px">CPUs:</td>
-        <td>
-            <div class="progress">
-                <div class="progress-bar"
-                     role="progressbar"
-                     style="width: {{CPU_PERCENTAGE}}%" aria-valuenow="{{CPU_USED}}" aria-valuemin="0" aria-valuemax="{{CPU_TOTAL}}"></div><br>
-            </div>
-            {{CPU_USED}} of {{CPU_TOTAL}} CPUs in use ({{CPU_PERCENTAGE}} %)
-        </td>
-    </tr>
-    <tr>
-        <td>Memory:</td>
-        <td>
-            <div class="progress">
-                <div class="progress-bar"
-                     role="progressbar"
-                     style="width: {{MEM_PERCENTAGE}}%" aria-valuenow="{{MEM_USED}}" aria-valuemin="0" aria-valuemax="{{MEM_TOTAL}}"></div><br>
-            </div>
-            {{MEM_USED}} of {{MEM_TOTAL}} MiB RAM in use ({{MEM_PERCENTAGE}} %)
-        </td>
-    </tr>
-    <tr>
-        <td>GPUs:</td>
-        <td>
-            <div class="progress">
-                <div class="progress-bar"
-                     role="progressbar"
-                     style="width: {{GPU_PERCENTAGE}}%" aria-valuenow="{{GPU_USED}}" aria-valuemin="0" aria-valuemax="{{GPU_TOTAL}}"></div><br>
-            </div>
-            {{GPU_USED}} of {{GPU_TOTAL}} GPUs in use ({{GPU_PERCENTAGE}} %)
-        </td>
-    </tr>
-</table>
+        <tr>
+            <td style="width: 100px">CPUs:</td>
+            <td>
+                <div class="progress">
+                    <div class="progress-bar"
+                         role="progressbar"
+                         style="width: {{CPU_PERCENTAGE}}%" aria-valuenow="{{CPU_USED}}" aria-valuemin="0" aria-valuemax="{{CPU_TOTAL}}"></div><br>
+                </div>
+                {{CPU_USED}} of {{CPU_TOTAL}} CPUs in use ({{CPU_PERCENTAGE}} %)
+            </td>
+        </tr>
+        <tr>
+            <td>Memory:</td>
+            <td>
+                <div class="progress">
+                    <div class="progress-bar"
+                         role="progressbar"
+                         style="width: {{MEM_PERCENTAGE}}%" aria-valuenow="{{MEM_USED}}" aria-valuemin="0" aria-valuemax="{{MEM_TOTAL}}"></div><br>
+                </div>
+                {{MEM_USED}} of {{MEM_TOTAL}} MiB RAM in use ({{MEM_PERCENTAGE}} %)
+            </td>
+        </tr>
+        <tr>
+            <td>GPUs:</td>
+            <td>
+                <div class="progress">
+                    <div class="progress-bar"
+                         role="progressbar"
+                         style="width: {{GPU_PERCENTAGE}}%" aria-valuenow="{{GPU_USED}}" aria-valuemin="0" aria-valuemax="{{GPU_TOTAL}}"></div><br>
+                </div>
+                {{GPU_USED}} of {{GPU_TOTAL}} GPUs in use ({{GPU_PERCENTAGE}} %)
+            </td>
+        </tr>
+    </table>
+</div>
 
 <button class="btn btn-primary" type="button" data-bs-toggle="collapse" data-bs-target="#collapse{{NODENAME}}" aria-expanded="false" aria-controls="collapse{{NODENAME}}">
     Show/Hide more
@@ -49,48 +51,50 @@
 
 <div class="collapse" id="collapse{{NODENAME}}">
     <div class="card card-body">
-        <table border="0" class="nodeinfo">
+        <div class="table-responsive">
+            <table class="nodeinfo table">
 
-            <tr>
-                <td>Architecture:</td>
-                <td>{{ARCHITECTURE}}</td>
-            </tr>
-            <tr>
-                <td>Boards:</td>
-                <td>{{BOARDS}}</td>
-            </tr>
-            <tr>
-                <td>Features:</td>
-                <td>{{FEATURES}}</td>
-            </tr>
-            <tr>
-                <td>Active features:</td>
-                <td>{{ACTIVE_FEATURES}}</td>
-            </tr>
-            <tr>
-                <td>Address:</td>
-                <td><span class="feature">{{ADDRESS}}</span></td>
-            </tr>
-            <tr>
-                <td>Hostname:</td>
-                <td><span class="feature">{{HOSTNAME}}</span></td>
-            </tr>
-            <tr>
-                <td>Operating system:</td>
-                <td><span class="feature">{{OPERATING_SYSTEM}}</span></td>
-            </tr>
-            <tr>
-                <td>Owner:</td>
-                <td>{{OWNER}}</td>
-            </tr>
-            <tr>
-                <td>TRES:</td>
-                <td><span class="feature">{{TRES}}</span></td>
-            </tr>
-            <tr>
-                <td>TRES used:</td>
-                <td><span class="feature">{{TRES_USED}}</span></td>
-            </tr>
-        </table>
+                <tr>
+                    <td>Architecture:</td>
+                    <td>{{ARCHITECTURE}}</td>
+                </tr>
+                <tr>
+                    <td>Boards:</td>
+                    <td>{{BOARDS}}</td>
+                </tr>
+                <tr>
+                    <td>Features:</td>
+                    <td>{{FEATURES}}</td>
+                </tr>
+                <tr>
+                    <td>Active features:</td>
+                    <td>{{ACTIVE_FEATURES}}</td>
+                </tr>
+                <tr>
+                    <td>Address:</td>
+                    <td><span class="feature">{{ADDRESS}}</span></td>
+                </tr>
+                <tr>
+                    <td>Hostname:</td>
+                    <td><span class="feature">{{HOSTNAME}}</span></td>
+                </tr>
+                <tr>
+                    <td>Operating system:</td>
+                    <td><span class="feature">{{OPERATING_SYSTEM}}</span></td>
+                </tr>
+                <tr>
+                    <td>Owner:</td>
+                    <td>{{OWNER}}</td>
+                </tr>
+                <tr>
+                    <td>TRES:</td>
+                    <td><span class="feature">{{TRES}}</span></td>
+                </tr>
+                <tr>
+                    <td>TRES used:</td>
+                    <td><span class="feature">{{TRES_USED}}</span></td>
+                </tr>
+            </table>
+        </div>
     </div>
 </div>

@@ -47,19 +47,34 @@ function get_date_from_unix_if_defined($job_arr, $param, $default = 'undefined')
         return $default;
 }
 
-function get_time_from_unix($job_arr, $param){
+/**
+ * Elapsed time is in seconds. Display it accordingly.
+ * @param $job_arr array Job array as from JSON
+ * @param $param string Array index (e.g. elapsed)
+ * @return string The time in D-HH:MM:SS
+ */
+function get_elapsed_time($job_arr, $param = 'elapsed'){
     if(! isset($job_arr[$param]) || $job_arr[$param] == 0 ){
         return "?";
     }
 
-    # TODO: FIX BUG: elapsed is in seconds, not minutes!
-    $days = floor($job_arr[$param] / 1440); // 1440 minutes in a day
-    $hours = floor(($job_arr[$param] % 1440) / 60); // 60 minutes in an hour
-    $remainingMinutes = $job_arr[$param] % 60; // Remaining minutes
-    return sprintf('%d-%02d:%02d', $days, $hours, $remainingMinutes);
+    $totalSeconds = $job_arr[$param]; // Assuming $job_arr[$param] is in seconds
+    $days = floor($totalSeconds / 86400); // 86400 seconds in a day
+    $hours = floor(($totalSeconds % 86400) / 3600); // 3600 seconds in an hour
+    $remainingMinutes = floor(($totalSeconds % 3600) / 60); // Remaining minutes
+    $remainingSeconds = $totalSeconds % 60; // Remaining seconds
+
+    return sprintf('%d-%02d:%02d:%02d', $days, $hours, $remainingMinutes, $remainingSeconds);
 }
 
-function get_time_from_unix_if_defined($job_arr, $param, $default = 'undefined'){
+/**
+ * Time limit is in minutes, so the input is minutes.
+ * @param $job_arr array Job array as from JSON
+ * @param $param string Array index (e.g. time_limit)
+ * @param $default string what to return if not set.
+ * @return mixed|string The time limit in D-HH:MM:SS
+ */
+function get_timelimit_if_defined($job_arr, $param, $default = 'undefined'){
     if(! isset($job_arr[$param])){
         return "?";
     }
@@ -68,7 +83,7 @@ function get_time_from_unix_if_defined($job_arr, $param, $default = 'undefined')
         $days = floor($job_arr[$param]['number'] / 1440); // 1440 minutes in a day
         $hours = floor(($job_arr[$param]['number'] % 1440) / 60); // 60 minutes in an hour
         $remainingMinutes = $job_arr[$param]['number'] % 60; // Remaining minutes
-        return sprintf('%d-%02d:%02d', $days, $hours, $remainingMinutes);
+        return sprintf('%d-%02d:%02d:00', $days, $hours, $remainingMinutes);
     }
     else {
         return $default;

@@ -1,9 +1,9 @@
 
-<form method="post" action="?action={{action}}">
+<form method="post" action="?action={{action}}" class="container mt-4">
     <fieldset class="border p-2">
         <legend class="w-auto">{{buttontext}}:</legend>
         <div class="form-outline mb-4">
-            <label for="username">Benutzername:</label>
+            <label for="username" class="form-label">Benutzername:</label>
             <input      type="text"
                         name="username"
                         id="username"
@@ -12,8 +12,8 @@
                         required>
         </div>
 
-        <div class="form-outline mb-4">
-            <label for="password">Password:</label>
+        <div class="form-group mb-4">
+            <label for="password" class="form-label">Password:</label>
             <input      type="password"
                         name="password"
                         id="password"
@@ -24,7 +24,7 @@
         </div>
 
         <div class="form-outline mb-4">
-            <label for="method">Login method:</label>
+            <label for="method" class="form-label">Login method:</label>
             <select     name="method"
                         id="method"
                         class="form-control"
@@ -34,8 +34,8 @@
             </select>
         </div>
 
-        <div class="modal-footer">
-            <button type="submit" class="btn btn-primary">{{buttontext}}</button>
+        <div class="d-flex justify-content-center mt-4">
+            <button type="submit" class="btn btn-primary btn-block">{{buttontext}}</button>
         </div>
     </fieldset>
 </form>

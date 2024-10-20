@@ -4,15 +4,6 @@ table  { border-collapse: collapse; width: 100%; }
 th, td { padding: 8px 16px; }
 th     { background:#eee; }
 
-textarea {
-    border: none;
-    width: 100%;
-    -webkit-box-sizing: border-box; /* <=iOS4, <= Android  2.3 */
-    -moz-box-sizing: border-box; /* FF1+ */
-    box-sizing: border-box; /* Chrome, IE8, Opera, Safari 5.1*/
-    background-color: lightgray;
-}
-
 .alert {
     max-width: 1140px;
     margin:auto;

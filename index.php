@@ -60,7 +60,7 @@ if(isset($_GET['action']) && $_GET['action'] == "about"){
     $contents .= $templateBuilder->build();
 }
 
-
+# User is logged in
 if( isset($_SESSION['USER']) ){
 
     $action = $_GET['action'] ?? "usage";

@@ -1,0 +1,39 @@
+<h1>About the cluster {{CLUSTER_NAME}}</h1>
+<p></p>
+<h2>How to connect to the cluster and start jobs?</h2>
+<ol>
+    <li>Connect to the university VPN.</li>
+    <li>Use the following command to connect via SSH:<br>
+    <span class="monospaced">ssh yourcs@{{SLURM_LOGIN_NODE}}</span></li>
+</ol>
+<p>You can find more information in the Wiki at {{WIKI_LINK}}.</p>
+
+<h2>How to get an account?</h2>
+If you do not yet have an account ...
+<ul>
+    <li>
+        <b>If you are a faculty member</b>, you likely have an LDAP account. It is usually your u:account with a "cs" suffix. This account is used to login to the cluster.<br>
+        However, you have to be added to the list of "allowed" accounts (i.e., to the slurm database). In order to do so, please write to {{ADMIN_EMAIL}} and include the following information:
+        <ul>
+            <li>Your CS account name.</li>
+            <li>Your research group.</li>
+        </ul>
+    </li>
+    <li>
+        <b>If you are a student</b>, please write an email to {{ADMIN_EMAIL}}. The email should contain:
+        <ul>
+            <li>Your u:account name.</li>
+            <li>A description why you need access (e.g., your project, supervisor, ...).</li>
+        </ul>
+    </li>
+    <li>
+        <b>If you are a faculty member but do not have an LDAP account</b>, please ask <i>your local technician</i> whether it makes sense to add an LDAP account for you ... and then either write us your LDAP account or your u:account name.
+    </li>
+</ul>
+<p>If you have an LDAP account but get logged out when trying to connect to the cluster via SSH, your account has not yet been added to the SLURM account list. In this case, please write us an email to {{ADMIN_EMAIL}}.</p>
+
+<h2>More information</h2>
+<p>You can find more information in the Wiki at {{WIKI_LINK}}.</p>
+
+<h2>Contact</h2>
+<p><b>Main admin and contact:</b> {{ADMIN_NAMES}}</p>

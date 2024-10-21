@@ -47,6 +47,19 @@ if(!isset($_SESSION['USER'])) {
     }
 }
 
+if(isset($_GET['action']) && $_GET['action'] == "about"){
+    $title = "About the cluster";
+
+    $templateBuilder = new TemplateLoader("about.html");
+    $templateBuilder->setParam("CLUSTER_NAME", CLUSTER_NAME);
+    $templateBuilder->setParam("ADMIN_NAMES", ADMIN_NAMES);
+    $templateBuilder->setParam("ADMIN_EMAIL", ADMIN_EMAIL);
+    $templateBuilder->setParam("SLURM_LOGIN_NODE", SLURM_LOGIN_NODE);
+    $templateBuilder->setParam("WIKI_LINK", WIKI_LINK);
+    $contents .= $templateBuilder->build();
+}
+
+
 if( isset($_SESSION['USER']) ){
 
     $action = $_GET['action'] ?? "usage";

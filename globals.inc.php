@@ -1,7 +1,10 @@
 <?php
 
-const CLUSTER_NAME = 'csunivie';
+const CLUSTER_NAME = '<TO BE REPLACED>';
+const ADMIN_NAMES = '<TO BE REPLACED>';
+const SLURM_LOGIN_NODE = '<TO BE REPLACED>';
 const ADMIN_EMAIL = '<TO BE REPLACED>';
+const WIKI_LINK = '<TO BE REPLACED>';
 
 if(!isset($errormsg)){
     $errormsg = "";

@@ -39,7 +39,7 @@ if(!isset($_SESSION['USER'])) {
     }
     // Wird oben, wenn der Login erfolgreich war, gesetzt.
     // Andernfalls das Login-Formular noch einmal anzeigen ...
-    if( ! isset($_SESSION['USER'])) {
+    if( ! isset($_SESSION['USER']) && (!isset($_GET['action']) || $_GET['action'] != "about")) {
         $templateBuilder = new TemplateLoader("loginForm.html");
         $templateBuilder->setParam("action", "login");
         $templateBuilder->setParam("buttontext", "Login");
@@ -48,7 +48,7 @@ if(!isset($_SESSION['USER'])) {
 }
 
 if(isset($_GET['action']) && $_GET['action'] == "about"){
-    $title = "About the cluster";
+    $title = "About the cluster " . CLUSTER_NAME;
 
     $templateBuilder = new TemplateLoader("about.html");
     $templateBuilder->setParam("CLUSTER_NAME", CLUSTER_NAME);

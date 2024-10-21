@@ -61,6 +61,7 @@ systemctl enable --now apache2
 systemctl restart slurmrestd
 systemctl restart apache2
 ```
+8. You might also want to edit the default page in `templates/about.html`.
 
 ## License
 To be decided ...

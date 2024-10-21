@@ -39,7 +39,7 @@ if(!isset($_SESSION['USER'])) {
     }
     // Wird oben, wenn der Login erfolgreich war, gesetzt.
     // Andernfalls das Login-Formular noch einmal anzeigen ...
-    if( ! isset($_SESSION['USER'])) {
+    if( ! isset($_SESSION['USER']) && (!isset($_GET['action']) || $_GET['action'] != "about")) {
         $templateBuilder = new TemplateLoader("loginForm.html");
         $templateBuilder->setParam("action", "login");
         $templateBuilder->setParam("buttontext", "Login");
@@ -47,6 +47,20 @@ if(!isset($_SESSION['USER'])) {
     }
 }
 
+# About page
+if(isset($_GET['action']) && $_GET['action'] == "about"){
+    $title = "About the cluster " . CLUSTER_NAME;
+
+    $templateBuilder = new TemplateLoader("about.html");
+    $templateBuilder->setParam("CLUSTER_NAME", CLUSTER_NAME);
+    $templateBuilder->setParam("ADMIN_NAMES", ADMIN_NAMES);
+    $templateBuilder->setParam("ADMIN_EMAIL", ADMIN_EMAIL);
+    $templateBuilder->setParam("SLURM_LOGIN_NODE", SLURM_LOGIN_NODE);
+    $templateBuilder->setParam("WIKI_LINK", WIKI_LINK);
+    $contents .= $templateBuilder->build();
+}
+
+# User is logged in
 if( isset($_SESSION['USER']) ){
 
     $action = $_GET['action'] ?? "usage";

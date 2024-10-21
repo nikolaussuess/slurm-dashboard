@@ -47,6 +47,7 @@ if(!isset($_SESSION['USER'])) {
     }
 }
 
+# About page
 if(isset($_GET['action']) && $_GET['action'] == "about"){
     $title = "About the cluster " . CLUSTER_NAME;
 

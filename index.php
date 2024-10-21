@@ -333,7 +333,6 @@ if( isset($_SESSION['USER']) ){
                 <th>User</th>
                 <th>State</th>
                 <th>Start time</th>
-                <th>Time (Running)</th>
                 <th>Time limit</th>
                 <th># Nodes</th>
                 <th>Nodelist</th>
@@ -355,13 +354,7 @@ EOF;
 
 
                 $contents .=    "<td>" . \utils\get_date_from_unix_if_defined($job, 'start_time') . "</td>";
-                $contents .=    "<td>TBD</td>";
-                if($job['time_limit']["set"]){
-                    $contents .=    "<td>" . $job['time_limit']["number"] . "</td>";
-                }
-                else {
-                    $contents .=    "<td>inf</td>";
-                }
+                $contents .=    "<td>" . \utils\get_timelimit_if_defined($job, 'time_limit', "inf") . "</td>";
 
                 if($job['node_count']['set'])
                     $contents .=    "<td>" . $job['node_count']['number']. "</td>";

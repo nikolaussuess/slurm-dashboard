@@ -8,6 +8,7 @@ This is a small dashboard that displays some information about a slurm cluster. 
 - communication with `slurmrestd` via unix socket
 - caching of the `slurmrestd` responses (using APCu)
 - display and filter job history (from `slurmdbd`)
+- display list of users with their respective accounts (for administrators only)
 
 ### Planned features
 - Allow administrators to requeue / cancel / ... jobs.

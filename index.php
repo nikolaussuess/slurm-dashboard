@@ -586,6 +586,58 @@ EOF;
 
             break;
 
+        case 'users':
+            $title = "List of users";
+
+            // Check if user is administrator, otherwise show 403.
+            if(! isset($_SESSION['USER_OBJ']['users'][0]['administrator_level']) || !isset($_SESSION['USER_OBJ']['users'][0]['administrator_level'][0]) || $_SESSION['USER_OBJ']['users'][0]['administrator_level'][0] != "Administrator"){
+                http_response_code(403);
+                $contents .= "403 Forbidden.<br>";
+                $contents .= "Only admins are allowed to list all users.";
+                break;
+            }
+
+            $contents .= <<<EOF
+<div class="table-responsive">
+    <table class="tableFixHead table">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Accounts</th>
+                <th>Default account</th>
+                <th>Admin level</th>
+            </tr>
+        </thead>
+        <tbody>
+EOF;
+
+
+            // User is administrator and therefore allowed to visit this page.
+            $users = $dao->get_users();
+            foreach($users as $user_arr) {
+                $contents .= "<tr>";
+                $contents .=    "<td>" . $user_arr['name'] . "</td>";
+                $contents .=    "<td><ul>";
+                foreach($user_arr['associations'] as $assoc){
+                    if($assoc['account'] == $user_arr['default']['account'])
+                        $contents .= '<li><b>' . $assoc['account'] . '</b></li>';
+                    else
+                        $contents .= '<li>' . $assoc['account'] . '</li>';
+                }
+                $contents .=           "</ul></td>";
+                $contents .=    "<td>" . $user_arr['default']['account'] . "</td>";
+                $contents .=    "<td>" . implode(", ", $user_arr['administrator_level']) . "</td>";
+                $contents .= '</tr>';
+            }
+
+            $contents .= <<<EOF
+        </tbody>
+    </table>
+</div>
+EOF;
+
+            break;
+
         default:
             http_response_code(404);
             $contents .= "404 Not Found.";
@@ -625,6 +677,15 @@ EOF;
                     <li class="nav-item">
                         <a class="nav-link" href="?action=job_history">Job history</a>
                     </li>
+<?php
+    if(isset($_SESSION['USER_OBJ']['users'][0]['administrator_level']) && isset($_SESSION['USER_OBJ']['users'][0]['administrator_level'][0]) && $_SESSION['USER_OBJ']['users'][0]['administrator_level'][0] == "Administrator"):
+?>
+                    <li class="nav-item">
+                        <a class="nav-link" href="?action=users">Users</a>
+                    </li>
+<?php
+    endif;
+?>
                 </ul>
                 <div class="text-end">
                     <div class="small float-lg-start" style="margin-right: 5px">Angemeldet als<br> <i><?php print $_SESSION['USER']; ?></i></div>

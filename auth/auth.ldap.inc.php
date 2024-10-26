@@ -110,12 +110,19 @@ namespace auth {
             $filter = "(uid=$uid)";
             $attributes = ["uid", "displayName", "department", "departmentNumber", "mail"];
 
+            if( apcu_exists("ldap" . '/' . $filter)){
+                return apcu_fetch("ldap" . '/' . $filter);
+            }
+
             $result = ldap_search($this->ldapConn, self::BASE, $filter, $attributes, 0, 1);
             if ($result === FALSE) {
                 addError("Error in ldap_search");
                 return array();
             }
             $entries = ldap_get_entries($this->ldapConn, $result);
+
+            apcu_store("ldap" . '/' . $filter , $entries, 600);
+
             return $entries;
         }
 

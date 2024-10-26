@@ -614,7 +614,7 @@ EOF;
 
             // User is administrator and therefore allowed to visit this page.
             $users = $dao->get_users();
-            foreach($users['users'] as $user_arr) {
+            foreach($users as $user_arr) {
                 $contents .= "<tr>";
                 $contents .=    "<td>" . $user_arr['name'] . "</td>";
                 $contents .=    "<td><ul>";

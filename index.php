@@ -643,7 +643,7 @@ EOF;
 
                 // LDAP
                 if( ! \auth\LDAP::is_supported() || $user_arr['name'] == "root" || $ldap_client === NULL ){
-                    $contents .= '<td colspan="4><i>No LDAP server available</i></td>';
+                    $contents .= '<td colspan="4"><i>No LDAP server available</i></td>';
                 }
                 else {
                     $ldap_data = $ldap_client->get_data_for_user($user_arr['name']);

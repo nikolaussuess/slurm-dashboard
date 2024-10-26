@@ -729,13 +729,13 @@ EOF;
 
 <div id="content">
     <div class="alert alert-danger" role="alert" style="display: <?php echo !empty($errormsg) ? "block" : "none"; ?>">
-        <strong>Fehler:</strong>
+        <strong>Error:</strong>
         <ul>
             <?php print $errormsg; ?>
         </ul>
     </div>
     <div class="alert alert-success" role="alert" style="display: <?php echo !empty($successmsg) ? "block" : "none"; ?>">
-        <strong>Erfolg:</strong>
+        <strong>Success:</strong>
         <ul>
             <?php print $successmsg; ?>
         </ul>

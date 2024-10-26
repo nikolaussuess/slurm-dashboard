@@ -3,6 +3,9 @@
 namespace auth {
     require_once "auth.inc.php";
 
+    /**
+     * Authentication via LDAP.
+     */
     class LDAP implements AuthenticationMethod {
         private const URI = TO_BE_REPLACED;
         private const BASE = TO_BE_REPLACED;

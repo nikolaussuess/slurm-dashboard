@@ -4,6 +4,10 @@ namespace auth {
 
     require_once "auth.inc.php";
 
+    /**
+     * Authentication via local SSH connection.
+     * I.e., this class connects with password authentication to a server via SSH.
+     */
     class Local implements AuthenticationMethod {
         private const SERVER_URL = TO_BE_REPLACED;
         public const METHOD_NAME = 'local';
@@ -35,7 +39,9 @@ namespace auth {
 
             $ok = @ssh2_auth_password($ssh, $username, $password);
 
-            @ssh2_disconnect($ssh);
+            if(function_exists("ssh2_disconnect")){
+                @ssh2_disconnect($ssh);
+            }
             return $ok;
         }
     }

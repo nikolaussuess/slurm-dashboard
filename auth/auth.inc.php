@@ -1,11 +1,25 @@
 <?php
 
 namespace auth {
+    /**
+     * Placeholder and default value in the auth classes for variables that must be overwritten.
+     */
     const TO_BE_REPLACED = '<TO BE REPLACED>';
 
     interface AuthenticationMethod {
+        /**
+         * Checks if the respective authentication method is supported. E.g., checks whether the required libraries are
+         * installed, configuration parameters are set, ...
+         * @return bool TRUE if the respective authentication method is supported, FALSE otherwise.
+         */
         public static function is_supported(): bool;
 
+        /**
+         * Tests the login.
+         * @param string $username Username to test.
+         * @param string $password Respective password for the given username.
+         * @return bool TRUE if authentication was successful, FALSE otherwise.
+         */
         public static function login(string $username, string $password): bool;
     }
 }
@@ -52,6 +66,7 @@ namespace {
         }
         # END Authenticate with LDAP
 
+        # Authentication with SSH
         if($method == \auth\Local::METHOD_NAME && \auth\Local::is_supported()){
             if(\auth\Local::login($username, $password)){
                 $_SESSION['USER_OBJ'] = $associations;
@@ -64,6 +79,7 @@ namespace {
         elseif ($method == \auth\Local::METHOD_NAME && !\auth\Local::is_supported()){
             addError("Authentication method not supported. Please try another one.");
         }
+        # END Authentication with SSH
 
         return FALSE;
     }
@@ -71,6 +87,11 @@ namespace {
 }
 
 namespace auth {
+    /**
+     * Get a list of login methods.
+     * @return array Returns an array where the keys are the names of the authentication methods,
+     * and the values are arrays of configuration parameters. such as "supported" (bool) and "default" (bool).
+     */
     function get_methods() : array {
         $methods = array();
 

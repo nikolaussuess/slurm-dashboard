@@ -678,7 +678,7 @@ EOF;
                         <a class="nav-link" href="?action=job_history">Job history</a>
                     </li>
 <?php
-    if(! isset($_SESSION['USER_OBJ']['users'][0]['administrator_level']) || !isset($_SESSION['USER_OBJ']['users'][0]['administrator_level'][0]) || $_SESSION['USER_OBJ']['users'][0]['administrator_level'][0] != "Administrator"):
+    if(isset($_SESSION['USER_OBJ']['users'][0]['administrator_level']) && isset($_SESSION['USER_OBJ']['users'][0]['administrator_level'][0]) && $_SESSION['USER_OBJ']['users'][0]['administrator_level'][0] == "Administrator"):
 ?>
                     <li class="nav-item">
                         <a class="nav-link" href="?action=users">Users</a>

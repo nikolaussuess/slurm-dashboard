@@ -43,6 +43,12 @@ namespace {
             return FALSE;
         }
 
+        // Root login is never permitted!
+        if( $username == "root" ){
+            addError("Root login is not permitted.");
+            return FALSE;
+        }
+
         $dbquery = new Client();
         $associations = $dbquery->get_user($username);
 

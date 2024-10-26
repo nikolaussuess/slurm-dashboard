@@ -7,7 +7,7 @@ date_default_timezone_set('Europe/Vienna');
 require_once 'TemplateLoader.inc.php';
 require_once 'client.inc.php';
 require_once 'globals.inc.php';
-require_once 'auth.inc.php';
+require_once 'auth/auth.inc.php';
 require_once 'utils.inc.php';
 
 $dao = new Client();
@@ -28,7 +28,8 @@ if(!isset($_SESSION['USER'])) {
         else {
             $username = $_POST['username'];
             $password = $_POST['password'];
-            if(auth($username, $password)){
+            $method = $_POST['method'];
+            if(auth($username, $password, $method)){
                 $_SESSION['USER'] = $username;
                 addSuccess("Login successful!");
             }
@@ -40,9 +41,25 @@ if(!isset($_SESSION['USER'])) {
     // Wird oben, wenn der Login erfolgreich war, gesetzt.
     // Andernfalls das Login-Formular noch einmal anzeigen ...
     if( ! isset($_SESSION['USER']) && (!isset($_GET['action']) || $_GET['action'] != "about")) {
+
+        $methods_string = '';
+        foreach(\auth\get_methods() as $method => $settings ){
+            $methods_string .= '<option value="' . $method . '"';
+            if(isset($settings['default']) &&  $settings['default'] === TRUE){
+                 $methods_string .= ' selected ';
+            }
+
+            if( ! isset($settings['supported']) ||  $settings['supported'] !== TRUE){
+                $methods_string .= ' disabled ';
+            }
+
+            $methods_string .= '>' . $method . '</option>';
+        }
+
         $templateBuilder = new TemplateLoader("loginForm.html");
         $templateBuilder->setParam("action", "login");
         $templateBuilder->setParam("buttontext", "Login");
+        $templateBuilder->setParam("methods", $methods_string);
         $contents .= $templateBuilder->build();
     }
 }

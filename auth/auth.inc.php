@@ -2,10 +2,8 @@
 
 namespace auth {
     const TO_BE_REPLACED = '<TO BE REPLACED>';
-    $methods = array();
 
-    interface AuthenticationMethod
-    {
+    interface AuthenticationMethod {
         public static function is_supported(): bool;
 
         public static function login(string $username, string $password): bool;
@@ -70,4 +68,19 @@ namespace {
         return FALSE;
     }
 
+}
+
+namespace auth {
+    function get_methods() : array {
+        $methods = array();
+
+        if( \auth\LDAP::is_supported() ){
+            $methods[] = 'ldap';
+        }
+        if( \auth\Local::is_supported() ){
+            $methods[] = 'local';
+        }
+
+        return $methods;
+    }
 }

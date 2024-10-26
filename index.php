@@ -41,9 +41,21 @@ if(!isset($_SESSION['USER'])) {
     // Wird oben, wenn der Login erfolgreich war, gesetzt.
     // Andernfalls das Login-Formular noch einmal anzeigen ...
     if( ! isset($_SESSION['USER']) && (!isset($_GET['action']) || $_GET['action'] != "about")) {
+
+        $methods_string = '';
+        foreach(\auth\get_methods() as $method){
+            if($method == 'ldap'){
+                $methods_string .= '<option value="' . $method . '" selected>' . $method . '</option>';
+            }
+            else {
+                $methods_string .= '<option value="' . $method . '">' . $method . '</option>';
+            }
+        }
+
         $templateBuilder = new TemplateLoader("loginForm.html");
         $templateBuilder->setParam("action", "login");
         $templateBuilder->setParam("buttontext", "Login");
+        $templateBuilder->setParam("methods", $methods_string);
         $contents .= $templateBuilder->build();
     }
 }

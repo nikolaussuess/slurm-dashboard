@@ -37,8 +37,4 @@ namespace auth {
         }
     }
 
-    if(\auth\Local::is_supported()){
-        $methods[] = \auth\Local::METHOD_NAME;
-    }
-
 }

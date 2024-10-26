@@ -79,8 +79,4 @@ namespace auth {
         }
     }
 
-    if(\auth\LDAP::is_supported()){
-        $methods[] = \auth\LDAP::METHOD_NAME;
-    }
-
 }

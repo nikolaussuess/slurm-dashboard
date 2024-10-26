@@ -116,6 +116,12 @@ namespace auth {
             $filter = "(uid=$uid)";
             $attributes = ["uid", "displayName", "department", "departmentNumber", "mail"];
 
+            // Prevent LDAP injection
+            if( \auth\validate_username($uid) !== TRUE ){
+                addError("Invalid username.");
+                return array();
+            }
+
             if( apcu_exists("ldap" . '/' . $filter)){
                 return apcu_fetch("ldap" . '/' . $filter);
             }

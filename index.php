@@ -606,6 +606,9 @@ EOF;
                 <th>Accounts</th>
                 <th>Default account</th>
                 <th>Admin level</th>
+                <th>Full name</th>
+                <th>Department</th>
+                <th>E-Mail</th>
             </tr>
         </thead>
         <tbody>
@@ -614,6 +617,11 @@ EOF;
 
             // User is administrator and therefore allowed to visit this page.
             $users = $dao->get_users();
+
+            if(\auth\LDAP::is_supported()){
+                $ldap_client = new \auth\LDAP();
+            }
+
             foreach($users as $user_arr) {
                 $contents .= "<tr>";
                 $contents .=    "<td>" . $user_arr['name'] . "</td>";
@@ -627,8 +635,26 @@ EOF;
                 $contents .=           "</ul></td>";
                 $contents .=    "<td>" . $user_arr['default']['account'] . "</td>";
                 $contents .=    "<td>" . implode(", ", $user_arr['administrator_level']) . "</td>";
+
+                // LDAP
+                if(! \auth\LDAP::is_supported() || $user_arr['name'] == "root"){
+                    $contents .= '<td colspan="4><i>No LDAP server available</i></td>';
+                }
+                else {
+                    $ldap_data = $ldap_client->get_data_for_user($user_arr['name']);
+                    for($i = 0; $i < $ldap_data["count"]; $i++){
+                        $contents .=    "<td>" . $ldap_data[$i]["displayName"][0] . "</td>";
+                        $contents .=    "<td>" . $ldap_data[$i]["department"][0] . " (" . $ldap_data[$i]["departmentNumber"][0] . ")</td>";
+                        $contents .=    "<td>" . $ldap_data[$i]["mail"][0] . "</td>";
+
+                        break;
+                    }
+                }
                 $contents .= '</tr>';
             }
+
+            if(isset($ldap_client))
+                unset($ldap_client);
 
             $contents .= <<<EOF
         </tbody>

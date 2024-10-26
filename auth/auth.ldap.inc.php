@@ -108,7 +108,7 @@ namespace auth {
 
         function get_data_for_user($uid): array {
             $filter = "(uid=$uid)";
-            $attributes = ["uid", "displayName", "department", "departmentNumber", "mail", "roomNumber"];
+            $attributes = ["uid", "displayName", "department", "departmentNumber", "mail"];
 
             $result = ldap_search($this->ldapConn, self::BASE, $filter, $attributes, 0, 1);
             if ($result === FALSE) {

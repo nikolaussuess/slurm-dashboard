@@ -128,6 +128,13 @@ class Client {
         return array_column($json['users'], 'name');
     }
 
+    function get_users(){
+        # curl --unix-socket /run/slurmrestd/slurmrestd.socket http://slurm/slurmdb/v0.0.40/users?with_assocs&with_deleted
+        $request = new Request();
+        $json = $request->request_json("users?with_assocs&with_deleted", 'slurmdb', 120);
+        return $json['users'];
+    }
+
     function get_job($id){
         # curl --unix-socket /run/slurmrestd/slurmrestd.socket http://slurm/slurm/v0.0.39/job/id
         $request = new Request();

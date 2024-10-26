@@ -618,8 +618,13 @@ EOF;
             // User is administrator and therefore allowed to visit this page.
             $users = $dao->get_users();
 
+            $ldap_client = NULL;
             if(\auth\LDAP::is_supported()){
-                $ldap_client = new \auth\LDAP();
+                try {
+                    $ldap_client = new \auth\LDAP();
+                } catch (Exception $e){
+                    addError($e->getMessage());
+                }
             }
 
             foreach($users as $user_arr) {
@@ -637,7 +642,7 @@ EOF;
                 $contents .=    "<td>" . implode(", ", $user_arr['administrator_level']) . "</td>";
 
                 // LDAP
-                if(! \auth\LDAP::is_supported() || $user_arr['name'] == "root"){
+                if( ! \auth\LDAP::is_supported() || $user_arr['name'] == "root" || $ldap_client === NULL ){
                     $contents .= '<td colspan="4><i>No LDAP server available</i></td>';
                 }
                 else {

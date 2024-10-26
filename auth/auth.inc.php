@@ -1,5 +1,17 @@
 <?php
 
+namespace auth {
+    const TO_BE_REPLACED = '<TO BE REPLACED>';
+    $methods = array();
+
+    interface AuthenticationMethod
+    {
+        public static function is_supported(): bool;
+
+        public static function login(string $username, string $password): bool;
+    }
+}
+
 namespace {
 
     require_once 'client.inc.php';
@@ -58,16 +70,4 @@ namespace {
         return FALSE;
     }
 
-}
-
-namespace auth {
-    const TO_BE_REPLACED = '<TO BE REPLACED>';
-    $methods = array();
-
-    interface AuthenticationMethod
-    {
-        public static function is_supported(): bool;
-
-        public static function login(string $username, string $password): bool;
-    }
 }

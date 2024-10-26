@@ -86,6 +86,61 @@ namespace auth {
             ldap_unbind($ldapConn);
             return $login_ok;
         }
+
+        function __construct() {
+
+            if(! self::is_supported() ){
+                throw new \Exception("LDAP not supported on this server!");
+            }
+
+            $this->ldapConn = ldap_connect(self::URI);
+            if (!$this->ldapConn) {
+                throw new \Exception("Could not connect to LDAP server.", 403);
+            }
+
+            ldap_set_option($this->ldapConn, LDAP_OPT_PROTOCOL_VERSION, 3);
+            ldap_set_option($this->ldapConn, LDAP_OPT_REFERRALS, 0);
+            ldap_start_tls($this->ldapConn); // Start TLS
+
+
+            $ldap_dn = 'cn=' . self::ADMIN_USER . ',' . self::BASE;
+            $ldap_password = self::ADMIN_PASSWORD;
+
+            // Bind to the LDAP server
+            if (! @ldap_bind($this->ldapConn, $ldap_dn, $ldap_password)) {
+                throw new \Exception('LDAP ERROR: Failed to bind as admin. Please contact ' . ADMIN_EMAIL);
+            }
+        }
+
+        function get_data_for_user($uid): array {
+            $filter = "(uid=$uid)";
+            $attributes = ["uid", "displayName", "department", "departmentNumber", "mail"];
+
+            // Prevent LDAP injection
+            if( \auth\validate_username($uid) !== TRUE ){
+                addError("Invalid username.");
+                return array();
+            }
+
+            if( apcu_exists("ldap" . '/' . $filter)){
+                return apcu_fetch("ldap" . '/' . $filter);
+            }
+
+            $result = ldap_search($this->ldapConn, self::BASE, $filter, $attributes, 0, 1);
+            if ($result === FALSE) {
+                addError("Error in ldap_search");
+                return array();
+            }
+            $entries = ldap_get_entries($this->ldapConn, $result);
+
+            apcu_store("ldap" . '/' . $filter , $entries, 600);
+
+            return $entries;
+        }
+
+        function __destruct(){
+            ldap_unbind($this->ldapConn);
+        }
     }
 
 }

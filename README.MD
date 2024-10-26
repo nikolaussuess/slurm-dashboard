@@ -4,7 +4,7 @@ This is a small dashboard that displays some information about a slurm cluster. 
 ## Current features
 - display cluster usage information (state, CPUs, memory, gpus per node)
 - display the current job queue, including a job detail page
-- authentication via LDAP, and it additionally checks whether the user exists in the accounting database
+- authentication via LDAP or local, and it additionally checks whether the user exists in the accounting database
 - communication with `slurmrestd` via unix socket
 - caching of the `slurmrestd` responses (using APCu)
 - display and filter job history (from `slurmdbd`)
@@ -18,14 +18,14 @@ This is a small dashboard that displays some information about a slurm cluster. 
 ## Requirements
 - PHP (currently only tested with PHP 8.2)<br>
   including
-  - `php_ldap` for LDAP authentication
   - `php-apcu` for caching `slurmrestd` responses
+  - `php_ldap` for LDAP authentication (if you are using LDAP; optional)
+  - `php_ssh2` for local authentication (if you are using local authentication; optional)
 - Apache2<br>
   including
   - `libapache2-mpm-itk` in order to use change to user to the same `slurmrestd` is running with.
   - `libapache2-mod-php`
 - `slurmrestd` using Unix sockets, running with the same user that the website is running with, and `Environment=SLURMRESTD_SECURITY=disable_user_check` set.
-- An LDAP server for authentication. (Otherwise, you have to adapt `auth.inc.php` a bit ...)
 
 ## Setup
 1. Install the requirements.
@@ -53,8 +53,10 @@ Group=slurm-dashboard
 </VirtualHost>
 ```
 5. Optionally, enable SSL etc.
-6. Adapt `CLUSTER_NAME` in `globals.inc.php` and LDAP authentication info in `auth.inc.php`.
-7. Start or restart the services:
+6. Adapt `CLUSTER_NAME` and the other constants in `globals.inc.php`.
+7. If you use LDAP authentication: Adapt parameters in `auth/auth.ldap.inc.php`.
+8. If you use local authentication: Adapt parameters in `auth/auth.local.inc.php`.
+9. Start or restart the services:
 ```
 systemctl enable --now slurmrestd
 systemctl enable --now apache2
@@ -62,7 +64,7 @@ systemctl enable --now apache2
 systemctl restart slurmrestd
 systemctl restart apache2
 ```
-8. You might also want to edit the default page in `templates/about.html`.
+10. You might also want to edit the default page in `templates/about.html`.
 
 ## License
 To be decided ...

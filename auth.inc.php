@@ -17,6 +17,11 @@ namespace {
             return FALSE;
         }
 
+        if( \auth\validate_username($username) !== TRUE ){
+            addError("Username invalid.");
+            return FALSE;
+        }
+
         $dbquery = new Client();
         $associations = $dbquery->get_user($username);
 
@@ -67,6 +72,12 @@ namespace auth {
             return FALSE;
         }
 
+        // Prevent LDAP injection
+        if( \auth\validate_username($username) !== TRUE ){
+            addError("Invalid username.");
+            return FALSE;
+        }
+
         ldap_set_option($ldapConn, LDAP_OPT_PROTOCOL_VERSION, 3);
         ldap_set_option($ldapConn, LDAP_OPT_REFERRALS, 0);
         ldap_start_tls($ldapConn); // Start TLS
@@ -105,6 +116,18 @@ namespace auth {
 
         ldap_unbind($ldapConn);
         return $login_ok;
+    }
+
+    /**
+     * Checks whether $username is a valid posix / linux username.
+     * See https://unix.stackexchange.com/a/435120.
+     * @param $username string Username to check
+     * @return bool TRUE if username is valid, FALSE otherwise.
+     */
+    function validate_username(string $username) : bool {
+        // Pattern: ^[a-z_]([a-z0-9_-]{0,31}|[a-z0-9_-]{0,30}\$)$
+        $pattern = '/^[a-z_]([a-z0-9_-]{0,31}|[a-z0-9_-]{0,30}\\$)$/';
+        return (bool)preg_match($pattern, $username);
     }
 
 }

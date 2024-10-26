@@ -43,13 +43,17 @@ if(!isset($_SESSION['USER'])) {
     if( ! isset($_SESSION['USER']) && (!isset($_GET['action']) || $_GET['action'] != "about")) {
 
         $methods_string = '';
-        foreach(\auth\get_methods() as $method){
-            if($method == 'ldap'){
-                $methods_string .= '<option value="' . $method . '" selected>' . $method . '</option>';
+        foreach(\auth\get_methods() as $method => $settings ){
+            $methods_string .= '<option value="' . $method . '"';
+            if(isset($settings['default']) &&  $settings['default'] === TRUE){
+                 $methods_string .= ' selected ';
             }
-            else {
-                $methods_string .= '<option value="' . $method . '">' . $method . '</option>';
+
+            if( ! isset($settings['supported']) ||  $settings['supported'] !== TRUE){
+                $methods_string .= ' disabled ';
             }
+
+            $methods_string .= '>' . $method . '</option>';
         }
 
         $templateBuilder = new TemplateLoader("loginForm.html");

@@ -75,11 +75,12 @@ namespace auth {
         $methods = array();
 
         if( \auth\LDAP::is_supported() ){
-            $methods[] = 'ldap';
+            $methods['ldap'] = array('supported' => TRUE, 'default' => TRUE);
+        } else {
+            $methods['ldap'] = array('supported' => FALSE);
         }
-        if( \auth\Local::is_supported() ){
-            $methods[] = 'local';
-        }
+
+        $methods['local'] = array('supported' => \auth\Local::is_supported());
 
         return $methods;
     }

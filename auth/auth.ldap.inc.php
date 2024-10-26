@@ -41,6 +41,12 @@ namespace auth {
                 return FALSE;
             }
 
+            // Prevent LDAP injection
+            if( \auth\validate_username($username) !== TRUE ){
+                addError("Invalid username.");
+                return FALSE;
+            }
+
             ldap_set_option($ldapConn, LDAP_OPT_PROTOCOL_VERSION, 3);
             ldap_set_option($ldapConn, LDAP_OPT_REFERRALS, 0);
             ldap_start_tls($ldapConn); // Start TLS

@@ -38,6 +38,13 @@ namespace {
      * @return bool True if authentication was successful, False otherwise
      */
     function auth(string $username, string $password, string $method = 'ldap') : bool{
+
+        if(\auth\rate_limit()){
+            addError("Rate limit exceeded: Please wait 20 seconds until you try again!");
+            http_response_code(429); // HTTP/1.1 429 Too Many Requests
+            return FALSE;
+        }
+
         if( count_chars($password) < 8 ){
             addError("Password too short.");
             return FALSE;
@@ -127,5 +134,26 @@ namespace auth {
         // Pattern: ^[a-z_]([a-z0-9_-]{0,31}|[a-z0-9_-]{0,30}\$)$
         $pattern = '/^[a-z_]([a-z0-9_-]{0,31}|[a-z0-9_-]{0,30}\\$)$/';
         return (bool)preg_match($pattern, $username);
+    }
+
+    /**
+     * Rate limit for user logins.
+     * @return bool TRUE if the limit is reached (and thus the login is NOT permitted), FALSE otherwise.
+     */
+    function rate_limit() : bool {
+        if( ! isset($_SERVER['REMOTE_ADDR']) ){
+            syslog(LOG_WARNING, "slurm-dashboard: REMOTE_ADDR is not set. Rate limiting does not work.");
+            return FALSE;
+        }
+        $userIp = $_SERVER['REMOTE_ADDR'];
+        $key = 'login_from_' . md5($userIp);
+
+        // Check if the key exists in APCu
+        if (apcu_exists($key)) {
+            return TRUE;
+        }
+        // Key does not exist, allow submission and set it with TTL
+        apcu_store($key, time(), 20);
+        return FALSE;
     }
 }

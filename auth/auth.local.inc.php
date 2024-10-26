@@ -33,7 +33,10 @@ namespace auth {
                 return FALSE;
             }
 
-            return @ssh2_auth_password($ssh, $username, $password);
+            $ok = @ssh2_auth_password($ssh, $username, $password);
+
+            @ssh2_disconnect($ssh);
+            return $ok;
         }
     }
 

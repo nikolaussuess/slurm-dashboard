@@ -7,7 +7,7 @@ date_default_timezone_set('Europe/Vienna');
 require_once 'TemplateLoader.inc.php';
 require_once 'client.inc.php';
 require_once 'globals.inc.php';
-require_once 'auth.inc.php';
+require_once 'auth/auth.inc.php';
 require_once 'utils.inc.php';
 
 $dao = new Client();
@@ -28,7 +28,8 @@ if(!isset($_SESSION['USER'])) {
         else {
             $username = $_POST['username'];
             $password = $_POST['password'];
-            if(auth($username, $password)){
+            $method = $_POST['method'];
+            if(auth($username, $password, $method)){
                 $_SESSION['USER'] = $username;
                 addSuccess("Login successful!");
             }

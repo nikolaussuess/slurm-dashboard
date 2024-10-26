@@ -43,6 +43,11 @@ namespace {
             return FALSE;
         }
 
+        if( \auth\validate_username($username) !== TRUE ){
+            addError("Username invalid.");
+            return FALSE;
+        }
+
         // Root login is never permitted!
         if( $username == "root" ){
             addError("Root login is not permitted.");
@@ -110,5 +115,17 @@ namespace auth {
         $methods['local'] = array('supported' => \auth\Local::is_supported());
 
         return $methods;
+    }
+
+    /**
+     * Checks whether $username is a valid posix / linux username.
+     * See https://unix.stackexchange.com/a/435120.
+     * @param $username string Username to check
+     * @return bool TRUE if username is valid, FALSE otherwise.
+     */
+    function validate_username(string $username) : bool {
+        // Pattern: ^[a-z_]([a-z0-9_-]{0,31}|[a-z0-9_-]{0,30}\$)$
+        $pattern = '/^[a-z_]([a-z0-9_-]{0,31}|[a-z0-9_-]{0,30}\\$)$/';
+        return (bool)preg_match($pattern, $username);
     }
 }

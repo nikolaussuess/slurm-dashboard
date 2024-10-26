@@ -649,7 +649,11 @@ EOF;
                     $ldap_data = $ldap_client->get_data_for_user($user_arr['name']);
                     for($i = 0; $i < $ldap_data["count"]; $i++){
                         $contents .=    "<td>" . $ldap_data[$i]["displayName"][0] . "</td>";
-                        $contents .=    "<td>" . $ldap_data[$i]["department"][0] . " (" . $ldap_data[$i]["departmentNumber"][0] . ")</td>";
+                        $contents .=    "<td>" . $ldap_data[$i]["department"][0];
+                        if(isset($ldap_data[$i]["departmentNumber"]) && isset($ldap_data[$i]["departmentNumber"][0])){
+                            $contents .= " (" . $ldap_data[$i]["departmentNumber"][0] . ")";
+                        }
+                        $contents .= "</td>";
                         $contents .=    "<td>" . $ldap_data[$i]["mail"][0] . "</td>";
 
                         break;

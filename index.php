@@ -626,7 +626,7 @@ EOF;
                 }
                 $contents .=           "</ul></td>";
                 $contents .=    "<td>" . $user_arr['default']['account'] . "</td>";
-                $contents .=    "<td>" . $user_arr['administrator_level'] . "</td>";
+                $contents .=    "<td>" . implode(", ", $user_arr['administrator_level']) . "</td>";
                 $contents .= '</tr>';
             }
 

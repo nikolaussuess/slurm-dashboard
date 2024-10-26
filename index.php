@@ -590,7 +590,7 @@ EOF;
             $title = "List of users";
 
             // Check if user is administrator, otherwise show 403.
-            if($_SESSION['USER_OBJ']['users'][0]['administrator_level'] != "Administrator"){
+            if(! isset($_SESSION['USER_OBJ']['users'][0]['administrator_level']) || !isset($_SESSION['USER_OBJ']['users'][0]['administrator_level'][0]) || $_SESSION['USER_OBJ']['users'][0]['administrator_level'][0] != "Administrator"){
                 http_response_code(403);
                 $contents .= "403 Forbidden.<br>";
                 $contents .= "Only admins are allowed to list all users.";
@@ -678,7 +678,7 @@ EOF;
                         <a class="nav-link" href="?action=job_history">Job history</a>
                     </li>
 <?php
-    if($_SESSION['USER_OBJ']['users'][0]['administrator_level'] == "Administrator"):
+    if(! isset($_SESSION['USER_OBJ']['users'][0]['administrator_level']) || !isset($_SESSION['USER_OBJ']['users'][0]['administrator_level'][0]) || $_SESSION['USER_OBJ']['users'][0]['administrator_level'][0] != "Administrator"):
 ?>
                     <li class="nav-item">
                         <a class="nav-link" href="?action=users">Users</a>

@@ -5,14 +5,14 @@
  */
 
 namespace utils;
-function get_number_if_defined($arr, $default = 'undefined'){
+function get_number_if_defined(array $arr, string $default = 'undefined') : string {
     if($arr['set'])
         return $arr['number'];
     else
         return $default;
 }
 
-function read_exit_code($job_arr){
+function read_exit_code(array $job_arr): string {
     if(! isset($job_arr['exit_code'])){
         return "?";
     }
@@ -28,7 +28,7 @@ function read_exit_code($job_arr){
     }
 }
 
-function get_date_from_unix($job_arr, $param){
+function get_date_from_unix(array $job_arr, string $param): string {
     if(! isset($job_arr[$param]) || $job_arr[$param] == 0){
         return "?";
     }
@@ -36,7 +36,7 @@ function get_date_from_unix($job_arr, $param){
     return date('Y-m-d H:i:s', $job_arr[$param]);
 }
 
-function get_date_from_unix_if_defined($job_arr, $param, $default = 'undefined'){
+function get_date_from_unix_if_defined(array $job_arr, string $param, string $default = 'undefined') : string {
     if(! isset($job_arr[$param])){
         return "?";
     }
@@ -53,7 +53,7 @@ function get_date_from_unix_if_defined($job_arr, $param, $default = 'undefined')
  * @param $param string Array index (e.g. elapsed)
  * @return string The time in D-HH:MM:SS
  */
-function get_elapsed_time($job_arr, $param = 'elapsed'){
+function get_elapsed_time(array $job_arr, string $param = 'elapsed'): string {
     if(! isset($job_arr[$param]) || $job_arr[$param] == 0 ){
         return "?";
     }
@@ -72,9 +72,9 @@ function get_elapsed_time($job_arr, $param = 'elapsed'){
  * @param $job_arr array Job array as from JSON
  * @param $param string Array index (e.g. time_limit)
  * @param $default string what to return if not set.
- * @return mixed|string The time limit in D-HH:MM:SS
+ * @return string The time limit in D-HH:MM:SS
  */
-function get_timelimit_if_defined($job_arr, $param, $default = 'undefined'){
+function get_timelimit_if_defined(array $job_arr, string $param, string $default = 'undefined'): string {
     if(! isset($job_arr[$param])){
         return "?";
     }
@@ -90,7 +90,7 @@ function get_timelimit_if_defined($job_arr, $param, $default = 'undefined'){
     }
 }
 
-function get_job_state_view($job, $param_name = 'job_state', $param2 = NULL){
+function get_job_state_view(array $job, string $param_name = 'job_state', ?string $param2 = NULL): string {
     $job_state_array = $job[$param_name];
     if($param2 != null)
         $job_state_array = $job_state_array[$param2];
@@ -123,6 +123,6 @@ function get_job_state_view($job, $param_name = 'job_state', $param2 = NULL){
     return $job_state_text;
 }
 
-function get_nodes($job_arr){
+function get_nodes(array $job_arr) : string {
     return $job_arr['job_resources']['nodes'];
 }

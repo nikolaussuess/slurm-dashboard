@@ -112,7 +112,7 @@ namespace auth {
             }
         }
 
-        function get_data_for_user($uid): array {
+        function get_data_for_user(string $uid): array {
             $filter = "(uid=$uid)";
             $attributes = ["uid", "displayName", "department", "departmentNumber", "mail"];
 

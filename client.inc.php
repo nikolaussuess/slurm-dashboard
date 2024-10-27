@@ -18,7 +18,7 @@ class Request {
         }
     }
 
-    function request_json($endpoint, $namespace = "slurm", $ttl = 5){
+    function request_json(string $endpoint, string $namespace = "slurm", int $ttl = 5) : mixed {
 
         if( apcu_exists($namespace . '/' . $endpoint)){
             return apcu_fetch($namespace . '/' . $endpoint);
@@ -66,20 +66,20 @@ class Request {
 
 class Client {
 
-    function getNodeList(){
+    function getNodeList(): array {
         $request = new Request();
         $json = $request->request_json("nodes", "slurm", 3600 * 24);
         return array_column($json['nodes'], 'name');
     }
 
-    function get_jobs(){
+    function get_jobs() : array {
         # curl --unix-socket /run/slurmrestd/slurmrestd.socket http://slurm/slurm/v0.0.39/jobs
         $request = new Request();
         $json = $request->request_json("jobs");
         return $json;
     }
 
-    function get_jobs_from_slurmdb($filter = NULL){
+    function get_jobs_from_slurmdb(?array $filter = NULL) : array {
         $query_string = '?';
         if($filter != NULL){
             if(isset($filter['start_time'])){
@@ -114,49 +114,49 @@ class Client {
         return $json;
     }
 
-    function get_account_list(){
+    function get_account_list(): array {
         # curl --unix-socket /run/slurmrestd/slurmrestd.socket http://slurm/slurmdb/v0.0.40/accounts
         $request = new Request();
         $json = $request->request_json("accounts", 'slurmdb', 6 * 3600);
         return array_column($json['accounts'], 'name');
     }
 
-    function get_users_list(){
+    function get_users_list(): array {
         # curl --unix-socket /run/slurmrestd/slurmrestd.socket http://slurm/slurmdb/v0.0.40/users
         $request = new Request();
         $json = $request->request_json("users", 'slurmdb', 120);
         return array_column($json['users'], 'name');
     }
 
-    function get_users(){
+    function get_users() : array {
         # curl --unix-socket /run/slurmrestd/slurmrestd.socket http://slurm/slurmdb/v0.0.40/users?with_assocs&with_deleted
         $request = new Request();
         $json = $request->request_json("users?with_assocs&with_deleted", 'slurmdb', 120);
         return $json['users'];
     }
 
-    function get_job($id){
+    function get_job(string $id) : array {
         # curl --unix-socket /run/slurmrestd/slurmrestd.socket http://slurm/slurm/v0.0.39/job/id
         $request = new Request();
         $json = $request->request_json("job/".$id);
         return $json;
     }
 
-    function get_job_from_slurmdb($id){
+    function get_job_from_slurmdb(int|string $id) : array {
         # curl --unix-socket /run/slurmrestd/slurmrestd.socket http://slurm/slurmdb/v0.0.39/job/id
         $request = new Request();
         $json = $request->request_json("job/".$id, 'slurmdb');
         return $json;
     }
 
-    function get_user($user_name){
+    function get_user(string $user_name) : array {
         # curl --unix-socket /run/slurmrestd/slurmrestd.socket http://slurm/slurmdb/v0.0.40/user/username?with_assocs
         $request = new Request();
         $json = $request->request_json("user/${user_name}?with_assocs", "slurmdb");
         return $json;
     }
 
-    function get_node_info($nodename){
+    function get_node_info(string $nodename) : array {
         # curl --unix-socket /run/slurmrestd/slurmrestd.socket http://slurm/slurm/v0.0.39/node/nodename
         $request = new Request();
         $json = $request->request_json("node/$nodename");

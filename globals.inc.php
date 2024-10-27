@@ -19,7 +19,7 @@ $successmsg = "";
  * Add an error that will be displayed on the page later.
  * @param $s string Error message
  */
-function addError($s){
+function addError(string $s): void {
     global $errormsg;
     global $error;
     $error = TRUE;
@@ -35,7 +35,7 @@ function addError($s){
  * Add a success message that will be displayed on the website later.
  * @param $s string Success message
  */
-function addSuccess($s){
+function addSuccess(string $s): void {
     global $successmsg;
 
     $successmsg .= '<li>' . $s . '</li>';

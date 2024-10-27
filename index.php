@@ -38,8 +38,8 @@ if(!isset($_SESSION['USER'])) {
             }
         }
     }
-    // Wird oben, wenn der Login erfolgreich war, gesetzt.
-    // Andernfalls das Login-Formular noch einmal anzeigen ...
+    // Is set above if the login was successful.
+    // Otherwise, the login form is displayed again.
     if( ! isset($_SESSION['USER']) && (!isset($_GET['action']) || $_GET['action'] != "about")) {
 
         $methods_string = '';

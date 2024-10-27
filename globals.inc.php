@@ -6,6 +6,10 @@ const SLURM_LOGIN_NODE = '<TO BE REPLACED>';
 const ADMIN_EMAIL = '<TO BE REPLACED>';
 const WIKI_LINK = '<TO BE REPLACED>';
 
+// Grant some users read access to e.g. the list of SLURM users.
+// Admins always have access.
+$privileged_users = array();
+
 if(!isset($errormsg)){
     $errormsg = "";
 }
@@ -15,7 +19,7 @@ $successmsg = "";
  * Add an error that will be displayed on the page later.
  * @param $s string Error message
  */
-function addError($s){
+function addError(string $s): void {
     global $errormsg;
     global $error;
     $error = TRUE;
@@ -31,7 +35,7 @@ function addError($s){
  * Add a success message that will be displayed on the website later.
  * @param $s string Success message
  */
-function addSuccess($s){
+function addSuccess(string $s): void {
     global $successmsg;
 
     $successmsg .= '<li>' . $s . '</li>';

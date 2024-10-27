@@ -413,17 +413,27 @@ EOF;
                 $start_time = $_POST['form_time_min'] ?? '';
                 if($start_time != ''){
                     $filter['start_time_value'] = $start_time;
-                    $dateTimeObject = new DateTime($start_time);
-                    $start_time = $dateTimeObject->getTimestamp();
-                    $filter['start_time'] = $start_time;
+                    try {
+                        $dateTimeObject = new DateTime($start_time);
+                        $start_time = $dateTimeObject->getTimestamp();
+                        $filter['start_time'] = $start_time;
+                    } catch (Exception $e) {
+                        addError("Start time value (" . $filter['start_time_value'] . ") invalid: " .
+                            $e->getMessage() . "; Ignoring value");
+                    }
                 }
 
                 $end_time = $_POST['form_time_max'] ?? '';
                 if($end_time != ''){
                     $filter['end_time_value'] = $end_time;
-                    $dateTimeObject = new DateTime($end_time);
-                    $end_time = $dateTimeObject->getTimestamp();
-                    $filter['end_time'] = $end_time;
+                    try {
+                        $dateTimeObject = new DateTime($end_time);
+                        $end_time = $dateTimeObject->getTimestamp();
+                        $filter['end_time'] = $end_time;
+                    } catch (Exception $e) {
+                        addError("End time value (" . $filter['end_time_value'] . ") invalid: " . $e->getMessage() .
+                            "; Ignoring value");
+                    }
                 }
 
                 $user = $_POST['form_user'] ?? '';
@@ -590,7 +600,7 @@ EOF;
             $title = "List of users";
 
             // Check if user is administrator, otherwise show 403.
-            if(! isset($_SESSION['USER_OBJ']['users'][0]['administrator_level']) || !isset($_SESSION['USER_OBJ']['users'][0]['administrator_level'][0]) || $_SESSION['USER_OBJ']['users'][0]['administrator_level'][0] != "Administrator"){
+            if( ! \auth\current_user_is_privileged() ){
                 http_response_code(403);
                 $contents .= "403 Forbidden.<br>";
                 $contents .= "Only admins are allowed to list all users.";
@@ -639,7 +649,11 @@ EOF;
                 }
                 $contents .=           "</ul></td>";
                 $contents .=    "<td>" . $user_arr['default']['account'] . "</td>";
-                $contents .=    "<td>" . implode(", ", $user_arr['administrator_level']) . "</td>";
+                global $privileged_users;
+                if( implode(", ", $user_arr['administrator_level']) == 'None' && in_array($user_arr['name'], $privileged_users))
+                    $contents .=    "<td>Web</td>";
+                else
+                    $contents .=    "<td>" . implode(", ", $user_arr['administrator_level']) . "</td>";
 
                 // LDAP
                 if( ! \auth\LDAP::is_supported() || $user_arr['name'] == "root" || $ldap_client === NULL ){
@@ -718,7 +732,7 @@ EOF;
                         <a class="nav-link" href="?action=job_history">Job history</a>
                     </li>
 <?php
-    if(isset($_SESSION['USER_OBJ']['users'][0]['administrator_level']) && isset($_SESSION['USER_OBJ']['users'][0]['administrator_level'][0]) && $_SESSION['USER_OBJ']['users'][0]['administrator_level'][0] == "Administrator"):
+    if( \auth\current_user_is_privileged() ):
 ?>
                     <li class="nav-item">
                         <a class="nav-link" href="?action=users">Users</a>

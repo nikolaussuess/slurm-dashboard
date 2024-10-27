@@ -6,6 +6,10 @@ const SLURM_LOGIN_NODE = '<TO BE REPLACED>';
 const ADMIN_EMAIL = '<TO BE REPLACED>';
 const WIKI_LINK = '<TO BE REPLACED>';
 
+// Grant some users read access to e.g. the list of SLURM users.
+// Admins always have access.
+$privileged_users = array();
+
 if(!isset($errormsg)){
     $errormsg = "";
 }

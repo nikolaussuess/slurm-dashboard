@@ -150,10 +150,34 @@ namespace auth {
 
         // Check if the key exists in APCu
         if (apcu_exists($key)) {
+            syslog(LOG_INFO, "slurm-dashboard: REMOTE_ADDR " .
+                           $_SERVER['REMOTE_ADDR'] .
+                           " has reached the rate limit and has been restricted for 20 seconds.");
             return TRUE;
         }
         // Key does not exist, allow submission and set it with TTL
         apcu_store($key, time(), 20);
         return FALSE;
+    }
+
+    /**
+     * Checks if the current user is an admin.
+     * @return bool TRUE if the currently logged-in user is a SLURM admin, FALSE otherwise.
+     */
+    function current_user_is_admin() : bool {
+        return
+            isset($_SESSION['USER_OBJ']['users'][0]['administrator_level']) &&
+            isset($_SESSION['USER_OBJ']['users'][0]['administrator_level'][0]) &&
+            $_SESSION['USER_OBJ']['users'][0]['administrator_level'][0] == "Administrator";
+    }
+
+    /**
+     * Check if the currently logged-in user has sufficient privileges to view sensitive information.
+     * This is the case if he is either a SLURM admin, or in the array $privileged_users.
+     * @return bool TRUE if the user is privileged, FALSE otherwise.
+     */
+    function current_user_is_privileged() : bool {
+        global $privileged_users;
+        return current_user_is_admin() || in_array($_SESSION['USER'], $privileged_users, TRUE);
     }
 }

@@ -649,7 +649,11 @@ EOF;
                 }
                 $contents .=           "</ul></td>";
                 $contents .=    "<td>" . $user_arr['default']['account'] . "</td>";
-                $contents .=    "<td>" . implode(", ", $user_arr['administrator_level']) . "</td>";
+                global $privileged_users;
+                if( implode(", ", $user_arr['administrator_level']) == 'None' && in_array($user_arr['name'], $privileged_users))
+                    $contents .=    "<td>Web</td>";
+                else
+                    $contents .=    "<td>" . implode(", ", $user_arr['administrator_level']) . "</td>";
 
                 // LDAP
                 if( ! \auth\LDAP::is_supported() || $user_arr['name'] == "root" || $ldap_client === NULL ){

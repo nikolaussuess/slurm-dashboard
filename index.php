@@ -413,17 +413,27 @@ EOF;
                 $start_time = $_POST['form_time_min'] ?? '';
                 if($start_time != ''){
                     $filter['start_time_value'] = $start_time;
-                    $dateTimeObject = new DateTime($start_time);
-                    $start_time = $dateTimeObject->getTimestamp();
-                    $filter['start_time'] = $start_time;
+                    try {
+                        $dateTimeObject = new DateTime($start_time);
+                        $start_time = $dateTimeObject->getTimestamp();
+                        $filter['start_time'] = $start_time;
+                    } catch (Exception $e) {
+                        addError("Start time value (" . $filter['start_time_value'] . ") invalid: " .
+                            $e->getMessage() . "; Ignoring value");
+                    }
                 }
 
                 $end_time = $_POST['form_time_max'] ?? '';
                 if($end_time != ''){
                     $filter['end_time_value'] = $end_time;
-                    $dateTimeObject = new DateTime($end_time);
-                    $end_time = $dateTimeObject->getTimestamp();
-                    $filter['end_time'] = $end_time;
+                    try {
+                        $dateTimeObject = new DateTime($end_time);
+                        $end_time = $dateTimeObject->getTimestamp();
+                        $filter['end_time'] = $end_time;
+                    } catch (Exception $e) {
+                        addError("End time value (" . $filter['end_time_value'] . ") invalid: " . $e->getMessage() .
+                            "; Ignoring value");
+                    }
                 }
 
                 $user = $_POST['form_user'] ?? '';

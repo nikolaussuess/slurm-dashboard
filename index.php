@@ -415,7 +415,7 @@ EOF;
             <span class="visually-hidden">Toggle Dropdown</span>
         </button>
         <ul class="dropdown-menu">
-            <li><a class="dropdown-item" href="#">Cancel job</a></li>
+            <li><a class="dropdown-item" href="?action=cancel-job&job_id={$job['job_id']}">Cancel job</a></li>
         </ul>
     </div>
 </td>

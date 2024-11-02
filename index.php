@@ -406,17 +406,8 @@ EOF;
 
                 $contents .=    "<td>" . \utils\get_date_from_unix_if_defined($job, 'start_time') . "</td>";
                 $contents .=    "<td>" . \utils\get_timelimit_if_defined($job, 'time_limit', "inf") . "</td>";
-
-                if($job['node_count']['set'])
-                    $contents .=    "<td>" . $job['node_count']['number']. "</td>";
-                else
-                    $contents .=    "<td>?</td>";
-
-                if(isset($job['job_resources']) && isset($job['job_resources']['nodes']))
-                    $contents .=    "<td>" . $job['job_resources']['nodes'] . "</td>";
-                else
-                    $contents .=    "<td>?</td>";
-
+                $contents .=    "<td>" . \utils\get_number_if_defined($job['node_count'], "?") . "</td>";
+                $contents .=    "<td>" . \utils\get_nodes($job) . "</td>";
                 $contents .=    '<td><a href="?action=job&job_id=' . $job['job_id'] . '">[Details]</a></td>';
 
             }

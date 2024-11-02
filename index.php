@@ -637,6 +637,58 @@ EOF;
 
             break;
 
+        case 'cancel-job':
+            // Check if job_id parameter exists.
+            if(! isset($_GET['job_id']) || !is_int($_GET['job_id'])){
+                addError("No job id provided or job id is not a valid number.");
+                break;
+            }
+
+            $job_id = $_GET['job_id'];
+
+            // Check for sufficient privileges
+            $job_data = $dao->get_job($job_id);
+
+            if(count($job_data['jobs']) == 0){
+                addError("Job " . $_GET['job_id'] . " not in active queue any more.");
+                break;
+            }
+
+            if( ! \auth\current_user_is_admin() && $job_data['jobs'][0]['user_name'] != $_SESSION['USER'] ){
+                addError(
+                        "The job belongs to user " . $job_data['jobs'][0]['user_name'] . " but current user is "
+                        . $_SESSION['USER'] . ". Since you are not an administrator, you can only delete your own jobs."
+                );
+                break;
+            }
+
+            if(! isset($_GET['do']) || $_GET['do'] != "cancel") {
+
+                $templateBuilder = new TemplateLoader("modal_job_cancelling.html");
+                $templateBuilder->setParam("JOBID", $job_id);
+                $contents .= $templateBuilder->build();
+                break;
+            }
+            elseif($_GET['do'] == "cancel") {
+                $res = $dao->cancel_job($job_id);
+                if(isset($res['errors']) && !empty($res['errors'])){
+                    foreach ($res['errors'] as $error){
+                        addError('<pre>' . var_export($error) . '</pre>');
+                    }
+                }
+                else {
+                    addSuccess("Job " . $job_id . "cancelled.");
+                }
+            }
+            else {
+                addError("Error!");
+                break;
+            }
+
+
+
+            break;
+
         case 'users':
             $title = "List of users";
 

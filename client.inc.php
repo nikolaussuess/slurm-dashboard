@@ -58,6 +58,41 @@ class Request {
         return $data;
     }
 
+    function request_delete(string $endpoint, string $namespace = "slurm") : mixed {
+
+        // Prepare the HTTP request
+        $request = "DELETE /${namespace}/v0.0.40/${endpoint} HTTP/1.1\r\n" .
+            "Host: localhost\r\n" .
+            "Connection: close\r\n\r\n";
+        // Send the request
+        fwrite($this->socket, $request);
+
+        // Read the response
+        $response = '';
+        while (!feof($this->socket)) {
+            $response .= fread($this->socket, 8192);
+        }
+
+        // Split the response headers and body
+        list($header, $body) = explode("\r\n\r\n", $response, 2);
+        $body = str_replace("Connection: Close", "", $body);
+        #print "<pre>";
+        #print_r($header);
+        #print "\n\n";
+        #print_r($body);
+        #print "</pre>";
+
+        // Decode the JSON response
+        $data = json_decode($body, true);
+
+        if (json_last_error() !== JSON_ERROR_NONE) {
+            addError("JSON decode error: " . json_last_error_msg());
+            return FALSE;
+        }
+
+        return $data;
+    }
+
     function __destruct(){
         // Close the socket
         fclose($this->socket);
@@ -175,6 +210,12 @@ class Client {
         return array_filter($raw_array['reservations'], function ($res){
             return isset($res['flags']) && in_array("MAINT", $res['flags']);
         });
+    }
+
+    function cancel_job($job_id) : array {
+        $request = new Request();
+        $json = $request->request_delete("job/" . $job_id);
+        return $json;
     }
 
 

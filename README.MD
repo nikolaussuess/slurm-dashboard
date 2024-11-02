@@ -11,6 +11,7 @@ This is a small dashboard that displays some information about a slurm cluster. 
 - caching of the `slurmrestd` responses (using APCu)
 - display and filter job history (from `slurmdbd`)
 - display list of users with their respective accounts (for administrators only)
+- show planned maintenances (`flags=maint`) that were created with e.g. `scontrol create reservation starttime=2024-11-02T13:30:00 duration=5 user=root flags=maint nodes=mynode`
 
 ![Job queue](./imgs/queue.png?raw=true "Job queue")
 

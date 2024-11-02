@@ -400,10 +400,7 @@ EOF;
                 $contents .=    "<td>" . $job['name'] . "</td>";
                 $contents .=    "<td>" . $job['partition'] . "</td>";
                 $contents .=    "<td>" . $job['user_name'] . " (" . $job['user_id'] . ")</td>";
-
                 $contents .=    "<td>" . \utils\get_job_state_view($job) . "</td>";
-
-
                 $contents .=    "<td>" . \utils\get_date_from_unix_if_defined($job, 'start_time') . "</td>";
                 $contents .=    "<td>" . \utils\get_timelimit_if_defined($job, 'time_limit', "inf") . "</td>";
                 $contents .=    "<td>" . \utils\get_number_if_defined($job['node_count'], "?") . "</td>";

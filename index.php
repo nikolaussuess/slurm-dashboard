@@ -99,7 +99,7 @@ if( isset($_SESSION['USER']) ){
         $contents .= '</li>';
     }
     if(! empty($maintenances)){
-        $contents .= '</ul><p>Please use other nodes (if available) or make sure none of your program(s) is running during the maintainances.</p></div>';
+        $contents .= '</ul><p>Please use other nodes (if available) or make sure none of your program(s) is running during the maintenance.</p><p>All jobs that are guaranteed to end before the maintenance window due to the time limit are scheduled normally. Jobs that are not guaranteed to end before the start of the maintenance window can only start after the maintenance window. Tip: You could run shorter jobs for the time being or use breakpoints to interrupt your job for maintenance.</p></div>';
     }
     // END of maintenance
 

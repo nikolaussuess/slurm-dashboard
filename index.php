@@ -405,7 +405,21 @@ EOF;
                 $contents .=    "<td>" . \utils\get_timelimit_if_defined($job, 'time_limit', "inf") . "</td>";
                 $contents .=    "<td>" . \utils\get_number_if_defined($job['node_count'], "?") . "</td>";
                 $contents .=    "<td>" . \utils\get_nodes($job) . "</td>";
-                $contents .=    '<td><a href="?action=job&job_id=' . $job['job_id'] . '">[Details]</a></td>';
+                $contents .= <<<EOF
+<td>
+    <div class="btn-group">
+        <a href="?action=job&job_id={$job['job_id']}" class="btn btn-info" type="button">
+            Details
+        </a>
+        <button type="button" class="btn btn-danger dropdown-toggle dropdown-toggle-split" data-bs-toggle="dropdown" aria-expanded="false">
+            <span class="visually-hidden">Toggle Dropdown</span>
+        </button>
+        <ul class="dropdown-menu">
+            <li><a class="dropdown-item" href="#">Cancel job</a></li>
+        </ul>
+    </div>
+</td>
+EOF;
 
             }
             $contents .= <<<EOF
@@ -597,6 +611,7 @@ EOF;
                 $contents .=    "<td>" . \utils\get_timelimit_if_defined($job['time'], 'limit', 'inf') . "</td>";
 
                 $contents .=    "<td>" . $job['nodes'] . "</td>";
+                // TODO: Provide the cancel option only if job is still active
                 $contents .= <<<EOF
 <td>
     <div class="btn-group">

@@ -124,7 +124,7 @@ function get_job_state_view(array $job, string $param_name = 'job_state', ?strin
 }
 
 function get_nodes(array $job_arr) : string {
-    if(isset($job['job_resources']) && isset($job['job_resources']['nodes']))
+    if(isset($job_arr['job_resources']) && isset($job_arr['job_resources']['nodes']))
         return $job_arr['job_resources']['nodes'];
     else
         return "?";

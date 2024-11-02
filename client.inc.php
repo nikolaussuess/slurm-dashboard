@@ -163,5 +163,19 @@ class Client {
         return $json;
     }
 
+    function get_reservations() : array {
+        # curl --unix-socket /run/slurmrestd/slurmrestd.socket http://slurm/slurm/v0.0.40/reservations
+        $request = new Request();
+        $json = $request->request_json("reservations");
+        return $json;
+    }
+
+    function get_maintenances() : array {
+        $raw_array = $this->get_reservations();
+        return array_filter($raw_array['reservations'], function ($res){
+            return isset($res['flags']) && in_array("MAINT", $res['flags']);
+        });
+    }
+
 
 }

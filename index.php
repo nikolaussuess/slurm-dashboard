@@ -83,6 +83,26 @@ if( isset($_SESSION['USER']) ){
     $action = $_GET['action'] ?? "usage";
     if( $action == "login") $action = "usage";
 
+    // Show maintenance dates if there are some
+    $maintenances = $dao->get_maintenances();
+    if(! empty($maintenances)){
+        $contents .= '<div class="alert alert-info" role="alert"><strong>Scheduled maintenances:</strong><ul>';
+    }
+    foreach( $maintenances as $maintenance ){
+        $contents .= '<li>Node(s) ';
+        if(isset($maintenance['node_list']))
+            $contents .= $maintenance['node_list'];
+        else
+            $contents .= '(any)';
+        $contents .= " will be unavailable from " . \utils\get_date_from_unix_if_defined($maintenance, 'start_time')
+            . " until " . \utils\get_date_from_unix_if_defined($maintenance, 'end_time') . ".";
+        $contents .= '</li>';
+    }
+    if(! empty($maintenances)){
+        $contents .= '</ul><p>Please use other nodes (if available) or make sure none of your program(s) is running during the maintainances.</p></div>';
+    }
+    // END of maintenance
+
     switch($action){
 
         case "usage":

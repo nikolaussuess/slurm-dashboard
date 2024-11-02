@@ -91,7 +91,7 @@ if( isset($_SESSION['USER']) ){
     foreach( $maintenances as $maintenance ){
         $contents .= '<li>Node(s) ';
         if(isset($maintenance['node_list']))
-            $contents .= $maintenance['node_list'];
+            $contents .= '<span class="monospaced">' . $maintenance['node_list'] . '</span>';
         else
             $contents .= '(any)';
         $contents .= " will be unavailable from " . \utils\get_date_from_unix_if_defined($maintenance, 'start_time')

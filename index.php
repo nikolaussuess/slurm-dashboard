@@ -412,7 +412,11 @@ EOF;
                 else
                     $contents .=    "<td>?</td>";
 
-                $contents .=    "<td>" . $job['job_resources']['nodes'] . "</td>";
+                if(isset($job['job_resources']) && isset($job['job_resources']['nodes']))
+                    $contents .=    "<td>" . $job['job_resources']['nodes'] . "</td>";
+                else
+                    $contents .=    "<td>?</td>";
+
                 $contents .=    '<td><a href="?action=job&job_id=' . $job['job_id'] . '">[Details]</a></td>';
 
             }

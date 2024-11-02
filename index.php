@@ -639,7 +639,7 @@ EOF;
 
         case 'cancel-job':
             // Check if job_id parameter exists.
-            if(! isset($_GET['job_id']) || !is_int($_GET['job_id'])){
+            if(! isset($_GET['job_id']) || intval($_GET['job_id']) != $_GET['job_id']){
                 addError("No job id provided or job id is not a valid number.");
                 break;
             }

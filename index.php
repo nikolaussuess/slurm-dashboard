@@ -673,7 +673,7 @@ EOF;
                 $res = $dao->cancel_job($job_id);
                 if(isset($res['errors']) && !empty($res['errors'])){
                     foreach ($res['errors'] as $error){
-                        addError('<pre>' . var_export($error) . '</pre>');
+                        addError('<b>' . $error['error'] . '</b>' . $error['source'] . '<br>' . $error['description']);
                     }
                 }
                 else {

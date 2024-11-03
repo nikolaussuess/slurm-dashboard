@@ -232,6 +232,7 @@ if( isset($_SESSION['USER']) ){
                 else {
                     addSuccess("Job " . $job_id . " cancelled.");
                     apcu_delete("slurm/jobs"); // Delete cached entry because we KNOW that it has changed.
+                    apcu_delete("slurm/job/".$job_id); // Delete cached entry because we KNOW that it has changed.
                     $contents .= \action\get_job_queue($dao);
                 }
             }

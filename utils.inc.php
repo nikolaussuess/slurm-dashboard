@@ -129,3 +129,11 @@ function get_nodes(array $job_arr) : string {
     else
         return "?";
 }
+
+function show_errors(array $response) : void {
+    if(isset($response['errors']) && !empty($response['errors'])){
+        foreach ($response['errors'] as $error){
+            addError('<b>' . $error['error'] . '</b> (source: ' . $error['source'] . ')<br>' . $error['description']);
+        }
+    }
+}

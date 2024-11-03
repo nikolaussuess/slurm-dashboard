@@ -672,9 +672,7 @@ EOF;
             elseif($_GET['do'] == "cancel") {
                 $res = $dao->cancel_job($job_id);
                 if(isset($res['errors']) && !empty($res['errors'])){
-                    foreach ($res['errors'] as $error){
-                        addError('<b>' . $error['error'] . '</b> (source: ' . $error['source'] . ')<br>' . $error['description']);
-                    }
+                    \utils\show_errors($res);
                 }
                 else {
                     addSuccess("Job " . $job_id . "cancelled.");

@@ -1,6 +1,7 @@
 <?php
 
 // Proof of concept!
+require_once "auth/auth.jwt.inc.php";
 
 /**
  * API documentation can be found at:
@@ -26,8 +27,12 @@ class Request {
 
         // Prepare the HTTP request
         $request = "GET /${namespace}/v0.0.40/${endpoint} HTTP/1.1\r\n" .
-            "Host: localhost\r\n" .
-            "Connection: close\r\n\r\n";
+            "Host: localhost\r\n";
+        if(\auth\jwt\JwtAuthentication::is_supported()){
+            $request .= "X-SLURM-USER-NAME: " . $_SESSION['USER'] . "\r\n";
+            $request .= "X-SLURM-USER-TOKEN: " . \auth\jwt\JwtAuthentication::gen_jwt($_SESSION['USER']) . "\r\n";
+        }
+        $request .= "Connection: close\r\n\r\n";
         // Send the request
         fwrite($this->socket, $request);
 
@@ -62,8 +67,12 @@ class Request {
 
         // Prepare the HTTP request
         $request = "DELETE /${namespace}/v0.0.40/${endpoint} HTTP/1.1\r\n" .
-            "Host: localhost\r\n" .
-            "Connection: close\r\n\r\n";
+            "Host: localhost\r\n";
+        if(\auth\jwt\JwtAuthentication::is_supported()){
+            $request .= "X-SLURM-USER-NAME: " . $_SESSION['USER'] . "\r\n";
+            $request .= "X-SLURM-USER-TOKEN: " . \auth\jwt\JwtAuthentication::gen_jwt($_SESSION['USER']) . "\r\n";
+        }
+        $request .= "Connection: close\r\n\r\n";
         // Send the request
         fwrite($this->socket, $request);
 

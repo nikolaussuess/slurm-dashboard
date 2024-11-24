@@ -41,10 +41,23 @@ function get_date_from_unix_if_defined(array $job_arr, string $param, string $de
         return "?";
     }
 
-    if($job_arr[$param]['set'])
-        return date('Y-m-d H:i:s', $job_arr[$param]['number']);
-    else
+    if($job_arr[$param]['set']){
+        if($job_arr[$param]['number'] == 0){
+            // When a dependency can never be satisfied, a depending job may never be started.
+            // In this case, 0 is reported as start_time (which is 1970/1/1).
+            // However, 0 is also returned if start_time cannot yet be determined.
+            //
+            // This is a fix for \utils\get_date_from_unix_if_defined to handle this,
+            // i.e. it prints "undefined" (or $default) instead of 1970/1/1.
+            return $default;
+        }
+        else {
+            return date('Y-m-d H:i:s', $job_arr[$param]['number']);
+        }
+    }
+    else {
         return $default;
+    }
 }
 
 /**

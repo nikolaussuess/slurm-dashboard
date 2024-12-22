@@ -183,8 +183,8 @@ if( isset($_SESSION['USER']) ){
                 $templateBuilder->setParam("OWNER", $data["nodes"][0]["owner"]);
                 $templateBuilder->setParam("TRES", $data["nodes"][0]["tres"]);
                 $templateBuilder->setParam("TRES_USED", $data["nodes"][0]["tres_used"]);
-                $templateBuilder->setParam("BOOT_TIME", \utils\get_date_from_unix($data["nodes"][0], "boot_time"));
-                $templateBuilder->setParam("LAST_BUSY", \utils\get_date_from_unix($data["nodes"][0], "last_busy"));
+                $templateBuilder->setParam("BOOT_TIME", \utils\get_date_from_unix_if_defined($data["nodes"][0], "boot_time"));
+                $templateBuilder->setParam("LAST_BUSY", \utils\get_date_from_unix_if_defined($data["nodes"][0], "last_busy"));
                 $templateBuilder->setParam("PARTITIONS", count($data["nodes"][0]["partitions"]) > 0 ? '<li><span class="monospaced">' . implode('</li><li><span class="monospaced">', $data["nodes"][0]["partitions"]) . '</span></li>' : '');
                 $templateBuilder->setParam("RESERVATION", $data["nodes"][0]["reservation"] ?? '');
                 $templateBuilder->setParam("SLURM_VERSION", $data["nodes"][0]["version"] ?? '');

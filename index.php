@@ -121,8 +121,8 @@ if( isset($_SESSION['USER']) ){
                 $templateBuilder->setParam("MEM_PERCENTAGE", ($data["nodes"][0]["real_memory"]-$data["nodes"][0]["free_mem"]["number"])/$data["nodes"][0]["real_memory"]*100);
                 $templateBuilder->setParam("MEM_USED", $data["nodes"][0]["real_memory"] - $data["nodes"][0]["free_mem"]["number"]);
                 $templateBuilder->setParam("MEM_TOTAL", $data["nodes"][0]["real_memory"]);
-                $templateBuilder->setParam("ALLOC_MEM_PERCENTAGE", ($data["nodes"][0]["real_memory"]-$data["nodes"][0]["alloc_memory"])/$data["nodes"][0]["real_memory"]*100);
-                $templateBuilder->setParam("ALLOC_MEM", $data["nodes"][0]["real_memory"] - $data["nodes"][0]["alloc_memory"]);
+                $templateBuilder->setParam("ALLOC_MEM_PERCENTAGE", ($data["nodes"][0]["alloc_memory"])/$data["nodes"][0]["real_memory"]*100);
+                $templateBuilder->setParam("ALLOC_MEM", $data["nodes"][0]["alloc_memory"]);
 
                 $gres = $data["nodes"][0]["gres"];
                 $gres_used = $data["nodes"][0]["gres_used"];

@@ -121,6 +121,8 @@ if( isset($_SESSION['USER']) ){
                 $templateBuilder->setParam("MEM_PERCENTAGE", ($data["nodes"][0]["real_memory"]-$data["nodes"][0]["free_mem"]["number"])/$data["nodes"][0]["real_memory"]*100);
                 $templateBuilder->setParam("MEM_USED", $data["nodes"][0]["real_memory"] - $data["nodes"][0]["free_mem"]["number"]);
                 $templateBuilder->setParam("MEM_TOTAL", $data["nodes"][0]["real_memory"]);
+                $templateBuilder->setParam("ALLOC_MEM_PERCENTAGE", ($data["nodes"][0]["real_memory"]-$data["nodes"][0]["alloc_memory"])/$data["nodes"][0]["real_memory"]*100);
+                $templateBuilder->setParam("ALLOC_MEM", $data["nodes"][0]["real_memory"] - $data["nodes"][0]["alloc_memory"]);
 
                 $gres = $data["nodes"][0]["gres"];
                 $gres_used = $data["nodes"][0]["gres_used"];
@@ -181,6 +183,11 @@ if( isset($_SESSION['USER']) ){
                 $templateBuilder->setParam("OWNER", $data["nodes"][0]["owner"]);
                 $templateBuilder->setParam("TRES", $data["nodes"][0]["tres"]);
                 $templateBuilder->setParam("TRES_USED", $data["nodes"][0]["tres_used"]);
+                $templateBuilder->setParam("BOOT_TIME", \utils\get_date_from_unix($data["nodes"][0], "boot_time"));
+                $templateBuilder->setParam("LAST_BUSY", \utils\get_date_from_unix($data["nodes"][0], "last_busy"));
+                $templateBuilder->setParam("PARTITIONS", count($data["nodes"][0]["partitions"]) > 0 ? '<li><span class="monospaced">' . implode('</li><li><span class="monospaced">', $data["nodes"][0]["partitions"]) . '</span></li>' : '');
+                $templateBuilder->setParam("RESERVATION", $data["nodes"][0]["reservation"] ?? '');
+                $templateBuilder->setParam("SLURM_VERSION", $data["nodes"][0]["version"] ?? '');
 
                 $contents .= $templateBuilder->build();
             }

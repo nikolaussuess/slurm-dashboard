@@ -20,7 +20,8 @@
                 {{CPU_USED}} of {{CPU_TOTAL}} CPUs in use ({{CPU_PERCENTAGE}} %)
             </td>
         </tr>
-        <tr>
+
+        <tr title="The sum of all RAM memory currently used on that node. This includes buffer and cache memory, which is currently in use but available.">
             <td>Memory:</td>
             <td>
                 <div class="progress">
@@ -31,6 +32,18 @@
                 {{MEM_USED}} of {{MEM_TOTAL}} MiB RAM in use ({{MEM_PERCENTAGE}} %)
             </td>
         </tr>
+        <tr title="Sum of RAM used by SLURM jobs. Does not include memory used by other processes or the kernel.">
+            <td>RAM of jobs:</td>
+            <td>
+                <div class="progress">
+                    <div class="progress-bar"
+                         role="progressbar"
+                         style="width: {{ALLOC_MEM_PERCENTAGE}}%" aria-valuenow="{{ALLOC_MEM}}" aria-valuemin="0" aria-valuemax="{{MEM_TOTAL}}"></div><br>
+                </div>
+                {{ALLOC_MEM}} of {{MEM_TOTAL}} MiB RAM in use ({{ALLOC_MEM_PERCENTAGE}} %)
+            </td>
+        </tr>
+
         <tr>
             <td>GPUs:</td>
             <td>
@@ -93,6 +106,30 @@
                 <tr>
                     <td>TRES used:</td>
                     <td><span class="feature">{{TRES_USED}}</span></td>
+                </tr>
+                <tr>
+                    <td>Partitions:</td>
+                    <td>
+                        <ul>
+                            {{PARTITIONS}}
+                        </ul>
+                    </td>
+                </tr>
+                <tr>
+                    <td>Boot time:</td>
+                    <td>{{BOOT_TIME}}</td>
+                </tr>
+                <tr>
+                    <td>Last busy:</td>
+                    <td>{{LAST_BUSY}}</td>
+                </tr>
+                <tr>
+                    <td>Reservation:</td>
+                    <td>{{RESERVATION}}</td>
+                </tr>
+                <tr>
+                    <td>SLURM version:</td>
+                    <td>{{SLURM_VERSION}}</td>
                 </tr>
             </table>
         </div>

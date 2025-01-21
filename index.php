@@ -381,6 +381,24 @@ if( isset($_SESSION['USER']) ){
             $contents .= "<h2>Jobs</h2>";
 
             $contents .= <<<EOF
+<div class="form-check form-switch">
+  <input 
+        class="form-check-input" 
+        type="checkbox" 
+        role="switch" 
+        id="show_p_low" 
+        onclick="if( this.checked() ) window.location.href = '?action=jobs&exclude_p_low=1'; else window.location.href = '?action=jobs';"
+        >
+  <label 
+        class="form-check-label" 
+        for="show_p_low">
+            Show partition <span class="monospaced">p_low</span>
+  </label>
+</div>
+EOF;
+
+
+            $contents .= <<<EOF
 <div class="table-responsive">
     <table class="tableFixHead table">
         <thead>

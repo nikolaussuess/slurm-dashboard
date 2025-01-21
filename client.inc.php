@@ -104,13 +104,32 @@ class Client {
                 $query_string .= '&constraints=' . $filter['constraints'];
             }
             if(isset($filter['state'])){
-                $query_string .= '&state=' . $filter['state'];
+                /*
+                 * Issue 12 specific code
+                 * See https://github.com/nikolaussuess/slurm-dashboard/issues/12
+                 */
+                if($filter['state'] != 'COMPLETED'){
+                    $query_string .= '&state=' . $filter['state'];
+                }
+                // ORIGINAL CODE:
+                // $query_string .= '&state=' . $filter['state'];
+                // END ISSUE 12
             }
         }
 
         # curl --unix-socket /run/slurmrestd/slurmrestd.socket http://slurm/slurmdb/v0.0.40/jobs
         $request = new Request();
         $json = $request->request_json("jobs" . $query_string, 'slurmdb', 30);
+
+        /*
+         * Issue 12 specific code
+         * See https://github.com/nikolaussuess/slurm-dashboard/issues/12
+         */
+        if(isset($filter['state']) && $filter['state'] == 'COMPLETED'){
+            $jobs_array = $this->_issue12_bugfix_post_request_filtering($json['jobs'], 'COMPLETED');
+            $json['jobs'] = $jobs_array;
+        }
+        // END Issue 12
         return $json;
     }
 
@@ -177,5 +196,20 @@ class Client {
         });
     }
 
-
+    /**
+     * [ISSUE 12]
+     * This is a bugfix for the slurmrestd upstream bug https://support.schedmd.com/show_bug.cgi?id=21853
+     * Filtering for completed jobs does not work in slurmdb. Thus, we do not filter for them at the
+     * request but we filter the response.
+     * See https://github.com/nikolaussuess/slurm-dashboard/issues/12
+     */
+    private function _issue12_bugfix_post_request_filtering($array, $value){
+        return array_filter($array, function ($v, $k) use($value) {
+            foreach($v['state']['current'] as $state){
+                if( $state == $value )
+                    return TRUE;
+            }
+            return FALSE;
+        }, ARRAY_FILTER_USE_BOTH);
+    }
 }

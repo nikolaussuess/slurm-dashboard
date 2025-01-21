@@ -191,6 +191,8 @@ class Client {
 
     function get_maintenances() : array {
         $raw_array = $this->get_reservations();
+        if($raw_array == NULL)
+            return array();
         return array_filter($raw_array['reservations'], function ($res){
             return isset($res['flags']) && in_array("MAINT", $res['flags']);
         });

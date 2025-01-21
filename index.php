@@ -426,7 +426,7 @@ EOF;
             if(isset($_GET['exclude_p_low']) && $_GET['exclude_p_low'] == 1)
                 $filter['exclude_p_low'] = 1;
 
-            $jobs = $dao->get_jobs();
+            $jobs = $dao->get_jobs($filter);
             foreach( $jobs['jobs'] as $job ) {
 
                 $contents .= "<tr>";

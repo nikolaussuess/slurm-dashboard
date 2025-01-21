@@ -387,7 +387,11 @@ if( isset($_SESSION['USER']) ){
         type="checkbox" 
         role="switch" 
         id="show_p_low" 
-        onclick="if( this.checked() ) window.location.href = '?action=jobs&exclude_p_low=1'; else window.location.href = '?action=jobs';"
+        onclick="if( this.checked ) window.location.href = '?action=jobs&exclude_p_low=1'; else window.location.href = '?action=jobs';"
+EOF;
+            if(isset($_GET['exclude_p_low']) && $_GET['exclude_p_low'] == 1)
+                $contents .= ' checked ';
+$contents .= <<<EOF
         >
   <label 
         class="form-check-label" 
@@ -417,6 +421,11 @@ EOF;
         </thead>
         <tbody>
 EOF;
+
+            $filter = array();
+            if(isset($_GET['exclude_p_low']) && $_GET['exclude_p_low'] == 1)
+                $filter['exclude_p_low'] = 1;
+
             $jobs = $dao->get_jobs();
             foreach( $jobs['jobs'] as $job ) {
 

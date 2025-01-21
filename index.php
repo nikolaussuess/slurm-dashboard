@@ -396,7 +396,7 @@ $contents .= <<<EOF
   <label 
         class="form-check-label" 
         for="show_p_low">
-            Hide partition <span title="Every user can use partition p_low. The aim of the partition p_low is to use any (currently) unused resources for experiments that should finish at some point, but it does not matter when. Any normal job will have higher priority than a job in p_low and will hence interrupt (REQUEUE) these jobs."><span class="monospaced">p_low</span> &#xF431;</span>
+            Hide partition <span title="Every user can use partition p_low. The aim of the partition p_low is to use any (currently) unused resources for experiments that should finish at some point, but it does not matter when. Any normal job will have higher priority than a job in p_low and will hence interrupt (REQUEUE) these jobs."><span class="monospaced">p_low</span> <span class="glyphicon glyphicon-info-sign"></span></span>
   </label>
 </div>
 EOF;

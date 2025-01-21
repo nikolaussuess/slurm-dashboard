@@ -77,12 +77,12 @@ class Client {
         $request = new Request();
         $json = $request->request_json("jobs");
 
+        // Exclude partition p_low if parameter exclude_p_low=1
         if($filter != NULL){
             if(isset($filter['exclude_p_low']) && $filter['exclude_p_low'] == 1){
                 $jobs_array = $this->_feature_exclude_p_low($json['jobs']);
                 $json['jobs'] = $jobs_array;
             }
-
         }
 
         return $json;

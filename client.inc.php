@@ -72,10 +72,19 @@ class Client {
         return array_column($json['nodes'], 'name');
     }
 
-    function get_jobs() : array {
+    function get_jobs(?array $filter = NULL) : array {
         # curl --unix-socket /run/slurmrestd/slurmrestd.socket http://slurm/slurm/v0.0.39/jobs
         $request = new Request();
         $json = $request->request_json("jobs");
+
+        // Exclude partition p_low if parameter exclude_p_low=1
+        if($filter != NULL){
+            if(isset($filter['exclude_p_low']) && $filter['exclude_p_low'] == 1){
+                $jobs_array = $this->_feature_exclude_p_low($json['jobs']);
+                $json['jobs'] = $jobs_array;
+            }
+        }
+
         return $json;
     }
 
@@ -205,11 +214,25 @@ class Client {
      * request but we filter the response.
      * See https://github.com/nikolaussuess/slurm-dashboard/issues/12
      */
-    private function _issue12_bugfix_post_request_filtering($array, $value){
+    private function _issue12_bugfix_post_request_filtering(array $array, string $value){
         return array_filter($array, function ($v, $k) use($value) {
             foreach($v['state']['current'] as $state){
                 if( $state == $value )
                     return TRUE;
+            }
+            return FALSE;
+        }, ARRAY_FILTER_USE_BOTH);
+    }
+
+    /**
+     * Exclude partition p_low in /slurm/jobs queue.
+     * @param array $jobs Job array
+     * @return array Job array without jobs in partition p_low
+     */
+    private function _feature_exclude_p_low(array $jobs) {
+        return array_filter($jobs, function ($v, $k) {
+            if( $v['partition'] != 'p_low' ){
+                return TRUE;
             }
             return FALSE;
         }, ARRAY_FILTER_USE_BOTH);

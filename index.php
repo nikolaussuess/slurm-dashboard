@@ -380,6 +380,36 @@ if( isset($_SESSION['USER']) ){
         case "jobs":
             $contents .= "<h2>Jobs</h2>";
 
+            // Allow to exclude jobs of partition p_low
+            // Every user can use partition p_low. The aim of the partition p_low is to use
+            // any (currently) unused resources for experiments that should finish at some point,
+            // but it does not matter when. Any normal job will have higher priority than a job in
+            // p_low and will hence interrupt (REQUEUE) these jobs.
+            //
+            // The filtering is done locally on the web server.
+            // JavaScript is required.
+            $contents .= <<<EOF
+<div class="form-check form-switch">
+  <input 
+        class="form-check-input" 
+        type="checkbox" 
+        role="switch" 
+        id="show_p_low" 
+        onclick="if( this.checked ) window.location.href = '?action=jobs&exclude_p_low=1'; else window.location.href = '?action=jobs';"
+EOF;
+            if(isset($_GET['exclude_p_low']) && $_GET['exclude_p_low'] == 1)
+                $contents .= ' checked ';
+$contents .= <<<EOF
+        >
+  <label 
+        class="form-check-label" 
+        for="show_p_low">
+            Hide partition <span title="Every user can use partition p_low. The aim of the partition p_low is to use any (currently) unused resources for experiments that should finish at some point, but it does not matter when. Any normal job will have higher priority than a job in p_low and will hence interrupt (REQUEUE) these jobs."><span class="monospaced">p_low</span></span>
+  </label>
+</div>
+EOF;
+
+
             $contents .= <<<EOF
 <div class="table-responsive">
     <table class="tableFixHead table">
@@ -399,7 +429,14 @@ if( isset($_SESSION['USER']) ){
         </thead>
         <tbody>
 EOF;
-            $jobs = $dao->get_jobs();
+
+            // Filter
+            // Exclude partition p_low if parameter exclude_p_low=1
+            $filter = array();
+            if(isset($_GET['exclude_p_low']) && $_GET['exclude_p_low'] == 1)
+                $filter['exclude_p_low'] = 1;
+
+            $jobs = $dao->get_jobs($filter);
             foreach( $jobs['jobs'] as $job ) {
 
                 $contents .= "<tr>";

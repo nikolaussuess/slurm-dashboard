@@ -409,6 +409,15 @@ $contents .= <<<EOF
 </div>
 EOF;
 
+            // Filter
+            // Exclude partition p_low if parameter exclude_p_low=1
+            $filter = array();
+            if(isset($_GET['exclude_p_low']) && $_GET['exclude_p_low'] == 1)
+                $filter['exclude_p_low'] = 1;
+
+            $jobs = $dao->get_jobs($filter);
+
+            $contents .= '<div>Found <span style="font-weight: bold">' . count($jobs['jobs']) . ' jobs</span>.</div>';
 
             $contents .= <<<EOF
 <div class="table-responsive">
@@ -430,13 +439,6 @@ EOF;
         <tbody>
 EOF;
 
-            // Filter
-            // Exclude partition p_low if parameter exclude_p_low=1
-            $filter = array();
-            if(isset($_GET['exclude_p_low']) && $_GET['exclude_p_low'] == 1)
-                $filter['exclude_p_low'] = 1;
-
-            $jobs = $dao->get_jobs($filter);
             foreach( $jobs['jobs'] as $job ) {
 
                 $contents .= "<tr>";
@@ -602,6 +604,11 @@ EOF;
             $templateBuilder->setParam("TIME_MAX_VALUE", $filter['end_time_value'] ?? '');
             $contents .= $templateBuilder->build();
 
+            $jobs = $dao->get_jobs_from_slurmdb($filter);
+            $jobs = array_reverse($jobs['jobs']); // newest entry first
+
+            $contents .= '<div>Found <span style="font-weight: bold">' . count($jobs) . ' jobs</span>.</div>';
+
             $contents .= <<<EOF
 <div class="table-responsive">
     <table class="tableFixHead table">
@@ -622,8 +629,7 @@ EOF;
         </thead>
         <tbody>
 EOF;
-            $jobs = $dao->get_jobs_from_slurmdb($filter);
-            $jobs = array_reverse($jobs['jobs']); // newest entry first
+
             foreach( $jobs as $job ) {
 
                 $contents .= "<tr>";

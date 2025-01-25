@@ -139,7 +139,7 @@ class Client {
          * Issue 12 specific code
          * See https://github.com/nikolaussuess/slurm-dashboard/issues/12
          */
-        // Running works on server side
+        // RUNNING works on server side
         // COMPLETED does not
         if(isset($filter['state']) && $filter['state'] == 'COMPLETED'){
             $jobs_array = $this->_issue12_bugfix_post_request_filtering($json['jobs'], 'COMPLETED');

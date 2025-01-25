@@ -117,7 +117,12 @@ class Client {
                  * Issue 12 specific code
                  * See https://github.com/nikolaussuess/slurm-dashboard/issues/12
                  */
-                if($filter['state'] != 'COMPLETED'){
+                if(
+                    $filter['state'] != 'COMPLETED' &&
+                    $filter['state'] != 'FAILED' &&
+                    $filter['state'] != 'TIMEOUT' &&
+                    $filter['state'] != 'OUT_OF_MEMORY'
+                ){
                     $query_string .= '&state=' . $filter['state'];
                 }
                 // ORIGINAL CODE:
@@ -134,8 +139,23 @@ class Client {
          * Issue 12 specific code
          * See https://github.com/nikolaussuess/slurm-dashboard/issues/12
          */
+        // RUNNING works on server side
+        // COMPLETED does not
         if(isset($filter['state']) && $filter['state'] == 'COMPLETED'){
             $jobs_array = $this->_issue12_bugfix_post_request_filtering($json['jobs'], 'COMPLETED');
+            $json['jobs'] = $jobs_array;
+        }
+        // FAILED does not
+        elseif(isset($filter['state']) && $filter['state'] == 'FAILED'){
+            $jobs_array = $this->_issue12_bugfix_post_request_filtering($json['jobs'], 'FAILED');
+            $json['jobs'] = $jobs_array;
+        }
+        elseif(isset($filter['state']) && $filter['state'] == 'TIMEOUT'){
+            $jobs_array = $this->_issue12_bugfix_post_request_filtering($json['jobs'], 'TIMEOUT');
+            $json['jobs'] = $jobs_array;
+        }
+        elseif(isset($filter['state']) && $filter['state'] == 'OUT_OF_MEMORY'){
+            $jobs_array = $this->_issue12_bugfix_post_request_filtering($json['jobs'], 'OUT_OF_MEMORY');
             $json['jobs'] = $jobs_array;
         }
         // END Issue 12

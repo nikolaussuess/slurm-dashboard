@@ -137,7 +137,7 @@ if( isset($_SESSION['USER']) ){
                     $gpus_used = preg_replace('/:(\d+)\(.*\)$/', '$2', $gres_used);
                     #$gpus = preg_replace('/.*gpu:(\d+).*|.*gpu:\(null\):(\d+).*/', '$1$2', $gres);
                     #$gpus_used = preg_replace('/.*gpu:(\d+).*|.*gpu:\(null\):(\d+).*/', '$1$2', $gres_used);
-                    echo "GPUs='$gpus', gpus_used='$gpus_used', gres='$gres'";
+                    echo "GPUs='$gpus', gpus_used='$gpus_used', gres='$gres', gres_used='$gres_used'";
                     #$gpus_percentage = (int)$gpus_used / (int)$gpus * 100;
                     $gpus_percentage = 1;
                 }

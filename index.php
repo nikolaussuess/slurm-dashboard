@@ -132,11 +132,14 @@ if( isset($_SESSION['USER']) ){
                     $gpus_percentage = 0;
                 }
                 else {
+
                     $gpus = preg_replace('/:(\d+)\(.*\)$/', '$1', $gres);
                     $gpus_used = preg_replace('/:(\d+)\(.*\)$/', '$1', $gres_used);
                     #$gpus = preg_replace('/.*gpu:(\d+).*|.*gpu:\(null\):(\d+).*/', '$1$2', $gres);
                     #$gpus_used = preg_replace('/.*gpu:(\d+).*|.*gpu:\(null\):(\d+).*/', '$1$2', $gres_used);
-                    $gpus_percentage = (int)$gpus_used / (int)$gpus * 100;
+                    echo "GPUs='$gpus', gpus_used='$gpus_used";
+                    #$gpus_percentage = (int)$gpus_used / (int)$gpus * 100;
+                    $gpus_percentage = 1;
                 }
                 $templateBuilder->setParam("GPU_PERCENTAGE", $gpus_percentage);
                 $templateBuilder->setParam("GPU_USED", $gpus_used);

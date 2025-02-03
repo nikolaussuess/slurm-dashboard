@@ -3,6 +3,10 @@ This is a small dashboard that displays some information about a slurm cluster. 
 
 ![Resource overview](./imgs/resources.png?raw=true "Resource overview")
 
+Currently tested with the following Slurm versions:
+- 23.11.x
+- 24.05.x
+
 ## Current features
 - display cluster usage information (state, CPUs, memory, gpus per node)
 - display the current job queue, including a job detail page
@@ -10,7 +14,7 @@ This is a small dashboard that displays some information about a slurm cluster. 
 - communication with `slurmrestd` via unix socket
 - caching of the `slurmrestd` responses (using APCu)
 - display and filter job history (from `slurmdbd`)
-- display list of users with their respective accounts (for administrators only)
+- display list of users with their respective accounts (for administrators and privileged users only)
 - show planned maintenances (`flags=maint`) that were created with e.g. `scontrol create reservation starttime=2024-11-02T13:30:00 duration=5 user=root flags=maint nodes=mynode`
 
 ![Job queue](./imgs/queue.png?raw=true "Job queue")
@@ -18,6 +22,7 @@ This is a small dashboard that displays some information about a slurm cluster. 
 ![Job history](./imgs/job_history.png?raw=true "Job history")
 
 ### Planned features
+- Authentication (at `slurmrestd`) via JWT.
 - Allow administrators to requeue / cancel / ... jobs.
 - Allow users to requeue and cancel their own jobs.
 - Allow users to submit jobs via a web interface.

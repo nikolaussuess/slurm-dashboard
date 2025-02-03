@@ -133,8 +133,8 @@ if( isset($_SESSION['USER']) ){
                 }
                 else {
 
-                    $gpus = preg_replace('/:(\d+)\(.*\)$/', '$2', $gres);
-                    $gpus_used = preg_replace('/:(\d+)\(.*\)$/', '$2', $gres_used);
+                    $gpus = preg_replace('/:(\d+)(?:\(.*\))?$/', '$2', $gres);
+                    $gpus_used = preg_replace('/:(\d+)(?:\(.*\))?$/', '$2', $gres_used);
                     #$gpus = preg_replace('/.*gpu:(\d+).*|.*gpu:\(null\):(\d+).*/', '$1$2', $gres);
                     #$gpus_used = preg_replace('/.*gpu:(\d+).*|.*gpu:\(null\):(\d+).*/', '$1$2', $gres_used);
                     echo "GPUs='$gpus', gpus_used='$gpus_used', gres='$gres', gres_used='$gres_used'";

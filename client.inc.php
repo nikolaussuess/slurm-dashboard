@@ -98,19 +98,19 @@ class Client {
                 $query_string .= '&end_time=uts' . (int)$filter['end_time'];
             }
             if(isset($filter['users'])){
-                $query_string .= '&users=' . $filter['users'];
+                $query_string .= '&users=' . urlencode($filter['users']);
             }
             if(isset($filter['account'])){
-                $query_string .= '&account=' . $filter['account'];
+                $query_string .= '&account=' . urlencode($filter['account']);
             }
             if(isset($filter['node'])){
-                $query_string .= '&node=' . $filter['node'];
+                $query_string .= '&node=' . urlencode($filter['node']);
             }
             if(isset($filter['job_name'])){
-                $query_string .= '&job_name=' . $filter['job_name'];
+                $query_string .= '&job_name=' . urlencode($filter['job_name']);
             }
             if(isset($filter['constraints'])){
-                $query_string .= '&constraints=' . $filter['constraints'];
+                $query_string .= '&constraints=' . urlencode($filter['constraints']);
             }
             if(isset($filter['state'])){
                 /*
@@ -123,7 +123,7 @@ class Client {
                     $filter['state'] != 'TIMEOUT' &&
                     $filter['state'] != 'OUT_OF_MEMORY'
                 ){
-                    $query_string .= '&state=' . $filter['state'];
+                    $query_string .= '&state=' . urlencode($filter['state']);
                 }
                 // ORIGINAL CODE:
                 // $query_string .= '&state=' . $filter['state'];

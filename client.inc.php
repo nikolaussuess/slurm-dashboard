@@ -20,7 +20,7 @@ class Request {
 
     function request_json(string $endpoint, string $namespace = "slurm", int $ttl = 5) : mixed {
 
-        if( apcu_exists($namespace . '/' . $endpoint)){
+        if( @apcu_exists($namespace . '/' . $endpoint)){
             return apcu_fetch($namespace . '/' . $endpoint);
         }
 
@@ -54,7 +54,7 @@ class Request {
             return FALSE;
         }
 
-        apcu_store($namespace . '/' . $endpoint , $data, $ttl);
+        @apcu_store($namespace . '/' . $endpoint , $data, $ttl);
         return $data;
     }
 
@@ -68,7 +68,7 @@ class Client {
 
     function getNodeList(): array {
         $request = new Request();
-        $json = $request->request_json("nodes", "slurm", 3600 * 24);
+        $json = $request->request_json("nodes", "slurm", 3600);
         return array_column($json['nodes'], 'name');
     }
 
@@ -133,7 +133,7 @@ class Client {
 
         # curl --unix-socket /run/slurmrestd/slurmrestd.socket http://slurm/slurmdb/v0.0.40/jobs
         $request = new Request();
-        $json = $request->request_json("jobs" . $query_string, 'slurmdb', 30);
+        $json = $request->request_json("jobs" . $query_string, 'slurmdb');
 
         /*
          * Issue 12 specific code
@@ -165,7 +165,7 @@ class Client {
     function get_account_list(): array {
         # curl --unix-socket /run/slurmrestd/slurmrestd.socket http://slurm/slurmdb/v0.0.40/accounts
         $request = new Request();
-        $json = $request->request_json("accounts", 'slurmdb', 6 * 3600);
+        $json = $request->request_json("accounts", 'slurmdb', 3600);
         return array_column($json['accounts'], 'name');
     }
 

@@ -4,6 +4,7 @@
  * Insert text into HTML page templates.
  */
 class TemplateLoader {
+    private string $contents;
 
     /**
      * @param $filename string Filename of template html file

@@ -19,6 +19,11 @@ if( isset($_GET['action']) && $_GET['action'] == "logout"){
     unset($_SESSION['USER']);
 }
 
+// Check if the socket exists and add a warning otherwise
+if( ! Client::socketExists() ){
+    addError("Cannot create socket. Is <kbd>slurmrestd</kbd> running? Please report this issue to " . ADMIN_EMAIL);
+}
+
 if(!isset($_SESSION['USER'])) {
 
     if(isset($_GET['action']) && $_GET['action'] == "login"){

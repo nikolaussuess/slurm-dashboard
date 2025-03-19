@@ -25,7 +25,7 @@ class Request {
         }
 
         // Prepare the HTTP request
-        $request = "GET /${namespace}/v0.0.40/${endpoint} HTTP/1.1\r\n" .
+        $request = "GET /{$namespace}/v0.0.40/{$endpoint} HTTP/1.1\r\n" .
             "Host: localhost\r\n" .
             "Connection: close\r\n\r\n";
         // Send the request
@@ -65,6 +65,10 @@ class Request {
 }
 
 class Client {
+
+    static function socketExists(): bool {
+        return file_exists(Request::socketPath);
+    }
 
     function getNodeList(): array {
         $request = new Request();
@@ -200,14 +204,14 @@ class Client {
     function get_user(string $user_name) : array {
         # curl --unix-socket /run/slurmrestd/slurmrestd.socket http://slurm/slurmdb/v0.0.40/user/username?with_assocs
         $request = new Request();
-        $json = $request->request_json("user/${user_name}?with_assocs", "slurmdb");
+        $json = $request->request_json("user/{$user_name}?with_assocs", "slurmdb");
         return $json;
     }
 
     function get_node_info(string $nodename) : array {
         # curl --unix-socket /run/slurmrestd/slurmrestd.socket http://slurm/slurm/v0.0.39/node/nodename
         $request = new Request();
-        $json = $request->request_json("node/$nodename");
+        $json = $request->request_json("node/{$nodename}");
         return $json;
     }
 

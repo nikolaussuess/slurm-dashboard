@@ -13,6 +13,8 @@ namespace auth {
         private const ADMIN_PASSWORD = TO_BE_REPLACED;
         public const METHOD_NAME = 'ldap';
 
+        private mixed $ldapConn;
+
         public static function is_supported(): bool {
             // LDAP functions must be available
             if (!function_exists("ldap_connect") || !function_exists("ldap_bind")) {

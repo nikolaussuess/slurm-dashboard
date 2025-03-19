@@ -9,6 +9,7 @@
 class Request {
     // Path to the Unix socket
     const socketPath = '/run/slurmrestd/slurmrestd.socket';
+    private mixed $socket;
 
     function __construct(){
         // Create a Unix socket connection

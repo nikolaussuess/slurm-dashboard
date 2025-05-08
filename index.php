@@ -845,7 +845,8 @@ EOF;
 
     <hr>
     <footer>
-        &copy; 2024 by <a href="https://ufind.univie.ac.at/de/person.html?id=109904" target="_blank">Nikolaus Süß</a>, University of Vienna
+        &copy; 2024-2025 by <a href="https://suess.dev/" target="_blank">Nikolaus Süß</a>, University of Vienna<br>
+        Source code available on <a href="https://github.com/nikolaussuess/slurm-dashboard" target="_blank">GitHub</a>.
     </footer>
 
 </body>

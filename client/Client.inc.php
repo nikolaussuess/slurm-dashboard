@@ -2,6 +2,7 @@
 
 namespace client;
 
+require_once 'Request.inc.php';
 use Error;
 
 interface Client{

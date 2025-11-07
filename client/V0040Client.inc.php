@@ -39,7 +39,7 @@ class V0040Client extends AbstractClient {
                 'job_id'     => $json_job['job_id'],    // Int
                 'job_name'   => $json_job['name'],      // String
                 'partition'  => $json_job['partition'],
-                'state'      => $json_job['job_state'], // Array of strings
+                'job_state'  => $json_job['job_state'], // Array of strings
                 'user_name'  => $json_job['user_name'],
                 'user_id'    => $json_job['user_id'],
                 'nodes'      => $this->get_nodes($json_job),

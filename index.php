@@ -314,11 +314,11 @@ if( isset($_SESSION['USER']) ){
                 $working_directory = $query['current_working_directory'] ?? "";
 
                 $comment = '<ul>';
-                if($query['jobs'][0]['comment']['administrator'] != '')
+                if($query['comment']['administrator'] != '')
                     $comment .= '<li><b>Admin comment:</b> ' .$query['comment']['administrator'] . '</li>';
-                if($query['jobs'][0]['comment']['job'] != '')
+                if($query['comment']['job'] != '')
                     $comment .= '<li><b>Job comment:</b> ' .$query['comment']['job'] . '</li>';
-                if($query['jobs'][0]['comment']['system'] != '')
+                if($query['comment']['system'] != '')
                     $comment .= '<li><b>System comment:</b> ' .$query['comment']['system'] . '</li>';
                 $comment .= '</ul>';
 

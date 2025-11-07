@@ -223,7 +223,7 @@ class V0040Client extends AbstractClient {
                 'user_name'  => $json_job['user'],
                 'group_name' => $json_job['group'],
                 'account'    => $json_job['account'],
-                'partitions' => $json_job['partition'],
+                'partition'  => $json_job['partition'],
                 'priority'   => $this->__get_number_if_defined($json_job['priority']),
                 'submit_line'=> $json_job['command'] ?? NULL,
                 'working_directory' => $json_job['current_working_directory'] ?? NULL,

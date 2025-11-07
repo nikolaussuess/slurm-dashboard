@@ -195,7 +195,7 @@ if( isset($_SESSION['USER']) ){
                 $templateBuilder->setParam("LAST_BUSY", $data["last_busy"]);
                 $templateBuilder->setParam("PARTITIONS", count($data["partitions"]) > 0 ? '<li><span class="monospaced">' . implode('</li><li><span class="monospaced">', $data["partitions"]) . '</span></li>' : '');
                 $templateBuilder->setParam("RESERVATION", $data["reservation"] ?? '');
-                $templateBuilder->setParam("SLURM_VERSION", $data["version"] ?? '');
+                $templateBuilder->setParam("SLURM_VERSION", $data["slurm_version"] ?? '');
 
                 $contents .= $templateBuilder->build();
             }

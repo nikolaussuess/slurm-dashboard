@@ -169,13 +169,13 @@ class V0040Client extends AbstractClient {
             $job = array(
                 'job_id'     => $json_job['job_id'],    // Int
                 'job_name'   => $json_job['name'],      // String
-                'state'      => $json_job['job_state'], // Array of strings
+                'job_state'  => $json_job['job_state'], // Array of strings
                 'user_name'  => $json_job['user_name'],
                 'user_id'    => $json_job['user_id'],
                 'group_name' => $json_job['group_name'],
                 'group_id'   => $json_job['group_id'],
                 'account'    => $json_job['account'],
-                'partitions' => $json_job['partition'],
+                'partition'  => $json_job['partition'],
                 'priority'   => $json_job['priority']['set'] ? $json_job['priority']['number'] : NULL,
                 'submit_line'=> $json_job['command'] ?? NULL,
                 'working_directory' => $json_job['current_working_directory'] ?? NULL,

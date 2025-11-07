@@ -295,7 +295,7 @@ if( isset($_SESSION['USER']) ){
 
             # SLURMDB information
             $query = $dao->get_job_from_slurmdb($_GET['job_id']);
-            if(count($query['jobs']) == 0){
+            if(count($query) == 0){
                 $contents .= "<p>Job " . $_GET['job_id'] . " not found in <span class='monospaced'>slurmdb</span>.</p>";
             }
             else {

@@ -322,7 +322,7 @@ if( isset($_SESSION['USER']) ){
                     $comment .= '<li><b>System comment:</b> ' .$query['comment']['system'] . '</li>';
                 $comment .= '</ul>';
 
-                $exit_code = $query['jobs']['exit_code'];
+                $exit_code = $query['exit_code'];
                 $nodes = $query['nodes'];
                 $qos = $query['qos'];
                 $container = $query['container'];

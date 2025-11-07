@@ -647,12 +647,11 @@ EOF;
                 $contents .=    "<td>" . $job['partition'] . "</td>";
                 $contents .=    "<td>" . $job['user'] . "</td>";
 
-                $contents .=    "<td>" . \utils\get_job_state_view($job, 'state', 'current') . "</td>";
+                $contents .=    "<td>" . \utils\get_job_state_view($job) . "</td>";
 
-
-                $contents .=    "<td>" . \utils\get_date_from_unix($job['time'], 'start') . "</td>";
-                $contents .=    "<td>" . \utils\get_elapsed_time($job['time'], 'elapsed') . "</td>";
-                $contents .=    "<td>" . \utils\get_timelimit_if_defined($job['time'], 'limit', 'inf') . "</td>";
+                $contents .=    "<td>" . $job['time_start'] . "</td>";
+                $contents .=    "<td>" . $job['time_elapsed'] . "</td>";
+                $contents .=    "<td>" . $job['time_limit'] . "</td>";
 
                 $contents .=    "<td>" . $job['nodes'] . "</td>";
                 $contents .=    '<td><a href="?action=job&job_id=' . $job['job_id'] . '">[Details]</a></td>';

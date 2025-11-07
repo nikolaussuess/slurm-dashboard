@@ -133,13 +133,13 @@ class V0040Client extends AbstractClient {
             $job = array(
                 'job_id'     => $json_job['job_id'],    // Int
                 'job_name'   => $json_job['name'],      // String
-                'state'      => $json_job['state']['current'], // Array of strings
+                'job_state'  => $json_job['state']['current'], // Array of strings
                 'user_name'  => $json_job['user'],
                 'account'    => $json_job['account'],
                 'partitions' => $json_job['partition'],
                 'time_limit' => $this->__get_timelimit_if_defined($json_job['time'], 'limit', 'inf'),
-                'start_time' => $this->__get_date_from_unix($json_job['time'], 'start'),
-                'elapsed_time' => $this->__get_elapsed_time($json_job['time'], 'elapsed'),
+                'time_start' => $this->__get_date_from_unix($json_job['time'], 'start'),
+                'time_elapsed' => $this->__get_elapsed_time($json_job['time'], 'elapsed'),
                 'nodes'      => $json_job['nodes']
             );
             $jobs[] = $job;

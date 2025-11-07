@@ -104,10 +104,8 @@ function get_timelimit_if_defined(array $job_arr, string $param, string $default
 }
 
 # TODO: Should in the future only do the *view* and NOT look into the original job array
-function get_job_state_view(array $job, string $param_name = 'job_state', ?string $param2 = NULL): string {
+function get_job_state_view(array $job, string $param_name = 'job_state'): string {
     $job_state_array = $job[$param_name];
-    if($param2 != null)
-        $job_state_array = $job_state_array[$param2];
 
     $job_state_text = '';
     foreach($job_state_array as $job_state) {

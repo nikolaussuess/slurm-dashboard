@@ -455,7 +455,7 @@ EOF;
                 $contents .=    "<td>" . $job['partition'] . "</td>";
                 $contents .=    "<td>" . $job['user_name'] . " (" . $job['user_id'] . ")</td>";
                 $contents .=    "<td>" . \utils\get_job_state_view($job) . "</td>";
-                $contents .=    "<td>" . $job['start_time'] . "</td>";
+                $contents .=    "<td>" . $job['time_start'] . "</td>";
                 $contents .=    "<td>" . $job['time_limit'] . "</td>";
                 $contents .=    "<td>" . ($job['node_count'] != NULL ? $job['node_count'] : "?") . "</td>";
                 $contents .=    "<td>" . $job['nodes'] . "</td>";

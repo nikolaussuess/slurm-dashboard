@@ -613,7 +613,6 @@ EOF;
             $contents .= $templateBuilder->build();
 
             $jobs = $dao->get_jobs_from_slurmdb($filter);
-            $jobs = array_reverse($jobs['jobs']); // newest entry first
 
             $contents .= '<div>Found <span style="font-weight: bold">' . count($jobs) . ' jobs</span>.</div>';
 

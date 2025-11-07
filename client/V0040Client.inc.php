@@ -145,7 +145,7 @@ class V0040Client extends AbstractClient {
             $jobs[] = $job;
         }
 
-        return $jobs;
+        return array_reverse($jobs); // newest entry first
     }
 
     function get_account_list(): array {

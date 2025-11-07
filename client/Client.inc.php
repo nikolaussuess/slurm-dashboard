@@ -106,6 +106,7 @@ class ClientFactory {
             throw new Error("API version currently unsupported. No client found.");
         }
 
+        $classname = '\\client\\' . $classname;
         return new $classname();
     }
 

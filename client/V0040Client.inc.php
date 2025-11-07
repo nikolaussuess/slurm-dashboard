@@ -31,43 +31,21 @@ class V0040Client extends AbstractClient {
         $jobs = [];
         foreach ($json['jobs'] as $json_job){
 
+            /**
+            $contents .=    "<td>" . $job['start_time'] . "</td>";
+            $contents .=    '<td><a href="?action=job&job_id=' . $job['job_id'] . '">[Details]</a></td>';
+             */
             $job = array(
                 'job_id'     => $json_job['job_id'],    // Int
                 'job_name'   => $json_job['name'],      // String
+                'partitions' => $json_job['partition'],
                 'state'      => $json_job['job_state'], // Array of strings
                 'user_name'  => $json_job['user_name'],
                 'user_id'    => $json_job['user_id'],
-                'group_name' => $json_job['group_name'],
-                'group_id'   => $json_job['group_id'],
-                'account'    => $json_job['account'],
-                'partitions' => $json_job['partition'],
-                'priority'   => $json_job['priority']['set'] ? $json_job['priority']['number'] : NULL,
-                'submit_line'=> $json_job['command'] ?? NULL,
-                'working_directory' => $json_job['current_working_directory'] ?? NULL,
-                'comment'    => $json_job['comment'],
-                'exit_code'  => $this->__read_exit_code($json_job),
-                'scheduled_nodes' => $json_job['scheduled_nodes'] ?? NULL,
-                'required_nodes' => $json_job['required_nodes'] ?? NULL,
                 'nodes'      => $this->get_nodes($json_job),
-                'qos'        => $json_job['qos'],
-                'container'  => $json_job['container'],
-                'container_id' => $json_job['container_id'] ?? NULL,
-                'allocating_node' => $json_job['allocating_node'] ?? NULL,
-                'flags'      => $json_job['flags'] ?? NULL,
-                'cores_per_socket' => $json_job['cores_per_socket']['set'] ? $json_job['cores_per_socket']['number'] : NULL,
-                'cpus_per_task' => $json_job['cpus_per_task']['set'] ? $json_job['cpus_per_task']['number'] : NULL,
-                'deadline'   => $json_job['deadline']['set'] ? $json_job['deadline']['number'] : NULL, // FIXME
-                'dependency' => $json_job['dependency'] ?? NULL,
-                'features'   => $json_job['features'] ?? NULL,
-                'gres_detail'=> $json_job['jobs'][0]['gres_detail'] ?? NULL,
-                'cpus'       => $json_job['cpus']['set'] ? $json_job['cpus']['number'] : NULL,
                 'node_count' => $json_job['node_count']['set'] ? $json_job['node_count']['number'] : NULL,
-                'tasks'      => $json_job['tasks']['set'] ? $json_job['tasks']['number'] : NULL,
-                'memory_per_cpu' => $json_job['memory_per_cpu']['set'] ? $json_job['memory_per_cpu']['number'] : NULL,
-                'memory_per_node' => $json_job['memory_per_node']['set'] ? $json_job['memory_per_node']['number'] : NULL,
-                'requeue'    => $json_job['requeue'],
-                'submit_time'=> $this->__get_date_from_unix_if_defined($json_job, 'submit_time'),
-                'time_limit' => $this->__get_timelimit_if_defined($json_job, 'time_limit')
+                'time_limit' => $this->__get_timelimit_if_defined($json_job, 'time_limit'),
+                'time_start' => $this->__get_date_from_unix_if_defined($json_job, 'start_time')
             );
             $jobs[] = $job;
         }

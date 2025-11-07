@@ -425,7 +425,7 @@ EOF;
 
             $jobs = $dao->get_jobs($filter);
 
-            $contents .= '<div>Found <span style="font-weight: bold">' . count($jobs['jobs']) . ' jobs</span>.</div>';
+            $contents .= '<div>Found <span style="font-weight: bold">' . count($jobs) . ' jobs</span>.</div>';
 
             $contents .= <<<EOF
 <div class="table-responsive">
@@ -447,7 +447,7 @@ EOF;
         <tbody>
 EOF;
 
-            foreach( $jobs['jobs'] as $job ) {
+            foreach( $jobs as $job ) {
 
                 $contents .= "<tr>";
                 $contents .=    "<td>" . $job['job_id'] . "</td>";
@@ -455,10 +455,10 @@ EOF;
                 $contents .=    "<td>" . $job['partition'] . "</td>";
                 $contents .=    "<td>" . $job['user_name'] . " (" . $job['user_id'] . ")</td>";
                 $contents .=    "<td>" . \utils\get_job_state_view($job) . "</td>";
-                $contents .=    "<td>" . \utils\get_date_from_unix_if_defined($job, 'start_time') . "</td>";
-                $contents .=    "<td>" . \utils\get_timelimit_if_defined($job, 'time_limit', "inf") . "</td>";
-                $contents .=    "<td>" . \utils\get_number_if_defined($job['node_count'], "?") . "</td>";
-                $contents .=    "<td>" . \utils\get_nodes($job) . "</td>";
+                $contents .=    "<td>" . $job['start_time'] . "</td>";
+                $contents .=    "<td>" . $job['time_limit'] . "</td>";
+                $contents .=    "<td>" . ($job['node_count'] != NULL ? $job['node_count'] : "?") . "</td>";
+                $contents .=    "<td>" . $job['nodes'] . "</td>";
                 $contents .=    '<td><a href="?action=job&job_id=' . $job['job_id'] . '">[Details]</a></td>';
 
             }

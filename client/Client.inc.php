@@ -103,7 +103,7 @@ class ClientFactory {
             require_once __DIR__ . "/{$classname}.php";
         }
         else {
-            throw new Error("API version currently unsupported. Not client found.");
+            throw new Error("API version currently unsupported. No client found. Hint: " . __DIR__ . "/{$classname}.php");
         }
 
         return new $classname();

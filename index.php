@@ -217,41 +217,41 @@ if( isset($_SESSION['USER']) ){
             else {
                 $contents .= '<h3>Job queue information</h3>';
 
-                $job_id = $query['jobs'][0]['job_id'];
-                $job_name = $query['jobs'][0]['name'];
-                $job_state_text = \utils\get_job_state_view($query['jobs'][0]);
+                $job_id = $query['job_id'];
+                $job_name = $query['job_name'];
+                $job_state_text = \utils\get_job_state_view($query);
 
-                $user = $query['jobs'][0]['user_name'] . " (" . $query['jobs'][0]['user_id'] . ')';
-                $group = $query['jobs'][0]['group_name'] . " (" . $query['jobs'][0]['group_id'] . ')';
-                $account = $query['jobs'][0]['account'];
-                $partitions = $query['jobs'][0]['partition'];
-                $priority = \utils\get_number_if_defined($query['jobs'][0]['priority']);
-                $submit_line = $query['jobs'][0]['command'] ?? "";
-                $working_directory = $query['jobs'][0]['current_working_directory'] ?? "";
-                $comment = $query['jobs'][0]['comment'];
-                $exit_code = \utils\read_exit_code($query['jobs'][0]);
-                $schednodes = $query['jobs'][0]['scheduled_nodes'] ?? '';
-                $reqnodes = $query['jobs'][0]['required_nodes'] ?? '';
-                $nodes = \utils\get_nodes($query['jobs'][0]);
-                $qos = $query['jobs'][0]['qos'];
-                $container = $query['jobs'][0]['container'];
-                $container_id = $query['jobs'][0]['container_id'] ?? "undefined";
-                $allocating_node = $query['jobs'][0]['allocating_node'] ?? "undefined";
-                $flags = $query['jobs'][0]['flags'] ?? "undefined";
-                $cores_per_socket = \utils\get_number_if_defined($query['jobs'][0]['cores_per_socket']);
-                $cpus_per_task = \utils\get_number_if_defined($query['jobs'][0]['cpus_per_task']);
-                $deadline = \utils\get_number_if_defined($query['jobs'][0]['deadline']);
-                $dependency = $query['jobs'][0]['dependency'] ?? "undefined";
-                $features = $query['jobs'][0]['features'] ?? "-";
-                $gres_detail = isset($query['jobs'][0]['gres_detail']) ? implode(",", $query['jobs'][0]['gres_detail']) : "none";
-                $cpus = \utils\get_number_if_defined($query['jobs'][0]['cpus']);
-                $node_count = \utils\get_number_if_defined($query['jobs'][0]['node_count']);
-                $tasks = \utils\get_number_if_defined($query['jobs'][0]['tasks']);
-                $memory_per_cpu = \utils\get_number_if_defined($query['jobs'][0]['memory_per_cpu']);
-                $memory_per_node = \utils\get_number_if_defined($query['jobs'][0]['memory_per_node']);
-                $requeue = $query['jobs'][0]['requeue'] ? 'yes' : 'no';
-                $submit_time = \utils\get_date_from_unix_if_defined($query['jobs'][0], 'submit_time');
-                $time_limit = \utils\get_timelimit_if_defined($query['jobs'][0], 'time_limit');
+                $user = $query['user_name'] . " (" . $query['user_id'] . ')';
+                $group = $query['group_name'] . " (" . $query['group_id'] . ')';
+                $account = $query['account'];
+                $partitions = $query['partition'];
+                $priority = ($query['priority'] != NULL ? $query['priority'] : '');
+                $submit_line = $query['command'] ?? "";
+                $working_directory = $query['current_working_directory'] ?? "";
+                $comment = $query['comment'];
+                $exit_code = $query['exit_code'];
+                $schednodes = $query['scheduled_nodes'] ?? '';
+                $reqnodes = $query['required_nodes'] ?? '';
+                $nodes = $query['nodes'];
+                $qos = $query['qos'];
+                $container = $query['container'];
+                $container_id = $query['container_id'] ?? "undefined";
+                $allocating_node = $query['allocating_node'] ?? "undefined";
+                $flags = $query['flags'] ?? "undefined";
+                $cores_per_socket = $query['cores_per_socket'];
+                $cpus_per_task = $query['cpus_per_task'];
+                $deadline = $query['deadline'];
+                $dependency = $query['dependency'] ?? "none";
+                $features = $query['features'] ?? "";
+                $gres_detail = isset($query['gres_detail']) ? implode(",", $query['gres_detail']) : "";
+                $cpus = $query['cpus'];
+                $node_count = $query['node_count'];
+                $tasks = $query['tasks'];
+                $memory_per_cpu = $query['memory_per_cpu'];
+                $memory_per_node = $query['memory_per_node'];
+                $requeue = $query['requeue'] ? 'yes' : 'no';
+                $submit_time = $query['submit_time'];
+                $time_limit = $query['time_limit'];
 
                 $templateBuilder = new TemplateLoader("jobinfo.html");
                 $templateBuilder->setParam("JOBID", $job_id);
@@ -301,56 +301,56 @@ if( isset($_SESSION['USER']) ){
             else {
                 $contents .= '<h3>Slurmdb information</h3>';
 
-                $job_id = $query['jobs'][0]['job_id'];
-                $job_name = $query['jobs'][0]['name'];
-                $job_state_text = \utils\get_job_state_view($query['jobs'][0], 'state', 'current');
+                $job_id = $query['job_id'];
+                $job_name = $query['job_name'];
+                $job_state_text = \utils\get_job_state_view($query);
 
-                $user = $query['jobs'][0]['user'];
-                $group = $query['jobs'][0]['group'];
-                $account = $query['jobs'][0]['account'];
-                $partitions = $query['jobs'][0]['partition'];
-                $priority = \utils\get_number_if_defined($query['jobs'][0]['priority']);
-                $submit_line = $query['jobs'][0]['submit_line'];
-                $working_directory = $query['jobs'][0]['current_working_directory'] ?? "";
+                $user = $query['user_name'];
+                $group = $query['group_name'];
+                $account = $query['account'];
+                $partitions = $query['partition'];
+                $priority = $query['priority'];
+                $submit_line = $query['submit_line'];
+                $working_directory = $query['current_working_directory'] ?? "";
 
                 $comment = '<ul>';
                 if($query['jobs'][0]['comment']['administrator'] != '')
-                    $comment .= '<li><b>Admin comment:</b> ' .$query['jobs'][0]['comment']['administrator'] . '</li>';
+                    $comment .= '<li><b>Admin comment:</b> ' .$query['comment']['administrator'] . '</li>';
                 if($query['jobs'][0]['comment']['job'] != '')
-                    $comment .= '<li><b>Job comment:</b> ' .$query['jobs'][0]['comment']['job'] . '</li>';
+                    $comment .= '<li><b>Job comment:</b> ' .$query['comment']['job'] . '</li>';
                 if($query['jobs'][0]['comment']['system'] != '')
-                    $comment .= '<li><b>System comment:</b> ' .$query['jobs'][0]['comment']['system'] . '</li>';
+                    $comment .= '<li><b>System comment:</b> ' .$query['comment']['system'] . '</li>';
                 $comment .= '</ul>';
 
-                $exit_code = \utils\read_exit_code($query['jobs'][0]);
-                $nodes = $query['jobs'][0]['nodes'];
-                $qos = $query['jobs'][0]['qos'];
-                $container = $query['jobs'][0]['container'];
-                $flags = $query['jobs'][0]['flags'] ?? array();
+                $exit_code = $query['jobs']['exit_code'];
+                $nodes = $query['nodes'];
+                $qos = $query['qos'];
+                $container = $query['container'];
+                $flags = $query['flags'] ?? array();
 
-                $gres_detail = isset($query['jobs'][0]['used_gres']) ? $query['jobs'][0]['used_gres'] : "none";
+                $gres_detail = isset($query['gres']) ? $query['gres'] : "";
                 $tres_detail = '';
-                if(isset($query['jobs'][0]['tres']) && isset($query['jobs'][0]['tres']['allocated'])){
+                if(isset($query['tres']) && isset($query['tres']['allocated'])){
                     $tres_detail .= '<b>Allocated:</b><ul>';
-                    foreach($query['jobs'][0]['tres']['allocated'] as $tres){
+                    foreach($query['tres']['allocated'] as $tres){
                         $tres_detail .= '<li>Name: ' . $tres['name'] . ', type: ' . $tres['type'] . ', count: ' . $tres['count'] . '</li>';
                     }
                     $tres_detail .= '</ul>';
                 }
-                if(isset($query['jobs'][0]['tres']) && isset($query['jobs'][0]['tres']['requested'])){
+                if(isset($query['tres']) && isset($query['tres']['requested'])){
                     $tres_detail .= '<b>Requested:</b><ul>';
-                    foreach($query['jobs'][0]['tres']['requested'] as $tres){
+                    foreach($query['tres']['requested'] as $tres){
                         $tres_detail .= '<li>Name: ' . $tres['name'] . ', type: ' . $tres['type'] . ', count: ' . $tres['count'] . '</li>';
                     }
                     $tres_detail .= '</ul>';
                 }
 
-                $submit_time = \utils\get_date_from_unix($query['jobs'][0]['time'], 'submission');
-                $time_limit = \utils\get_timelimit_if_defined($query['jobs'][0]['time'], 'limit');
-                $time_elapsed = \utils\get_elapsed_time($query['jobs'][0]['time'], 'elapsed');
-                $time_start = \utils\get_date_from_unix($query['jobs'][0]['time'], 'start');
-                $time_end = \utils\get_date_from_unix($query['jobs'][0]['time'], 'end');
-                $time_eligible = \utils\get_date_from_unix($query['jobs'][0]['time'], 'eligible');
+                $submit_time = $query['time_submit'];
+                $time_limit = $query['time_limit'];
+                $time_elapsed = $query['time_elapsed'];
+                $time_start = $query['time_start'];
+                $time_end = $query['time_end'];
+                $time_eligible = $query['time_eligible'];
 
                 $templateBuilder = new TemplateLoader("jobinfo_slurmdb.html");
                 $templateBuilder->setParam("JOBID", $job_id);

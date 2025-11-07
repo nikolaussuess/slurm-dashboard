@@ -210,7 +210,7 @@ class V0040Client extends AbstractClient {
         return NULL;
     }
 
-    function get_job_from_slurmdb(int|string $id) : array {
+    function get_job_from_slurmdb(int|string $id) : ?array {
         # curl --unix-socket /run/slurmrestd/slurmrestd.socket http://slurm/slurmdb/v0.0.39/job/id
         $json = \RequestFactory::newRequest()->request_json("job/".$id, 'slurmdb');
 
@@ -247,7 +247,7 @@ class V0040Client extends AbstractClient {
 
             return $job;
         }
-        throw new \Exception("Job does not exist.");
+        return NULL;
     }
 
     function get_user(string $user_name) : array {
@@ -256,6 +256,13 @@ class V0040Client extends AbstractClient {
         $json = \RequestFactory::newRequest()->request_json("user/{$user_name}?with_assocs", 'slurmdb');
         return $json;
     }
+
+    function get_users() : array {
+        # curl --unix-socket /run/slurmrestd/slurmrestd.socket http://slurm/slurmdb/v0.0.40/users?with_assocs&with_deleted
+        $json = \RequestFactory::newRequest()->request_json("users?with_assocs&with_deleted", 'slurmdb');
+        return $json['users'];
+    }
+
 
     function get_node_info(string $nodename) : array {
         # curl --unix-socket /run/slurmrestd/slurmrestd.socket http://slurm/slurm/v0.0.39/node/nodename

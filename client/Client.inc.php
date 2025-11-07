@@ -9,6 +9,15 @@ interface Client{
     function is_available() : bool;
     function getNodeList(): array;
     function get_jobs(?array $filter = NULL) : array;
+    function get_jobs_from_slurmdb(?array $filter = NULL) : array;
+    function get_account_list(): array;
+    function get_users_list(): array;
+    function get_job(string $id) : ?array;
+    function get_job_from_slurmdb(int|string $id) : ?array;
+    function get_user(string $user_name) : array;
+    function get_users() : array;
+    function get_node_info(string $nodename) : array;
+    function get_maintenances() : array;
 }
 
 abstract class AbstractClient implements Client {

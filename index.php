@@ -5,12 +5,12 @@ session_start();
 date_default_timezone_set('Europe/Vienna');
 
 require_once 'TemplateLoader.inc.php';
-require_once 'client.inc.php';
 require_once 'globals.inc.php';
+require_once 'client/Client.inc.php';
 require_once 'auth/auth.inc.php';
 require_once 'utils.inc.php';
 
-$dao = new Client();
+$dao = \client\ClientFactory::newClient();
 $title = "Clusterinfo " . CLUSTER_NAME;
 $contents = "";
 
@@ -20,7 +20,7 @@ if( isset($_GET['action']) && $_GET['action'] == "logout"){
 }
 
 // Check if the socket exists and add a warning otherwise
-if( ! Client::socketExists() ){
+if( ! $dao->is_available() ){
     addError("Cannot create socket. Is <kbd>slurmrestd</kbd> running? Please report this issue to " . ADMIN_EMAIL);
 }
 
@@ -119,18 +119,18 @@ if( isset($_SESSION['USER']) ){
                 $templateBuilder = new TemplateLoader("nodeinfo.html");
                 $templateBuilder->setParam("NODENAME", $node);
 
-                $templateBuilder->setParam("CPU_PERCENTAGE", $data["nodes"][0]["alloc_cpus"]/$data["nodes"][0]["cpus"]*100);
-                $templateBuilder->setParam("CPU_USED", $data["nodes"][0]["alloc_cpus"]);
-                $templateBuilder->setParam("CPU_TOTAL", $data["nodes"][0]["cpus"]);
+                $templateBuilder->setParam("CPU_PERCENTAGE", $data["alloc_cpus"]/$data["cpus"]*100);
+                $templateBuilder->setParam("CPU_USED", $data["alloc_cpus"]);
+                $templateBuilder->setParam("CPU_TOTAL", $data["cpus"]);
 
-                $templateBuilder->setParam("MEM_PERCENTAGE", ($data["nodes"][0]["real_memory"]-$data["nodes"][0]["free_mem"]["number"])/$data["nodes"][0]["real_memory"]*100);
-                $templateBuilder->setParam("MEM_USED", $data["nodes"][0]["real_memory"] - $data["nodes"][0]["free_mem"]["number"]);
-                $templateBuilder->setParam("MEM_TOTAL", $data["nodes"][0]["real_memory"]);
-                $templateBuilder->setParam("ALLOC_MEM_PERCENTAGE", ($data["nodes"][0]["alloc_memory"])/$data["nodes"][0]["real_memory"]*100);
-                $templateBuilder->setParam("ALLOC_MEM", $data["nodes"][0]["alloc_memory"]);
+                $templateBuilder->setParam("MEM_PERCENTAGE", ($data["mem_total"]-$data["mem_free"])/$data["mem_total"]*100);
+                $templateBuilder->setParam("MEM_USED", $data["mem_total"] - $data["mem_free"]);
+                $templateBuilder->setParam("MEM_TOTAL", $data["mem_total"]);
+                $templateBuilder->setParam("ALLOC_MEM_PERCENTAGE", ($data["mem_alloc"])/$data["mem_total"]*100);
+                $templateBuilder->setParam("ALLOC_MEM", $data["mem_alloc"]);
 
-                $gres = $data["nodes"][0]["gres"];
-                $gres_used = $data["nodes"][0]["gres_used"];
+                $gres = $data["gres"];
+                $gres_used = $data["gres_used"];
                 if($gres == ""){
                     $gpus = 0;
                     $gpus_used = 0;
@@ -140,8 +140,6 @@ if( isset($_SESSION['USER']) ){
 
                     $gpus = preg_replace('/.*:(\d+)(?:\(.*\))?$/', '$1', $gres);
                     $gpus_used = preg_replace('/.*:(\d+)(?:\(.*\))?$/', '$1', $gres_used);
-                    //$gpus = preg_replace('/.*gpu:(\d+).*|.*gpu:\(null\):(\d+).*/', '$1$2', $gres);
-                    //$gpus_used = preg_replace('/.*gpu:(\d+).*|.*gpu:\(null\):(\d+).*/', '$1$2', $gres_used);
                     // For debugging
                     //echo "GPUs='$gpus', gpus_used='$gpus_used', gres='$gres', gres_used='$gres_used'";
                     $gpus_percentage = (int)$gpus_used / (int)$gpus * 100;
@@ -150,54 +148,54 @@ if( isset($_SESSION['USER']) ){
                 $templateBuilder->setParam("GPU_USED", $gpus_used);
                 $templateBuilder->setParam("GPU_TOTAL", $gpus);
 
-                $templateBuilder->setParam("STATE", implode(", ", $data["nodes"][0]["state"]));
+                $templateBuilder->setParam("STATE", implode(", ", $data["state"]));
                 $state_color = "#f9c98f"; # orange
                 if(
-                        in_array("IDLE", $data["nodes"][0]["state"]) ||
-                        in_array("MIX", $data["nodes"][0]["state"]) ||
-                        in_array("MIXED", $data["nodes"][0]["state"]) ||
-                        in_array("ALLOC", $data["nodes"][0]["state"]) ||
-                        in_array("ALLOCATED", $data["nodes"][0]["state"])
+                        in_array("IDLE", $data["state"]) ||
+                        in_array("MIX", $data["state"]) ||
+                        in_array("MIXED", $data["state"]) ||
+                        in_array("ALLOC", $data["state"]) ||
+                        in_array("ALLOCATED", $data["state"])
                 ){
                     $state_color = "#c1dead"; # green
                 }
                 elseif (
-                        in_array("DOWN", $data["nodes"][0]["state"]) ||
-                        in_array("DRAIN", $data["nodes"][0]["state"]) ||
-                        in_array("DRAINED", $data["nodes"][0]["state"]) ||
-                        in_array("DRAINING", $data["nodes"][0]["state"]) ||
-                        in_array("FAIL", $data["nodes"][0]["state"])
+                        in_array("DOWN", $data["state"]) ||
+                        in_array("DRAIN", $data["state"]) ||
+                        in_array("DRAINED", $data["state"]) ||
+                        in_array("DRAINING", $data["state"]) ||
+                        in_array("FAIL", $data["state"])
                 ) {
                     $state_color = "#deadae"; # Red
                 }
                 $templateBuilder->setParam("STATE_COLOR", $state_color);
 
-                $templateBuilder->setParam("ARCHITECTURE", $data["nodes"][0]["architecture"]);
-                $templateBuilder->setParam("BOARDS", $data["nodes"][0]["boards"]);
+                $templateBuilder->setParam("ARCHITECTURE", $data["architecture"]);
+                $templateBuilder->setParam("BOARDS", $data["boards"]);
 
                 $feature_str = "";
-                foreach ($data["nodes"][0]["features"] as $feature){
+                foreach ($data["features"] as $feature){
                     $feature_str .= '<span class="feature">' . $feature . '</span> ';
                 }
                 $templateBuilder->setParam("FEATURES", $feature_str);
 
                 $feature_str = "";
-                foreach ($data["nodes"][0]["active_features"] as $feature){
+                foreach ($data["active_features"] as $feature){
                     $feature_str .= '<span class="feature">' . $feature . '</span> ';
                 }
                 $templateBuilder->setParam("ACTIVE_FEATURES", $feature_str);
 
-                $templateBuilder->setParam("ADDRESS", $data["nodes"][0]["address"]);
-                $templateBuilder->setParam("HOSTNAME", $data["nodes"][0]["hostname"]);
-                $templateBuilder->setParam("OPERATING_SYSTEM", $data["nodes"][0]["operating_system"]);
-                $templateBuilder->setParam("OWNER", $data["nodes"][0]["owner"]);
-                $templateBuilder->setParam("TRES", $data["nodes"][0]["tres"]);
-                $templateBuilder->setParam("TRES_USED", $data["nodes"][0]["tres_used"]);
-                $templateBuilder->setParam("BOOT_TIME", \utils\get_date_from_unix_if_defined($data["nodes"][0], "boot_time"));
-                $templateBuilder->setParam("LAST_BUSY", \utils\get_date_from_unix_if_defined($data["nodes"][0], "last_busy"));
-                $templateBuilder->setParam("PARTITIONS", count($data["nodes"][0]["partitions"]) > 0 ? '<li><span class="monospaced">' . implode('</li><li><span class="monospaced">', $data["nodes"][0]["partitions"]) . '</span></li>' : '');
-                $templateBuilder->setParam("RESERVATION", $data["nodes"][0]["reservation"] ?? '');
-                $templateBuilder->setParam("SLURM_VERSION", $data["nodes"][0]["version"] ?? '');
+                $templateBuilder->setParam("ADDRESS", $data["address"]);
+                $templateBuilder->setParam("HOSTNAME", $data["hostname"]);
+                $templateBuilder->setParam("OPERATING_SYSTEM", $data["operating_system"]);
+                $templateBuilder->setParam("OWNER", $data["owner"]);
+                $templateBuilder->setParam("TRES", $data["tres"]);
+                $templateBuilder->setParam("TRES_USED", $data["tres_used"]);
+                $templateBuilder->setParam("BOOT_TIME", $data["boot_time"]);
+                $templateBuilder->setParam("LAST_BUSY", $data["last_busy"]);
+                $templateBuilder->setParam("PARTITIONS", count($data["partitions"]) > 0 ? '<li><span class="monospaced">' . implode('</li><li><span class="monospaced">', $data["partitions"]) . '</span></li>' : '');
+                $templateBuilder->setParam("RESERVATION", $data["reservation"] ?? '');
+                $templateBuilder->setParam("SLURM_VERSION", $data["version"] ?? '');
 
                 $contents .= $templateBuilder->build();
             }
@@ -213,8 +211,8 @@ if( isset($_SESSION['USER']) ){
 
             $contents .= "<h2>Job " . $_GET['job_id'] . "</h2>";
             $query = $dao->get_job($_GET['job_id']);
-            if(count($query['jobs']) == 0){
-                $contents .= "<p>Job " . $_GET['job_id'] . " not in active queue any more.</p>";
+            if( $query == NULL ){
+                $contents .= "<p>Job " . $_GET['job_id'] . " not in active queue anymore.</p>";
             }
             else {
                 $contents .= '<h3>Job queue information</h3>';

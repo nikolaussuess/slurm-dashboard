@@ -5,6 +5,8 @@ const ADMIN_NAMES = '<TO BE REPLACED>';
 const SLURM_LOGIN_NODE = '<TO BE REPLACED>';
 const ADMIN_EMAIL = '<TO BE REPLACED>';
 const WIKI_LINK = '<TO BE REPLACED>';
+const CONNECTION_MODE = 'unix';
+const REST_API_VERSION = 'v0.0.40';
 
 // Grant some users read access to e.g. the list of SLURM users.
 // Admins always have access.

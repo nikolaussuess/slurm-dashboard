@@ -99,11 +99,11 @@ abstract class AbstractClient implements Client {
 class ClientFactory {
     public static function newClient($version = REST_API_VERSION) : Client {
         $classname = strtoupper(str_replace('.', '', $version)) . "Client";
-        if(file_exists(__DIR__ . "/{$classname}.php")){
-            require_once __DIR__ . "/{$classname}.php";
+        if(file_exists(__DIR__ . "/{$classname}.inc.php")){
+            require_once __DIR__ . "/{$classname}.inc.php";
         }
         else {
-            throw new Error("API version currently unsupported. No client found. Hint: " . __DIR__ . "/{$classname}.php");
+            throw new Error("API version currently unsupported. No client found.");
         }
 
         return new $classname();

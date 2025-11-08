@@ -193,7 +193,7 @@ abstract class AbstractClient implements Client {
                 'deadline'   => $json_job['deadline']['set'] ? $json_job['deadline']['number'] : NULL, // FIXME
                 'dependency' => $json_job['dependency'] ?? NULL,
                 'features'   => $json_job['features'] ?? NULL,
-                'gres'       => $json_job['jobs'][0]['gres_detail'] ?? NULL,
+                'gres'       => $json_job['gres_detail'] ?? NULL,
                 'cpus'       => $json_job['cpus']['set'] ? $json_job['cpus']['number'] : NULL,
                 'node_count' => $json_job['node_count']['set'] ? $json_job['node_count']['number'] : NULL,
                 'tasks'      => $json_job['tasks']['set'] ? $json_job['tasks']['number'] : NULL,

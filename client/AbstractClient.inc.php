@@ -222,7 +222,7 @@ abstract class AbstractClient implements Client {
                 'account'    => $json_job['account'],
                 'partition'  => $json_job['partition'],
                 'priority'   => $this->__get_number_if_defined($json_job['priority']),
-                'submit_line'=> $json_job['command'] ?? NULL,
+                'submit_line'=> $json_job['submit_line'] ?? NULL,
                 'working_directory' => $json_job['current_working_directory'] ?? NULL,
                 'comment'    => $json_job['comment'],
                 'exit_code'  => $this->__read_exit_code($json_job),

@@ -12,7 +12,7 @@ Unless you explicitly override the constant `REST_API_VERSION` from `"auto"` to 
 Currently tested with the following Slurm versions:
 - 23.11.x (tested with version <= v1.0.0 only)
 - 24.05.x
-- 25.05.x (version > v1.0.0 only)
+- 25.05.x (supported by version > v1.0.0 only)
 
 However, any slurm version `>= 23.11.x` should work. If you encounter any issues, please write a bug report.
 

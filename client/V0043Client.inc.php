@@ -6,19 +6,21 @@ use function utils\get_number_if_defined;
 
 class V0043Client extends AbstractClient {
 
+    const api_version = 'v0.0.43';
+
     function is_available() : bool {
         return \RequestFactory::socket_exists();
     }
 
     function getNodeList(): array{
         $request = \RequestFactory::newRequest();
-        $json = $request->request_json("nodes", "slurm", 3600);
+        $json = $request->request_json("nodes", "slurm", self::api_version, 3600);
         return array_column($json['nodes'], 'name');
     }
 
     function get_jobs(?array $filter = NULL): array {
         # curl --unix-socket /run/slurmrestd/slurmrestd.socket http://slurm/slurm/v0.0.39/jobs
-        $json = \RequestFactory::newRequest()->request_json("jobs");
+        $json = \RequestFactory::newRequest()->request_json("jobs", 'slurm', self::api_version);
 
         // Exclude partition p_low if parameter exclude_p_low=1
         if($filter != NULL){
@@ -98,7 +100,7 @@ class V0043Client extends AbstractClient {
         }
 
         # curl --unix-socket /run/slurmrestd/slurmrestd.socket http://slurm/slurmdb/v0.0.40/jobs
-        $json = \RequestFactory::newRequest()->request_json("jobs" . $query_string, 'slurmdb');
+        $json = \RequestFactory::newRequest()->request_json("jobs" . $query_string, 'slurmdb', self::api_version);
 
         /*
          * Issue 12 specific code
@@ -150,19 +152,19 @@ class V0043Client extends AbstractClient {
 
     function get_account_list(): array {
         # curl --unix-socket /run/slurmrestd/slurmrestd.socket http://slurm/slurmdb/v0.0.40/accounts
-        $json = \RequestFactory::newRequest()->request_json("accounts", 'slurmdb', 3600);
+        $json = \RequestFactory::newRequest()->request_json("accounts", 'slurmdb', self::api_version, 3600);
         return array_column($json['accounts'], 'name');
     }
 
     function get_users_list(): array {
         # curl --unix-socket /run/slurmrestd/slurmrestd.socket http://slurm/slurmdb/v0.0.40/users
-        $json = \RequestFactory::newRequest()->request_json("users", 'slurmdb', 120);
+        $json = \RequestFactory::newRequest()->request_json("users", 'slurmdb', self::api_version, 120);
         return array_column($json['users'], 'name');
     }
 
     function get_job(string $id) : ?array {
         # curl --unix-socket /run/slurmrestd/slurmrestd.socket http://slurm/slurm/v0.0.40/job/id
-        $json = \RequestFactory::newRequest()->request_json("job/".$id);
+        $json = \RequestFactory::newRequest()->request_json("job/".$id, 'slurm', self::api_version);
 
         foreach ($json['jobs'] as $json_job){
 
@@ -212,7 +214,7 @@ class V0043Client extends AbstractClient {
 
     function get_job_from_slurmdb(int|string $id) : ?array {
         # curl --unix-socket /run/slurmrestd/slurmrestd.socket http://slurm/slurmdb/v0.0.39/job/id
-        $json = \RequestFactory::newRequest()->request_json("job/".$id, 'slurmdb');
+        $json = \RequestFactory::newRequest()->request_json("job/".$id, 'slurmdb', self::api_version);
 
         foreach ($json['jobs'] as $json_job){
 
@@ -253,20 +255,20 @@ class V0043Client extends AbstractClient {
     function get_user(string $user_name) : array {
         // TODO: We should not just pass the oroginal array ...
         # curl --unix-socket /run/slurmrestd/slurmrestd.socket http://slurm/slurmdb/v0.0.40/user/username?with_assocs
-        $json = \RequestFactory::newRequest()->request_json("user/{$user_name}?with_assocs", 'slurmdb');
+        $json = \RequestFactory::newRequest()->request_json("user/{$user_name}?with_assocs", 'slurmdb', self::api_version);
         return $json;
     }
 
     function get_users() : array {
         # curl --unix-socket /run/slurmrestd/slurmrestd.socket http://slurm/slurmdb/v0.0.40/users?with_assocs&with_deleted
-        $json = \RequestFactory::newRequest()->request_json("users?with_assocs&with_deleted", 'slurmdb');
+        $json = \RequestFactory::newRequest()->request_json("users?with_assocs&with_deleted", 'slurmdb', self::api_version);
         return $json['users'];
     }
 
 
     function get_node_info(string $nodename) : array {
         # curl --unix-socket /run/slurmrestd/slurmrestd.socket http://slurm/slurm/v0.0.39/node/nodename
-        $json = \RequestFactory::newRequest()->request_json("node/{$nodename}");
+        $json = \RequestFactory::newRequest()->request_json("node/{$nodename}", 'slurm', self::api_version);
 
         $node = array(
             'node_name'  => $nodename,
@@ -301,7 +303,7 @@ class V0043Client extends AbstractClient {
 
     private function get_reservations() : array {
         # curl --unix-socket /run/slurmrestd/slurmrestd.socket http://slurm/slurm/v0.0.40/reservations
-        $json = \RequestFactory::newRequest()->request_json("reservations");
+        $json = \RequestFactory::newRequest()->request_json("reservations", 'slurm', self::api_version);
         return $json;
     }
 

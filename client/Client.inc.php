@@ -110,7 +110,7 @@ class ClientFactory {
     public static function newClient($version = REST_API_VERSION) : Client {
 
         if( $version == 'auto' ){
-            $response = \RequestFactory::newRequest()->request_json2("openapi/v3", 0);;
+            $response = \RequestFactory::newRequest()->request_json2("openapi/v3", 0);
             if(! isset($response['info']['x-slurm']['data_parsers']) ){
                 die("Could not detect SLURM REST API version. If the error persists, please contact " . ADMIN_EMAIL);
             }

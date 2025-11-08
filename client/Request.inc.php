@@ -1,7 +1,7 @@
 <?php
 
 interface Request {
-    function request_json(string $endpoint, string $namespace = "slurm", int $ttl = 5);
+    function request_json(string $endpoint, string $namespace, string $api_version, int $ttl = 5);
     static function socket_exists() : bool;
 }
 
@@ -18,7 +18,7 @@ class UnixRequest implements Request {
         }
     }
 
-    function request_json(string $endpoint, string $namespace = "slurm", int $ttl = 5, $api_version = REST_API_VERSION) : mixed {
+    function request_json(string $endpoint, string $namespace, string $api_version, int $ttl = 5) : mixed {
 
         if( @apcu_exists($namespace . '/' . $endpoint)){
             return apcu_fetch($namespace . '/' . $endpoint);

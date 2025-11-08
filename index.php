@@ -226,8 +226,8 @@ if( isset($_SESSION['USER']) ){
                 $account = $query['account'];
                 $partitions = $query['partition'];
                 $priority = ($query['priority'] != NULL ? $query['priority'] : '');
-                $submit_line = $query['command'] ?? "";
-                $working_directory = $query['current_working_directory'] ?? "";
+                $submit_line = $query['submit_line'] ?? "";
+                $working_directory = $query['working_directory'] ?? "";
                 $comment = $query['comment'];
                 $exit_code = $query['exit_code'];
                 $schednodes = $query['scheduled_nodes'] ?? '';
@@ -243,7 +243,7 @@ if( isset($_SESSION['USER']) ){
                 $deadline = $query['deadline'];
                 $dependency = $query['dependency'] ?? "none";
                 $features = $query['features'] ?? "";
-                $gres_detail = isset($query['gres_detail']) ? implode(",", $query['gres_detail']) : "";
+                $gres_detail = isset($query['gres']) ? implode(",", $query['gres']) : "";
                 $cpus = $query['cpus'];
                 $node_count = $query['node_count'];
                 $tasks = $query['tasks'];
@@ -311,7 +311,7 @@ if( isset($_SESSION['USER']) ){
                 $partitions = $query['partition'];
                 $priority = $query['priority'];
                 $submit_line = $query['submit_line'];
-                $working_directory = $query['current_working_directory'] ?? "";
+                $working_directory = $query['working_directory'] ?? "";
 
                 $comment = '<ul>';
                 if($query['comment']['administrator'] != '')

@@ -5,13 +5,6 @@
  */
 
 namespace utils;
-function get_number_if_defined(array $arr, string $default = 'undefined') : string {
-    if($arr['set'])
-        return $arr['number'];
-    else
-        return $default;
-}
-
 
 function get_date_from_unix_if_defined(array $job_arr, string $param, string $default = 'undefined') : string {
     if(! isset($job_arr[$param])){
@@ -58,7 +51,6 @@ function get_job_state_view(array $job, string $param_name = 'job_state'): strin
             $job_state == 'COMPLETED' ||
             $job_state == 'CONFIGURING' ||
             $job_state == 'COMPLETING' ||
-            $job_state == 'RUNNING' ||
             $job_state == 'RUNNING'
         ) {
             $state_color = "#28a745"; # green

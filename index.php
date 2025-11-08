@@ -328,7 +328,7 @@ if( isset($_SESSION['USER']) ){
                 $container = $query['container'];
                 $flags = $query['flags'] ?? array();
 
-                $gres_detail = isset($query['gres']) ? $query['gres'] : "";
+                $gres_detail = $query['gres'] ?? "";
                 $tres_detail = '';
                 if(isset($query['tres']) && isset($query['tres']['allocated'])){
                     $tres_detail .= '<b>Allocated:</b><ul>';

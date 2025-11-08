@@ -108,16 +108,31 @@ abstract class AbstractClient implements Client {
 
 class ClientFactory {
     public static function newClient($version = REST_API_VERSION) : Client {
-        $classname = strtoupper(str_replace('.', '', $version)) . "Client";
-        if(file_exists(__DIR__ . "/{$classname}.inc.php")){
-            require_once __DIR__ . "/{$classname}.inc.php";
-        }
-        else {
-            throw new Error("API version currently unsupported. No client found.");
+
+        if( $version == 'auto' ){
+            $response = \RequestFactory::newRequest()->request_json2("v3/openapi", 0);;
+            if(! isset($response['info']['x-slurm']['data_parsers']) ){
+                die("Could not detect SLURM REST API version. If the error persists, please contact " . ADMIN_EMAIL);
+            }
+            $parsers = array_column($response['info']['x-slurm']['data_parsers'], 'plugin');
+            rsort($parsers, SORT_NATURAL | SORT_FLAG_CASE);
+
+            syslog(LOG_INFO, "slurm-dashboard: Detected the following data parsers: " . implode(', ', $parsers));
         }
 
-        $classname = '\\client\\' . $classname;
-        return new $classname();
+        if( ! isset($parsers) )
+            $parsers = [$version];
+
+        // Use the first matching version.
+        foreach ($parsers as $version){
+            $classname = strtoupper(str_replace('.', '', $version)) . "Client";
+            if(file_exists(__DIR__ . "/{$classname}.inc.php")){
+                require_once __DIR__ . "/{$classname}.inc.php";
+                $classname = '\\client\\' . $classname;
+                return new $classname();
+            }
+        }
+        throw new Error("API version currently unsupported. No client found.");
     }
 
 }

@@ -348,7 +348,7 @@ class V0043Client extends AbstractClient {
 
     private function get_nodes(array $job_arr) : string {
         // TODO
-        if(isset($job_arr['job_resources']) && isset($job_arr['job_resources']['nodes']))
+        if(isset($job_arr['job_resources']) && isset($job_arr['job_resources']['nodes']['list']))
             return $job_arr['job_resources']['nodes']['list'];
         else
             return "?";

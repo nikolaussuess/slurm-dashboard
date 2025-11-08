@@ -1,6 +1,7 @@
 <?php
 
 namespace client;
+require_once 'AbstractClient.inc.php';
 
 class V0043Client extends AbstractClient {
 

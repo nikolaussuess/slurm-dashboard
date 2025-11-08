@@ -5,6 +5,8 @@ It currently supports the following `slurmrestd` openAPI versions:
 - `v0.0.40` (supported in Slurm versions 23.11 until excl. 25.11)
 - `v0.0.43` (supported in Slurm versions 25.05 until excl. 27.05)
 
+Unless you explicitly override the constant `REST_API_VERSION` from `"auto"` to another value (e.g., `v0.0.40`), the dashboard will dynamically choose the latest API version that is supported by both the dashboard and `slurmrestd`.
+
 ![Resource overview](./imgs/resources.png?raw=true "Resource overview")
 
 Currently tested with the following Slurm versions:

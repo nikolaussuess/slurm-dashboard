@@ -1,11 +1,18 @@
 # Slurm dashboard
-This is a small dashboard that displays some information about a slurm cluster. It is written in PHP, using `slurmrestd` API version `v0.0.40` (which should be supported in Slurm versions 23.11 to excl. 26.02).
+This is a small dashboard that displays some information about a slurm cluster. It is written in PHP, using `slurmrestd`.
+
+It currently supports the following `slurmrestd` openAPI versions:
+- `v0.0.40` (supported in Slurm versions 23.11 until excl. 25.11)
+- `v0.0.43` (supported in Slurm versions 25.05 until excl. 27.05)
 
 ![Resource overview](./imgs/resources.png?raw=true "Resource overview")
 
 Currently tested with the following Slurm versions:
-- 23.11.x
+- 23.11.x (tested with version <= v1.0.0 only)
 - 24.05.x
+- 25.05.x (version > v1.0.0 only)
+
+However, any slurm version `>= 23.11.x` should work. If you encounter any issues, please write a bug report.
 
 ## Current features
 - display cluster usage information (state, CPUs, memory, gpus per node)
@@ -27,7 +34,7 @@ Currently tested with the following Slurm versions:
 - Allow users to requeue and cancel their own jobs.
 - Allow users to submit jobs via a web interface.
 
-But currently none of these features is under active development. I will, however, make this dashboard compatible with slurm 26.x, which requires adding compatibility for REST API v0.0.43.
+But currently none of these features is under active development.
 
 ## Requirements
 - PHP (currently only tested with PHP 8.2)<br>
@@ -39,7 +46,7 @@ But currently none of these features is under active development. I will, howeve
   including
   - `libapache2-mpm-itk` in order to change to user to the same `slurmrestd` is running with.
   - `libapache2-mod-php`
-- `slurmrestd` using Unix sockets, running with the same user that the website is running with, and `Environment=SLURMRESTD_SECURITY=disable_user_check` set.
+- `slurmrestd` using Unix sockets, running with the same user that the website is running with.
 
 ## Setup
 1. Install the requirements.
@@ -50,8 +57,8 @@ But currently none of these features is under active development. I will, howeve
 # Unset vendor unit ExecStart to avoid cumulative definition
 ExecStart=
 Environment=
-# Disable slurm user security check
-Environment=SLURMRESTD_SECURITY=disable_user_check
+# Disable slurm user security check - might be required.
+#Environment=SLURMRESTD_SECURITY=disable_user_check
 ExecStart=/usr/local/sbin/slurmrestd $SLURMRESTD_OPTIONS unix:/run/slurmrestd/slurmrestd.socket
 RuntimeDirectory=slurmrestd
 RuntimeDirectoryMode=0755

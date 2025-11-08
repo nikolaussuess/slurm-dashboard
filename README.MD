@@ -27,6 +27,8 @@ Currently tested with the following Slurm versions:
 - Allow users to requeue and cancel their own jobs.
 - Allow users to submit jobs via a web interface.
 
+But currently none of these features is under active development. I will, however, make this dashboard compatible with slurm 26.x, which requires adding compatibility for REST API v0.0.43.
+
 ## Requirements
 - PHP (currently only tested with PHP 8.2)<br>
   including
@@ -77,6 +79,103 @@ systemctl restart slurmrestd
 systemctl restart apache2
 ```
 10. You might also want to edit the default page in `templates/about.html`.
+
+### Update
+Once you have set up the dashboard, you can use the following bash script to upgrade to a new version. (It might also be helpful for the initial setup.)
+
+```bash
+#!/bin/bash
+
+# TODO: REPLACE THE FOLLOWING VARIABLES
+# Replace by your web directory
+WEB_DIRECTORY="/var/www/slurm-dashboard"
+DASHBOARD_USER="slurm-dashboard"
+SLURM_USER="slurm"
+SLURM_LOGIN_NODE="slurm.example.com"
+CLUSTER_NAME="Test cluster"
+ADMIN_NAMES="[should contain contact info]"
+ADMIN_EMAIL="[should contain an email address - publicly available]"
+WIKI_LINK="https://example.com/my-slurm-wiki"
+
+LDAP_URI='dc.example.com'
+LDAP_BASE='cn=users,dc=i,dc=example,dc=com'
+LDAP_ADMIN_USER='ldapuser'
+LDAP_ADMIN_PASSWORD='replaceme'
+
+SSH_SERVER_URL='localhost'
+# END OF REPLACE-ME
+
+# PRODUCTIVE INSTANCE
+tput setab 1
+echo -n "                                                  "
+tput sgr0
+echo 
+tput setab 1
+echo -n "        upgrading productive instance             "
+tput sgr0
+echo
+tput setab 1
+echo -n "                                                  "
+tput sgr0
+echo 
+read -p "Are you sure that you want to update the productive instance? " -n 1 -r
+echo    # (optional) move to a new line
+if [[ $REPLY =~ ^[Yy]$ ]]; then
+
+    pushd "$WEB_DIRECTORY"
+
+    if [ "`pwd`" != "$WEB_DIRECTORY" ]; then
+        tput bold
+        tput setaf 1
+        echo -n "[ERROR] " >&2
+        tput sgr0
+        echo "Wrong directory." >&2
+        exit 1
+
+    fi
+
+    if [ "$USER" != "$DASHBOARD_USER" ]; then
+        tput bold
+        tput setaf 1
+        echo -n "[ERROR] " >&2
+        tput sgr0
+        echo "MUST be logged in as user $DASHBOARD_USER." >&2
+        echo "Try to replace user ..."
+        exec su -s /bin/bash $DASHBOARD_USER "$0" -- "$@"
+    fi
+
+    if [ "$#" -eq 1 ]; then
+        branch=$1
+    else
+        branch="master"
+    fi
+
+    echo "Pulling repository."
+    set +x
+    git config pull.rebase true
+    git checkout -b $branch
+    git branch --set-upstream-to=origin/$branch $branch
+    git checkout .
+    git pull -f
+
+    set -x
+
+    sed -i "s/const CLUSTER_NAME = '<TO BE REPLACED>';/const CLUSTER_NAME = '${CLUSTER_NAME}';/g" globals.inc.php
+    sed -i "s#const ADMIN_NAMES = '<TO BE REPLACED>';#const ADMIN_NAMES = '${ADMIN_NAMES}';#g" globals.inc.php
+    sed -i "s#const ADMIN_EMAIL = '<TO BE REPLACED>';#const ADMIN_EMAIL = '${ADMIN_EMAIL}';#g" globals.inc.php
+    sed -i "s#const WIKI_LINK = '<TO BE REPLACED>';#const WIKI_LINK = '${WIKI_LINK}';#g" globals.inc.php
+    sed -i "s#const SLURM_LOGIN_NODE = '<TO BE REPLACED>';#const SLURM_LOGIN_NODE = '${SLURM_LOGIN_NODE}';#g" globals.inc.php
+
+    sed -i "s#const URI = TO_BE_REPLACED;#const URI = '${LDAP_URI}';#g" auth/auth.ldap.inc.php
+    sed -i "s#const BASE = TO_BE_REPLACED;#const BASE = '${LDAP_BASE}';#g" auth/auth.ldap.inc.php
+    sed -i "s#const ADMIN_USER = TO_BE_REPLACED;#const ADMIN_USER = '${LDAP_ADMIN_USER}';#g" auth/auth.ldap.inc.php
+    sed -i "s!const ADMIN_PASSWORD = TO_BE_REPLACED;!const ADMIN_PASSWORD = '${LDAP_ADMIN_PASSWORD}" auth/auth.ldap.inc.php
+
+    sed -i "s#private const SERVER_URL = TO_BE_REPLACED;#private const SERVER_URL = '${SSH_SERVER_URL}';#g" auth/auth.local.inc.php
+
+    find $WEB_DIRECTORY -type f -exec chmod 640 {} \;
+fi
+```
 
 ## License
 This project is currently licensed under the [MIT License](https://github.com/nikolaussuess/slurm-dashboard/blob/master/LICENSE).

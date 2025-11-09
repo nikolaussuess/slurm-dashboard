@@ -37,7 +37,7 @@ function get_slurm_jobinfo(array $query) : string {
     $templateBuilder->setParam("FLAGS",             implode('<br>', $query['flags']));
     $templateBuilder->setParam("CORES_PER_SOCKET",  $query['cores_per_socket'] ?? '' );
     $templateBuilder->setParam("CPUS_PER_TASK",     $query['cpus_per_task'] ?? '' );
-    $templateBuilder->setParam("DEADLINE",          $query['deadline'] ??         );
+    $templateBuilder->setParam("DEADLINE",          $query['deadline'] ?? ''      );
     $templateBuilder->setParam("DEPENDENCY",        $query['dependency'] ??             );
     $templateBuilder->setParam("FEATURES",          $query['features']                  );
     $templateBuilder->setParam("GRES_DETAIL",       implode(",", $query['gres']));

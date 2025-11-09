@@ -10,6 +10,11 @@ require_once 'client/Client.inc.php';
 require_once 'auth/auth.inc.php';
 require_once 'utils.inc.php';
 
+require_once 'view/login.tpl.php';
+require_once 'view/maintenances.tpl.php';
+require_once 'view/usage.tpl.php';
+require_once 'view/job.tpl.php';
+
 $dao = \client\ClientFactory::newClient();
 $title = "Clusterinfo " . CLUSTER_NAME;
 $contents = "";
@@ -46,40 +51,14 @@ if(!isset($_SESSION['USER'])) {
     // Is set above if the login was successful.
     // Otherwise, the login form is displayed again.
     if( ! isset($_SESSION['USER']) && (!isset($_GET['action']) || $_GET['action'] != "about")) {
-
-        $methods_string = '';
-        foreach(\auth\get_methods() as $method => $settings ){
-            $methods_string .= '<option value="' . $method . '"';
-            if(isset($settings['default']) &&  $settings['default'] === TRUE){
-                 $methods_string .= ' selected ';
-            }
-
-            if( ! isset($settings['supported']) ||  $settings['supported'] !== TRUE){
-                $methods_string .= ' disabled ';
-            }
-
-            $methods_string .= '>' . $method . '</option>';
-        }
-
-        $templateBuilder = new TemplateLoader("loginForm.html");
-        $templateBuilder->setParam("action", "login");
-        $templateBuilder->setParam("buttontext", "Login");
-        $templateBuilder->setParam("methods", $methods_string);
-        $contents .= $templateBuilder->build();
+        $contents .= \view\login\get_login_form();
     }
 }
 
 # About page
 if(isset($_GET['action']) && $_GET['action'] == "about"){
     $title = "About the cluster " . CLUSTER_NAME;
-
-    $templateBuilder = new TemplateLoader("about.html");
-    $templateBuilder->setParam("CLUSTER_NAME", CLUSTER_NAME);
-    $templateBuilder->setParam("ADMIN_NAMES", ADMIN_NAMES);
-    $templateBuilder->setParam("ADMIN_EMAIL", ADMIN_EMAIL);
-    $templateBuilder->setParam("SLURM_LOGIN_NODE", SLURM_LOGIN_NODE);
-    $templateBuilder->setParam("WIKI_LINK", WIKI_LINK);
-    $contents .= $templateBuilder->build();
+    $contents .= \view\login\get_about_page();
 }
 
 # User is logged in
@@ -90,117 +69,16 @@ if( isset($_SESSION['USER']) ){
 
     // Show maintenance dates if there are some
     $maintenances = $dao->get_maintenances();
-    if(! empty($maintenances)){
-        $contents .= '<div class="alert alert-info" role="alert"><strong>Scheduled maintenances:</strong><ul>';
-    }
-    foreach( $maintenances as $maintenance ){
-        $contents .= '<li>Node(s) ';
-        if(isset($maintenance['node_list']))
-            $contents .= '<span class="monospaced">' . $maintenance['node_list'] . '</span>';
-        else
-            $contents .= '(any)';
-        $contents .= " will be unavailable from " . \utils\get_date_from_unix_if_defined($maintenance, 'start_time')
-            . " until " . \utils\get_date_from_unix_if_defined($maintenance, 'end_time') . ".";
-        $contents .= '</li>';
-    }
-    if(! empty($maintenances)){
-        $contents .= '</ul><p>All jobs that are guaranteed to end before the maintenance window due to the time limit are scheduled normally. Jobs that are not guaranteed to end before the start of the maintenance window can only start after the maintenance window on affected nodes. Tip: You could run shorter jobs for the time being, use breakpoints to interrupt your job for maintenance or use other nodes that are not affected from maintenance.</p></div>';
-    }
+    $contents .= \view\maintenances\get_maintenances($maintenances);
     // END of maintenance
 
     switch($action){
 
         case "usage":
             $contents .= "<h2>Current cluster usage</h2>";
-
             foreach ($dao->getNodeList() as $node) {
-                $data = $dao->get_node_info($node);
-
-                $templateBuilder = new TemplateLoader("nodeinfo.html");
-                $templateBuilder->setParam("NODENAME", $node);
-
-                $templateBuilder->setParam("CPU_PERCENTAGE", $data["alloc_cpus"]/$data["cpus"]*100);
-                $templateBuilder->setParam("CPU_USED", $data["alloc_cpus"]);
-                $templateBuilder->setParam("CPU_TOTAL", $data["cpus"]);
-
-                $templateBuilder->setParam("MEM_PERCENTAGE", ($data["mem_total"]-$data["mem_free"])/$data["mem_total"]*100);
-                $templateBuilder->setParam("MEM_USED", $data["mem_total"] - $data["mem_free"]);
-                $templateBuilder->setParam("MEM_TOTAL", $data["mem_total"]);
-                $templateBuilder->setParam("ALLOC_MEM_PERCENTAGE", ($data["mem_alloc"])/$data["mem_total"]*100);
-                $templateBuilder->setParam("ALLOC_MEM", $data["mem_alloc"]);
-
-                $gres = $data["gres"];
-                $gres_used = $data["gres_used"];
-                if($gres == ""){
-                    $gpus = 0;
-                    $gpus_used = 0;
-                    $gpus_percentage = 0;
-                }
-                else {
-
-                    $gpus = preg_replace('/.*:(\d+)(?:\(.*\))?$/', '$1', $gres);
-                    $gpus_used = preg_replace('/.*:(\d+)(?:\(.*\))?$/', '$1', $gres_used);
-                    // For debugging
-                    //echo "GPUs='$gpus', gpus_used='$gpus_used', gres='$gres', gres_used='$gres_used'";
-                    $gpus_percentage = (int)$gpus_used / (int)$gpus * 100;
-                }
-                $templateBuilder->setParam("GPU_PERCENTAGE", $gpus_percentage);
-                $templateBuilder->setParam("GPU_USED", $gpus_used);
-                $templateBuilder->setParam("GPU_TOTAL", $gpus);
-
-                $templateBuilder->setParam("STATE", implode(", ", $data["state"]));
-                $state_color = "#f9c98f"; # orange
-                if(
-                        in_array("IDLE", $data["state"]) ||
-                        in_array("MIX", $data["state"]) ||
-                        in_array("MIXED", $data["state"]) ||
-                        in_array("ALLOC", $data["state"]) ||
-                        in_array("ALLOCATED", $data["state"])
-                ){
-                    $state_color = "#c1dead"; # green
-                }
-                elseif (
-                        in_array("DOWN", $data["state"]) ||
-                        in_array("DRAIN", $data["state"]) ||
-                        in_array("DRAINED", $data["state"]) ||
-                        in_array("DRAINING", $data["state"]) ||
-                        in_array("FAIL", $data["state"])
-                ) {
-                    $state_color = "#deadae"; # Red
-                }
-                $templateBuilder->setParam("STATE_COLOR", $state_color);
-
-                $templateBuilder->setParam("ARCHITECTURE", $data["architecture"]);
-                $templateBuilder->setParam("BOARDS", $data["boards"]);
-
-                $feature_str = "";
-                foreach ($data["features"] as $feature){
-                    $feature_str .= '<span class="feature">' . $feature . '</span> ';
-                }
-                $templateBuilder->setParam("FEATURES", $feature_str);
-
-                $feature_str = "";
-                foreach ($data["active_features"] as $feature){
-                    $feature_str .= '<span class="feature">' . $feature . '</span> ';
-                }
-                $templateBuilder->setParam("ACTIVE_FEATURES", $feature_str);
-
-                $templateBuilder->setParam("ADDRESS", $data["address"]);
-                $templateBuilder->setParam("HOSTNAME", $data["hostname"]);
-                $templateBuilder->setParam("OPERATING_SYSTEM", $data["operating_system"]);
-                $templateBuilder->setParam("OWNER", $data["owner"]);
-                $templateBuilder->setParam("TRES", $data["tres"]);
-                $templateBuilder->setParam("TRES_USED", $data["tres_used"]);
-                $templateBuilder->setParam("BOOT_TIME", $data["boot_time"]);
-                $templateBuilder->setParam("LAST_BUSY", $data["last_busy"]);
-                $templateBuilder->setParam("PARTITIONS", count($data["partitions"]) > 0 ? '<li><span class="monospaced">' . implode('</li><li><span class="monospaced">', $data["partitions"]) . '</span></li>' : '');
-                $templateBuilder->setParam("RESERVATION", $data["reservation"] ?? '');
-                $templateBuilder->setParam("SLURM_VERSION", $data["slurm_version"] ?? '');
-
-                $contents .= $templateBuilder->build();
+                $contents .= \view\actions\get_usage($dao->get_node_info($node));
             }
-
-
             break;
 
         case "job":
@@ -209,60 +87,15 @@ if( isset($_SESSION['USER']) ){
                 break;
             }
 
+            # SLURM QUEUE information
             $contents .= "<h2>Job " . $_GET['job_id'] . "</h2>";
             $query = $dao->get_job($_GET['job_id']);
             if( $query == NULL ){
                 $contents .= "<p>Job " . $_GET['job_id'] . " not in active queue anymore.</p>";
             }
             else {
-                $contents .= '<h3>Job queue information</h3>';
-
-                $job_id = $query['job_id'];
-                $job_name = $query['job_name'];
-                $job_state_text = \utils\get_job_state_view($query);
-                $user = $query['user_name'] . " (" . $query['user_id'] . ')';
-                $group = $query['group_name'] . " (" . $query['group_id'] . ')';
-                $requeue = $query['requeue'] ? 'yes' : 'no';
-
-                $templateBuilder = new TemplateLoader("jobinfo.html");
-                $templateBuilder->setParam("JOBID",             $query['job_id']                    );
-                $templateBuilder->setParam("JOBNAME",           $query['job_name']                  );
-                $templateBuilder->setParam("USER",              $user                               );
-                $templateBuilder->setParam("GROUP",             $group                              );
-                $templateBuilder->setParam("ACCOUNT",           $query['account']                   );
-                $templateBuilder->setParam("PARTITIONS",        $query['partition']                 );
-                $templateBuilder->setParam("PRIORITY",    $query['priority'] ?? ''            );
-                $templateBuilder->setParam("SUBMIT_LINE", $query['submit_line'] ?? ""         );
-                $templateBuilder->setParam("WORKING_DIRECTORY", $query['working_directory'] ?? "");
-                $templateBuilder->setParam("COMMENT",           $query['comment']                   );
-                $templateBuilder->setParam("EXIT_CODE",         $query['exit_code']                 );
-                $templateBuilder->setParam("SCHEDNODES",  $query['scheduled_nodes'] ?? ''     );
-                $templateBuilder->setParam("REQNODES",    $query['required_nodes'] ?? ''      );
-                $templateBuilder->setParam("NODES",             $query['nodes']                     );
-                $templateBuilder->setParam("QOS",               $query['qos']                       );
-                $templateBuilder->setParam("CONTAINER",         $query['container']                 );
-                $templateBuilder->setParam("CONTAINER_ID", $query['container_id'] ?? ""       );
-                $templateBuilder->setParam("ALLOCATING_NODE",$query['allocating_node'] ?? ""  );
-                $templateBuilder->setParam("FLAGS",             implode('<br>', $query['flags']));
-                $templateBuilder->setParam("CORES_PER_SOCKET",  $query['cores_per_socket']          );
-                $templateBuilder->setParam("CPUS_PER_TASK",     $query['cpus_per_task']             );
-                $templateBuilder->setParam("DEADLINE",          $query['deadline']                  );
-                $templateBuilder->setParam("DEPENDENCY",        $query['dependency']                );
-                $templateBuilder->setParam("FEATURES",          $query['features']                  );
-                $templateBuilder->setParam("GRES_DETAIL",       implode(",", $query['gres']));
-                $templateBuilder->setParam("CPUS",              $query['cpus']                      );
-                $templateBuilder->setParam("NODE_COUNT",        $query['node_count']                );
-                $templateBuilder->setParam("TASKS",             $query['tasks']                     );
-                $templateBuilder->setParam("MEMORY_PER_CPU",    $query['memory_per_cpu']            );
-                $templateBuilder->setParam("MEMORY_PER_NODE",   $query['memory_per_node']           );
-                $templateBuilder->setParam("REQUEUE",           $requeue                            );
-                $templateBuilder->setParam("SUBMIT_TIME",       $query['submit_time']               );
-                $templateBuilder->setParam("TIME_LIMIT",        $query['time_limit']                );
-                $templateBuilder->setParam("JOB_STATE",         $job_state_text                     );
-
-                $contents .= $templateBuilder->build();
+                $contents .= \view\actions\get_slurm_jobinfo($query);
             }
-
 
             # SLURMDB information
             $query = $dao->get_job_from_slurmdb($_GET['job_id']);
@@ -270,67 +103,7 @@ if( isset($_SESSION['USER']) ){
                 $contents .= "<p>Job " . $_GET['job_id'] . " not found in <span class='monospaced'>slurmdb</span>.</p>";
             }
             else {
-                $contents .= '<h3>Slurmdb information</h3>';
-
-                $job_state_text = \utils\get_job_state_view($query);
-
-                $comment = '<ul>';
-                if($query['comment']['administrator'] != '')
-                    $comment .= '<li><b>Admin comment:</b> ' .$query['comment']['administrator'] . '</li>';
-                if($query['comment']['job'] != '')
-                    $comment .= '<li><b>Job comment:</b> ' .$query['comment']['job'] . '</li>';
-                if($query['comment']['system'] != '')
-                    $comment .= '<li><b>System comment:</b> ' .$query['comment']['system'] . '</li>';
-                $comment .= '</ul>';
-
-                $container = $query['container'];
-                $flags = $query['flags'] ?? array();
-
-                $tres_detail = '';
-                if(isset($query['tres']) && isset($query['tres']['allocated'])){
-                    $tres_detail .= '<b>Allocated:</b><ul>';
-                    foreach($query['tres']['allocated'] as $tres){
-                        $tres_detail .= '<li>Name: ' . $tres['name'] . ', type: ' . $tres['type'] . ', count: ' . $tres['count'] . '</li>';
-                    }
-                    $tres_detail .= '</ul>';
-                }
-                if(isset($query['tres']) && isset($query['tres']['requested'])){
-                    $tres_detail .= '<b>Requested:</b><ul>';
-                    foreach($query['tres']['requested'] as $tres){
-                        $tres_detail .= '<li>Name: ' . $tres['name'] . ', type: ' . $tres['type'] . ', count: ' . $tres['count'] . '</li>';
-                    }
-                    $tres_detail .= '</ul>';
-                }
-
-                $templateBuilder = new TemplateLoader("jobinfo_slurmdb.html");
-                $templateBuilder->setParam("JOBID",             $query['job_id']);
-                $templateBuilder->setParam("JOBNAME",           $query['job_name']);
-                $templateBuilder->setParam("USER",              $query['user_name']);
-                $templateBuilder->setParam("GROUP",             $query['group_name']);
-                $templateBuilder->setParam("ACCOUNT",           $query['account']);
-                $templateBuilder->setParam("PARTITIONS",        $query['partition']);
-                $templateBuilder->setParam("PRIORITY",          $query['priority']);
-                $templateBuilder->setParam("SUBMIT_LINE",       $query['submit_line']);
-                $templateBuilder->setParam("WORKING_DIRECTORY", $query['working_directory'] ?? "");
-                $templateBuilder->setParam("COMMENT",           $comment);
-                $templateBuilder->setParam("EXIT_CODE",         $query['exit_code']);
-                $templateBuilder->setParam("NODES",             $query['nodes']);
-                $templateBuilder->setParam("QOS",               $query['qos']);
-                $templateBuilder->setParam("CONTAINER",         $query['container']);
-                $templateBuilder->setParam("FLAGS", count($flags) > 0 ? '<li><span class="monospaced">' . implode('</li><li><span class="monospaced">', $flags) . '</span></li>' : '');
-                $templateBuilder->setParam("GRES_DETAIL",       $query['gres'] ?? "");
-                $templateBuilder->setParam("TRES_DETAIL",       $tres_detail);
-
-                $templateBuilder->setParam("SUBMIT_TIME",       $query['time_submit']);
-                $templateBuilder->setParam("TIME_LIMIT",        $query['time_limit']);
-                $templateBuilder->setParam("TIME_ELAPSED",      $query['time_elapsed']);
-                $templateBuilder->setParam("START_TIME",        $query['time_start']);
-                $templateBuilder->setParam("END_TIME",          $query['time_end']);
-                $templateBuilder->setParam("TIME_ELIGIBLE",     $query['time_eligible']);
-
-                $templateBuilder->setParam("JOB_STATE",         $job_state_text);
-
-                $contents .= $templateBuilder->build();
+                $contents .= \view\actions\get_slurmdb_jobinfo($query);
             }
 
             break;

@@ -22,10 +22,6 @@ class TemplateLoader {
      */
     function setParam(string $name, mixed $value): static {
 
-        if( $name === NULL ){
-            error_log("TemplateLoader: name was NULL");
-            return $this;
-        }
         if( $value === NULL ){
             error_log("TemplateLoader: value of name '$name' was NULL at " . (function(){ob_start();debug_print_backtrace();return ob_get_clean();})());
             $value = '';

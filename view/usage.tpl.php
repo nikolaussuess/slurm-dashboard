@@ -60,8 +60,8 @@ function get_usage(array $data) : string {
     }
     $templateBuilder->setParam("STATE_COLOR", $state_color);
 
-    $templateBuilder->setParam("ARCHITECTURE", $data["architecture"]);
-    $templateBuilder->setParam("BOARDS", $data["boards"]);
+    $templateBuilder->setParam("ARCHITECTURE", $data["architecture"] ?? '');
+    $templateBuilder->setParam("BOARDS", $data["boards"] ?? '');
 
     $feature_str = "";
     foreach ($data["features"] as $feature){
@@ -77,12 +77,12 @@ function get_usage(array $data) : string {
 
     $templateBuilder->setParam("ADDRESS", $data["address"]);
     $templateBuilder->setParam("HOSTNAME", $data["hostname"]);
-    $templateBuilder->setParam("OPERATING_SYSTEM", $data["operating_system"]);
-    $templateBuilder->setParam("OWNER", $data["owner"]);
-    $templateBuilder->setParam("TRES", $data["tres"]);
-    $templateBuilder->setParam("TRES_USED", $data["tres_used"]);
-    $templateBuilder->setParam("BOOT_TIME", $data["boot_time"]);
-    $templateBuilder->setParam("LAST_BUSY", $data["last_busy"]);
+    $templateBuilder->setParam("OPERATING_SYSTEM", $data["operating_system"] ?? '');
+    $templateBuilder->setParam("OWNER", $data["owner"] ?? '');
+    $templateBuilder->setParam("TRES", $data["tres"] ?? '');
+    $templateBuilder->setParam("TRES_USED", $data["tres_used"] ?? '');
+    $templateBuilder->setParam("BOOT_TIME", $data["boot_time"] ?? '');
+    $templateBuilder->setParam("LAST_BUSY", $data["last_busy"] ?? '');
     $templateBuilder->setParam("PARTITIONS", count($data["partitions"]) > 0 ? '<li><span class="monospaced">' . implode('</li><li><span class="monospaced">', $data["partitions"]) . '</span></li>' : '');
     $templateBuilder->setParam("RESERVATION", $data["reservation"] ?? '');
     $templateBuilder->setParam("SLURM_VERSION", $data["slurm_version"] ?? '');

@@ -26,7 +26,7 @@ namespace auth {
 
 namespace {
 
-    require_once 'client.inc.php';
+    require_once 'client/Client.inc.php';
     require_once 'globals.inc.php';
     require_once "auth.ldap.inc.php";
     require_once "auth.local.inc.php";
@@ -61,7 +61,7 @@ namespace {
             return FALSE;
         }
 
-        $dbquery = new Client();
+        $dbquery = \client\ClientFactory::newClient();
         $associations = $dbquery->get_user($username);
 
         if(empty($associations['users'])){

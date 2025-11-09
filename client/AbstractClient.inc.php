@@ -2,6 +2,13 @@
 
 namespace client;
 
+/**
+ * Abstract implementation of common functions of versions
+ * - v0.0.40
+ * - v0.0.43
+ *
+ * NOTE: This class might be renamed in the future, e.g. to Common_V0040_V0043_AbstractClient.
+ */
 abstract class AbstractClient implements Client {
 
     abstract protected function get_nodes(array $job_arr) : string;

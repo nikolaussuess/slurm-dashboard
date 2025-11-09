@@ -220,74 +220,45 @@ if( isset($_SESSION['USER']) ){
                 $job_id = $query['job_id'];
                 $job_name = $query['job_name'];
                 $job_state_text = \utils\get_job_state_view($query);
-
                 $user = $query['user_name'] . " (" . $query['user_id'] . ')';
                 $group = $query['group_name'] . " (" . $query['group_id'] . ')';
-                $account = $query['account'];
-                $partitions = $query['partition'];
-                $priority = ($query['priority'] != NULL ? $query['priority'] : '');
-                $submit_line = $query['submit_line'] ?? "";
-                $working_directory = $query['working_directory'] ?? "";
-                $comment = $query['comment'];
-                $exit_code = $query['exit_code'];
-                $schednodes = $query['scheduled_nodes'] ?? '';
-                $reqnodes = $query['required_nodes'] ?? '';
-                $nodes = $query['nodes'];
-                $qos = $query['qos'];
-                $container = $query['container'];
-                $container_id = $query['container_id'] ?? "undefined";
-                $allocating_node = $query['allocating_node'] ?? "undefined";
-                $flags = $query['flags'] ?? "undefined";
-                $cores_per_socket = $query['cores_per_socket'];
-                $cpus_per_task = $query['cpus_per_task'];
-                $deadline = $query['deadline'];
-                $dependency = $query['dependency'] ?? "none";
-                $features = $query['features'] ?? "";
-                $gres_detail = isset($query['gres']) ? implode(",", $query['gres']) : "";
-                $cpus = $query['cpus'];
-                $node_count = $query['node_count'];
-                $tasks = $query['tasks'];
-                $memory_per_cpu = $query['memory_per_cpu'];
-                $memory_per_node = $query['memory_per_node'];
                 $requeue = $query['requeue'] ? 'yes' : 'no';
-                $submit_time = $query['submit_time'];
-                $time_limit = $query['time_limit'];
 
                 $templateBuilder = new TemplateLoader("jobinfo.html");
-                $templateBuilder->setParam("JOBID", $job_id);
-                $templateBuilder->setParam("JOBNAME", $job_name);
-                $templateBuilder->setParam("USER", $user);
-                $templateBuilder->setParam("GROUP", $group);
-                $templateBuilder->setParam("ACCOUNT", $account);
-                $templateBuilder->setParam("PARTITIONS", $partitions);
-                $templateBuilder->setParam("PRIORITY", $priority);
-                $templateBuilder->setParam("SUBMIT_LINE", $submit_line);
-                $templateBuilder->setParam("WORKING_DIRECTORY", $working_directory);
-                $templateBuilder->setParam("COMMENT", $comment);
-                $templateBuilder->setParam("EXIT_CODE", $exit_code);
-                $templateBuilder->setParam("SCHEDNODES", $schednodes);
-                $templateBuilder->setParam("REQNODES", $reqnodes);
-                $templateBuilder->setParam("NODES", $nodes);
-                $templateBuilder->setParam("QOS", $qos);
-                $templateBuilder->setParam("CONTAINER", $container);
-                $templateBuilder->setParam("CONTAINER_ID", $container_id);
-                $templateBuilder->setParam("ALLOCATING_NODE", $allocating_node);
-                $templateBuilder->setParam("FLAGS", implode('<br>', $flags));
-                $templateBuilder->setParam("CORES_PER_SOCKET", $cores_per_socket);
-                $templateBuilder->setParam("CPUS_PER_TASK", $cpus_per_task);
-                $templateBuilder->setParam("DEADLINE", $deadline);
-                $templateBuilder->setParam("DEPENDENCY", $dependency);
-                $templateBuilder->setParam("FEATURES", $features);
-                $templateBuilder->setParam("GRES_DETAIL", $gres_detail);
-                $templateBuilder->setParam("CPUS", $cpus);
-                $templateBuilder->setParam("NODE_COUNT", $node_count);
-                $templateBuilder->setParam("TASKS", $tasks);
-                $templateBuilder->setParam("MEMORY_PER_CPU", $memory_per_cpu);
-                $templateBuilder->setParam("MEMORY_PER_NODE", $memory_per_node);
-                $templateBuilder->setParam("REQUEUE", $requeue);
-                $templateBuilder->setParam("SUBMIT_TIME", $submit_time);
-                $templateBuilder->setParam("TIME_LIMIT", $time_limit);
-                $templateBuilder->setParam("JOB_STATE", $job_state_text);
+                $templateBuilder->setParam("JOBID",             $query['job_id']                    );
+                $templateBuilder->setParam("JOBNAME",           $query['job_name']                  );
+                $templateBuilder->setParam("USER",              $user                               );
+                $templateBuilder->setParam("GROUP",             $group                              );
+                $templateBuilder->setParam("ACCOUNT",           $query['account']                   );
+                $templateBuilder->setParam("PARTITIONS",        $query['partition']                 );
+                $templateBuilder->setParam("PRIORITY",    $query['priority'] ?? ''            );
+                $templateBuilder->setParam("SUBMIT_LINE", $query['submit_line'] ?? ""         );
+                $templateBuilder->setParam("WORKING_DIRECTORY", $query['working_directory'] ?? "");
+                $templateBuilder->setParam("COMMENT",           $query['comment']                   );
+                $templateBuilder->setParam("EXIT_CODE",         $query['exit_code']                 );
+                $templateBuilder->setParam("SCHEDNODES",  $query['scheduled_nodes'] ?? ''     );
+                $templateBuilder->setParam("REQNODES",    $query['required_nodes'] ?? ''      );
+                $templateBuilder->setParam("NODES",             $query['nodes']                     );
+                $templateBuilder->setParam("QOS",               $query['qos']                       );
+                $templateBuilder->setParam("CONTAINER",         $query['container']                 );
+                $templateBuilder->setParam("CONTAINER_ID", $query['container_id'] ?? ""       );
+                $templateBuilder->setParam("ALLOCATING_NODE",$query['allocating_node'] ?? ""  );
+                $templateBuilder->setParam("FLAGS",             implode('<br>', $query['flags']));
+                $templateBuilder->setParam("CORES_PER_SOCKET",  $query['cores_per_socket']          );
+                $templateBuilder->setParam("CPUS_PER_TASK",     $query['cpus_per_task']             );
+                $templateBuilder->setParam("DEADLINE",          $query['deadline']                  );
+                $templateBuilder->setParam("DEPENDENCY",        $query['dependency']                );
+                $templateBuilder->setParam("FEATURES",          $query['features']                  );
+                $templateBuilder->setParam("GRES_DETAIL",       implode(",", $query['gres']));
+                $templateBuilder->setParam("CPUS",              $query['cpus']                      );
+                $templateBuilder->setParam("NODE_COUNT",        $query['node_count']                );
+                $templateBuilder->setParam("TASKS",             $query['tasks']                     );
+                $templateBuilder->setParam("MEMORY_PER_CPU",    $query['memory_per_cpu']            );
+                $templateBuilder->setParam("MEMORY_PER_NODE",   $query['memory_per_node']           );
+                $templateBuilder->setParam("REQUEUE",           $requeue                            );
+                $templateBuilder->setParam("SUBMIT_TIME",       $query['submit_time']               );
+                $templateBuilder->setParam("TIME_LIMIT",        $query['time_limit']                );
+                $templateBuilder->setParam("JOB_STATE",         $job_state_text                     );
 
                 $contents .= $templateBuilder->build();
             }
@@ -301,17 +272,7 @@ if( isset($_SESSION['USER']) ){
             else {
                 $contents .= '<h3>Slurmdb information</h3>';
 
-                $job_id = $query['job_id'];
-                $job_name = $query['job_name'];
                 $job_state_text = \utils\get_job_state_view($query);
-
-                $user = $query['user_name'];
-                $group = $query['group_name'];
-                $account = $query['account'];
-                $partitions = $query['partition'];
-                $priority = $query['priority'];
-                $submit_line = $query['submit_line'];
-                $working_directory = $query['working_directory'] ?? "";
 
                 $comment = '<ul>';
                 if($query['comment']['administrator'] != '')
@@ -322,13 +283,9 @@ if( isset($_SESSION['USER']) ){
                     $comment .= '<li><b>System comment:</b> ' .$query['comment']['system'] . '</li>';
                 $comment .= '</ul>';
 
-                $exit_code = $query['exit_code'];
-                $nodes = $query['nodes'];
-                $qos = $query['qos'];
                 $container = $query['container'];
                 $flags = $query['flags'] ?? array();
 
-                $gres_detail = $query['gres'] ?? "";
                 $tres_detail = '';
                 if(isset($query['tres']) && isset($query['tres']['allocated'])){
                     $tres_detail .= '<b>Allocated:</b><ul>';
@@ -345,40 +302,33 @@ if( isset($_SESSION['USER']) ){
                     $tres_detail .= '</ul>';
                 }
 
-                $submit_time = $query['time_submit'];
-                $time_limit = $query['time_limit'];
-                $time_elapsed = $query['time_elapsed'];
-                $time_start = $query['time_start'];
-                $time_end = $query['time_end'];
-                $time_eligible = $query['time_eligible'];
-
                 $templateBuilder = new TemplateLoader("jobinfo_slurmdb.html");
-                $templateBuilder->setParam("JOBID", $job_id);
-                $templateBuilder->setParam("JOBNAME", $job_name);
-                $templateBuilder->setParam("USER", $user);
-                $templateBuilder->setParam("GROUP", $group);
-                $templateBuilder->setParam("ACCOUNT", $account);
-                $templateBuilder->setParam("PARTITIONS", $partitions);
-                $templateBuilder->setParam("PRIORITY", $priority);
-                $templateBuilder->setParam("SUBMIT_LINE", $submit_line);
-                $templateBuilder->setParam("WORKING_DIRECTORY", $working_directory);
-                $templateBuilder->setParam("COMMENT", $comment);
-                $templateBuilder->setParam("EXIT_CODE", $exit_code);
-                $templateBuilder->setParam("NODES", $nodes);
-                $templateBuilder->setParam("QOS", $qos);
-                $templateBuilder->setParam("CONTAINER", $container);
+                $templateBuilder->setParam("JOBID",             $query['job_id']);
+                $templateBuilder->setParam("JOBNAME",           $query['job_name']);
+                $templateBuilder->setParam("USER",              $query['user_name']);
+                $templateBuilder->setParam("GROUP",             $query['group_name']);
+                $templateBuilder->setParam("ACCOUNT",           $query['account']);
+                $templateBuilder->setParam("PARTITIONS",        $query['partition']);
+                $templateBuilder->setParam("PRIORITY",          $query['priority']);
+                $templateBuilder->setParam("SUBMIT_LINE",       $query['submit_line']);
+                $templateBuilder->setParam("WORKING_DIRECTORY", $query['working_directory'] ?? "");
+                $templateBuilder->setParam("COMMENT",           $comment);
+                $templateBuilder->setParam("EXIT_CODE",         $query['exit_code']);
+                $templateBuilder->setParam("NODES",             $query['nodes']);
+                $templateBuilder->setParam("QOS",               $query['qos']);
+                $templateBuilder->setParam("CONTAINER",         $query['container']);
                 $templateBuilder->setParam("FLAGS", count($flags) > 0 ? '<li><span class="monospaced">' . implode('</li><li><span class="monospaced">', $flags) . '</span></li>' : '');
-                $templateBuilder->setParam("GRES_DETAIL", $gres_detail);
-                $templateBuilder->setParam("TRES_DETAIL", $tres_detail);
+                $templateBuilder->setParam("GRES_DETAIL",       $query['gres'] ?? "");
+                $templateBuilder->setParam("TRES_DETAIL",       $tres_detail);
 
-                $templateBuilder->setParam("SUBMIT_TIME", $submit_time);
-                $templateBuilder->setParam("TIME_LIMIT", $time_limit);
-                $templateBuilder->setParam("TIME_ELAPSED", $time_elapsed);
-                $templateBuilder->setParam("START_TIME", $time_start);
-                $templateBuilder->setParam("END_TIME", $time_end);
-                $templateBuilder->setParam("TIME_ELIGIBLE", $time_eligible);
+                $templateBuilder->setParam("SUBMIT_TIME",       $query['time_submit']);
+                $templateBuilder->setParam("TIME_LIMIT",        $query['time_limit']);
+                $templateBuilder->setParam("TIME_ELAPSED",      $query['time_elapsed']);
+                $templateBuilder->setParam("START_TIME",        $query['time_start']);
+                $templateBuilder->setParam("END_TIME",          $query['time_end']);
+                $templateBuilder->setParam("TIME_ELIGIBLE",     $query['time_eligible']);
 
-                $templateBuilder->setParam("JOB_STATE", $job_state_text);
+                $templateBuilder->setParam("JOB_STATE",         $job_state_text);
 
                 $contents .= $templateBuilder->build();
             }

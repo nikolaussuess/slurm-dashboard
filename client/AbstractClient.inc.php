@@ -307,21 +307,6 @@ abstract class AbstractClient implements Client {
     }
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
     protected function __get_number_if_defined(array $arr, string $default = 'undefined') : string {
         if($arr['set'])
             return $arr['number'];

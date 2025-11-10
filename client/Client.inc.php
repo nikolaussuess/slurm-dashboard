@@ -92,7 +92,7 @@ interface Client{
      * 'submit_line'=> $json_job['command'] ?? NULL,
      * 'working_directory' => $json_job['current_working_directory'] ?? NULL,
      * 'comment'    => $json_job['comment'],
-     * 'exit_code'  => $this->__read_exit_code($json_job),
+     * 'exit_code'  => $this->_read_exit_code($json_job),
      * 'scheduled_nodes' => $json_job['scheduled_nodes'] ?? NULL,
      * 'required_nodes' => $json_job['required_nodes'] ?? NULL,
      * 'nodes'      => $this->get_nodes($json_job),
@@ -113,8 +113,8 @@ interface Client{
      * 'memory_per_cpu' => $json_job['memory_per_cpu']['set'] ? $json_job['memory_per_cpu']['number'] : NULL,
      * 'memory_per_node' => $json_job['memory_per_node']['set'] ? $json_job['memory_per_node']['number'] : NULL,
      * 'requeue'    => $json_job['requeue'],
-     * 'submit_time'=> $this->__get_date_from_unix_if_defined($json_job, 'submit_time'),
-     * 'time_limit' => $this->__get_timelimit_if_defined($json_job, 'time_limit')
+     * 'submit_time'=> $this->_get_date_from_unix_if_defined($json_job, 'submit_time'),
+     * 'time_limit' => $this->_get_timelimit_if_defined($json_job, 'time_limit')
      * );
      * </pre>
      */
@@ -133,23 +133,23 @@ interface Client{
      * 'group_name' => $json_job['group'],
      * 'account'    => $json_job['account'],
      * 'partition'  => $json_job['partition'],
-     * 'priority'   => $this->__get_number_if_defined($json_job['priority']),
+     * 'priority'   => $this->_get_number_if_defined($json_job['priority']),
      * 'submit_line'=> $json_job['submit_line'] ?? NULL,
      * 'working_directory' => $json_job['current_working_directory'] ?? NULL,
      * 'comment'    => $json_job['comment'],
-     * 'exit_code'  => $this->__read_exit_code($json_job),
+     * 'exit_code'  => $this->_read_exit_code($json_job),
      * 'nodes'      => $json_job['nodes'],
      * 'qos'        => $json_job['qos'],
      * 'container'  => $json_job['container'],
      * 'flags'      => $json_job['flags'] ?? array(),
      * 'gres'       => $json_job['jobs'][0]['used_gres'] ?? NULL,
      * 'tres'       => $json_job['tres'],
-     * 'time_submit'=> $this->__get_date_from_unix($json_job['time'], 'submission'),
-     * 'time_limit' => $this->__get_timelimit_if_defined($json_job['time'], 'limit'),
-     * 'time_elapsed' => $this->__get_elapsed_time($json_job['time']),
-     * 'time_start' => $this->__get_date_from_unix($json_job['time'], 'start'),
-     * 'time_end'   => $this->__get_date_from_unix($json_job['time'], 'end'),
-     * 'time_eligible' => $this->__get_date_from_unix($json_job['time'], 'eligible'),
+     * 'time_submit'=> $this->_get_date_from_unix($json_job['time'], 'submission'),
+     * 'time_limit' => $this->_get_timelimit_if_defined($json_job['time'], 'limit'),
+     * 'time_elapsed' => $this->_get_elapsed_time($json_job['time']),
+     * 'time_start' => $this->_get_date_from_unix($json_job['time'], 'start'),
+     * 'time_end'   => $this->_get_date_from_unix($json_job['time'], 'end'),
+     * 'time_eligible' => $this->_get_date_from_unix($json_job['time'], 'eligible'),
      * );
      * </pre>
      */
@@ -195,8 +195,8 @@ interface Client{
      * 'owner' => $json["nodes"][0]["owner"],
      * 'tres' => $json["nodes"][0]["tres"],
      * 'tres_used' => $json["nodes"][0]["tres_used"],
-     * 'boot_time' => $this->__get_date_from_unix_if_defined($json["nodes"][0], "boot_time"),
-     * 'last_busy' => $this->__get_date_from_unix_if_defined($json["nodes"][0], "last_busy"),
+     * 'boot_time' => $this->_get_date_from_unix_if_defined($json["nodes"][0], "boot_time"),
+     * 'last_busy' => $this->_get_date_from_unix_if_defined($json["nodes"][0], "last_busy"),
      * 'partitions' => $json["nodes"][0]["partitions"] ?? array(),
      * 'reservation' => $json["nodes"][0]["reservation"] ??'',
      * 'slurm_version' => $json["nodes"][0]["version"] ?? '',

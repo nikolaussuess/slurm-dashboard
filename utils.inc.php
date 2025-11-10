@@ -8,7 +8,7 @@ namespace utils;
 
 function get_date_from_unix_if_defined(array $job_arr, string $param, string $default = 'undefined') : string {
     if(! isset($job_arr[$param])){
-        return "?";
+        return $default;
     }
 
     if($job_arr[$param]['set']){

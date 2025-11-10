@@ -51,8 +51,8 @@ abstract class AbstractClient implements Client {
                 'user_id'    => $json_job['user_id'],
                 'nodes'      => $this->get_nodes($json_job),
                 'node_count' => $json_job['node_count']['set'] ? $json_job['node_count']['number'] : NULL,
-                'time_limit' => $this->__get_timelimit_if_defined($json_job, 'time_limit'),
-                'time_start' => $this->__get_date_from_unix_if_defined($json_job, 'start_time')
+                'time_limit' => $this->_get_timelimit_if_defined($json_job, 'time_limit'),
+                'time_start' => $this->_get_date_from_unix_if_defined($json_job, 'start_time')
             );
             $jobs[] = $job;
         }
@@ -143,9 +143,9 @@ abstract class AbstractClient implements Client {
                 'user_name'  => $json_job['user'],
                 'account'    => $json_job['account'],
                 'partition'  => $json_job['partition'],
-                'time_limit' => $this->__get_timelimit_if_defined($json_job['time'], 'limit', 'inf'),
-                'time_start' => $this->__get_date_from_unix($json_job['time'], 'start'),
-                'time_elapsed' => $this->__get_elapsed_time($json_job['time']),
+                'time_limit' => $this->_get_timelimit_if_defined($json_job['time'], 'limit', 'inf'),
+                'time_start' => $this->_get_date_from_unix($json_job['time'], 'start'),
+                'time_elapsed' => $this->_get_elapsed_time($json_job['time']),
                 'nodes'      => $json_job['nodes']
             );
             $jobs[] = $job;
@@ -186,7 +186,7 @@ abstract class AbstractClient implements Client {
                 'submit_line'=> $json_job['command'] ?? NULL,
                 'working_directory' => $json_job['current_working_directory'] ?? NULL,
                 'comment'    => $json_job['comment'],
-                'exit_code'  => $this->__read_exit_code($json_job),
+                'exit_code'  => $this->_read_exit_code($json_job),
                 'scheduled_nodes' => $json_job['scheduled_nodes'] ?? NULL,
                 'required_nodes' => $json_job['required_nodes'] ?? NULL,
                 'nodes'      => $this->get_nodes($json_job),
@@ -197,7 +197,7 @@ abstract class AbstractClient implements Client {
                 'flags'      => $json_job['flags'] ?? array(),
                 'cores_per_socket' => $json_job['cores_per_socket']['set'] ? $json_job['cores_per_socket']['number'] : NULL,
                 'cpus_per_task' => $json_job['cpus_per_task']['set'] ? $json_job['cpus_per_task']['number'] : NULL,
-                'deadline'   => $json_job['deadline']['set'] ? $json_job['deadline']['number'] : NULL, // FIXME
+                'deadline'   => $this->_get_date_from_unix_if_defined( $json_job , 'deadline', NULL) ,
                 'dependency' => $json_job['dependency'] ?? NULL,
                 'features'   => $json_job['features'] ?? NULL,
                 'gres'       => $json_job['gres_detail'] ?? NULL,
@@ -207,8 +207,8 @@ abstract class AbstractClient implements Client {
                 'memory_per_cpu' => $json_job['memory_per_cpu']['set'] ? $json_job['memory_per_cpu']['number'] : NULL,
                 'memory_per_node' => $json_job['memory_per_node']['set'] ? $json_job['memory_per_node']['number'] : NULL,
                 'requeue'    => $json_job['requeue'],
-                'submit_time'=> $this->__get_date_from_unix_if_defined($json_job, 'submit_time'),
-                'time_limit' => $this->__get_timelimit_if_defined($json_job, 'time_limit')
+                'submit_time'=> $this->_get_date_from_unix_if_defined($json_job, 'submit_time'),
+                'time_limit' => $this->_get_timelimit_if_defined($json_job, 'time_limit')
             );
         }
         return NULL;
@@ -228,11 +228,11 @@ abstract class AbstractClient implements Client {
                 'group_name' => $json_job['group'],
                 'account'    => $json_job['account'],
                 'partition'  => $json_job['partition'],
-                'priority'   => $this->__get_number_if_defined($json_job['priority']),
+                'priority'   => $this->_get_number_if_defined($json_job['priority']),
                 'submit_line'=> $json_job['submit_line'] ?? NULL,
                 'working_directory' => $json_job['current_working_directory'] ?? NULL,
                 'comment'    => $json_job['comment'],
-                'exit_code'  => $this->__read_exit_code($json_job),
+                'exit_code'  => $this->_read_exit_code($json_job),
                 'nodes'      => $json_job['nodes'],
                 'qos'        => $json_job['qos'],
                 'container'  => $json_job['container'],
@@ -241,12 +241,12 @@ abstract class AbstractClient implements Client {
                 'gres'       => $json_job['jobs'][0]['used_gres'] ?? NULL,
                 'tres'       => $json_job['tres'],
 
-                'time_submit'=> $this->__get_date_from_unix($json_job['time'], 'submission'),
-                'time_limit' => $this->__get_timelimit_if_defined($json_job['time'], 'limit'),
-                'time_elapsed' => $this->__get_elapsed_time($json_job['time']),
-                'time_start' => $this->__get_date_from_unix($json_job['time'], 'start'),
-                'time_end'   => $this->__get_date_from_unix($json_job['time'], 'end'),
-                'time_eligible' => $this->__get_date_from_unix($json_job['time'], 'eligible'),
+                'time_submit'=> $this->_get_date_from_unix($json_job['time'], 'submission'),
+                'time_limit' => $this->_get_timelimit_if_defined($json_job['time'], 'limit'),
+                'time_elapsed' => $this->_get_elapsed_time($json_job['time']),
+                'time_start' => $this->_get_date_from_unix($json_job['time'], 'start'),
+                'time_end'   => $this->_get_date_from_unix($json_job['time'], 'end'),
+                'time_eligible' => $this->_get_date_from_unix($json_job['time'], 'eligible'),
             );
         }
         return NULL;
@@ -290,8 +290,8 @@ abstract class AbstractClient implements Client {
             'owner' => $json["nodes"][0]["owner"],
             'tres' => $json["nodes"][0]["tres"],
             'tres_used' => $json["nodes"][0]["tres_used"],
-            'boot_time' => $this->__get_date_from_unix_if_defined($json["nodes"][0], "boot_time"),
-            'last_busy' => $this->__get_date_from_unix_if_defined($json["nodes"][0], "last_busy"),
+            'boot_time' => $this->_get_date_from_unix_if_defined($json["nodes"][0], "boot_time"),
+            'last_busy' => $this->_get_date_from_unix_if_defined($json["nodes"][0], "last_busy"),
             'partitions' => $json["nodes"][0]["partitions"] ?? array(),
             'reservation' => $json["nodes"][0]["reservation"] ??'',
             'slurm_version' => $json["nodes"][0]["version"] ?? '',
@@ -314,14 +314,14 @@ abstract class AbstractClient implements Client {
     }
 
 
-    protected function __get_number_if_defined(array $arr, string $default = 'undefined') : string {
+    protected function _get_number_if_defined(array $arr, string $default = 'undefined') : string {
         if($arr['set'])
             return $arr['number'];
         else
             return $default;
     }
 
-    protected function __get_date_from_unix(array $job_arr, string $param): string {
+    protected function _get_date_from_unix(array $job_arr, string $param): string {
         if(! isset($job_arr[$param]) || $job_arr[$param] == 0){
             return "?";
         }
@@ -329,9 +329,9 @@ abstract class AbstractClient implements Client {
         return date('Y-m-d H:i:s', $job_arr[$param]);
     }
 
-    protected function __get_date_from_unix_if_defined(array $job_arr, string $param, string $default = 'undefined') : string {
+    protected function _get_date_from_unix_if_defined(array $job_arr, string $param, ?string $default = 'undefined') : ?string {
         if(! isset($job_arr[$param])){
-            return "?";
+            return $default;
         }
 
         if($job_arr[$param]['set']){
@@ -359,7 +359,7 @@ abstract class AbstractClient implements Client {
      * @param $param string Array index (e.g. elapsed)
      * @return string The time in D-HH:MM:SS
      */
-    protected function __get_elapsed_time(array $job_arr, string $param = 'elapsed'): string {
+    protected function _get_elapsed_time(array $job_arr, string $param = 'elapsed'): string {
         if(! isset($job_arr[$param]) || $job_arr[$param] == 0 ){
             return "?";
         }
@@ -380,7 +380,7 @@ abstract class AbstractClient implements Client {
      * @param $default string what to return if not set.
      * @return string The time limit in D-HH:MM:SS
      */
-    protected function __get_timelimit_if_defined(array $job_arr, string $param, string $default = 'undefined'): string {
+    protected function _get_timelimit_if_defined(array $job_arr, string $param, string $default = 'undefined'): string {
         if(! isset($job_arr[$param])){
             return "?";
         }
@@ -410,7 +410,7 @@ abstract class AbstractClient implements Client {
         }, ARRAY_FILTER_USE_BOTH);
     }
 
-    protected function __read_exit_code(array $job_arr): string {
+    protected function _read_exit_code(array $job_arr): string {
 
         if(! isset($job_arr['exit_code'])){
             return "?";
@@ -418,12 +418,12 @@ abstract class AbstractClient implements Client {
 
         if(isset($job_arr['exit_code']['return_code'])){
             if(isset($job_arr['exit_code']['signal']) && isset($job_arr['exit_code']['signal']['name']) && $job_arr['exit_code']['signal']['id']['set'])
-                return $this->__get_number_if_defined($job_arr['exit_code']['return_code']) . " with Signal " . $job_arr['exit_code']['signal']['name'] . ' (' . $job_arr['exit_code']['signal']['id']['number'] . ')';
+                return $this->_get_number_if_defined($job_arr['exit_code']['return_code']) . " with Signal " . $job_arr['exit_code']['signal']['name'] . ' (' . $job_arr['exit_code']['signal']['id']['number'] . ')';
             else
-                return $this->__get_number_if_defined($job_arr['exit_code']['return_code']);
+                return $this->_get_number_if_defined($job_arr['exit_code']['return_code']);
         }
         else {
-            return $this->__get_number_if_defined($job_arr['exit_code']);
+            return $this->_get_number_if_defined($job_arr['exit_code']);
         }
     }
 

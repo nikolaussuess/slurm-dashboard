@@ -329,7 +329,7 @@ abstract class AbstractClient implements Client {
         return date('Y-m-d H:i:s', $job_arr[$param]);
     }
 
-    protected function _get_date_from_unix_if_defined(array $job_arr, string $param, ?string $default = 'undefined') : string {
+    protected function _get_date_from_unix_if_defined(array $job_arr, string $param, ?string $default = 'undefined') : ?string {
         if(! isset($job_arr[$param])){
             return $default;
         }

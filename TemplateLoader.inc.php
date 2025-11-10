@@ -21,6 +21,12 @@ class TemplateLoader {
      * @return static $this
      */
     function setParam(string $name, mixed $value): static {
+
+        if( $value === NULL ){
+            error_log("TemplateLoader: value of name '$name' was NULL at " . (function(){ob_start();debug_print_backtrace();return ob_get_clean();})());
+            $value = '';
+        }
+
         $this->contents = preg_replace("/{{".$name."}}/i", $value, $this->contents);
         return $this;
     }

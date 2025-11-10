@@ -197,7 +197,7 @@ abstract class AbstractClient implements Client {
                 'flags'      => $json_job['flags'] ?? array(),
                 'cores_per_socket' => $json_job['cores_per_socket']['set'] ? $json_job['cores_per_socket']['number'] : NULL,
                 'cpus_per_task' => $json_job['cpus_per_task']['set'] ? $json_job['cpus_per_task']['number'] : NULL,
-                'deadline'   => $json_job['deadline']['set'] ? $json_job['deadline']['number'] : NULL, // FIXME
+                'deadline'   => $this->_get_date_from_unix_if_defined( $json_job['deadline'] , NULL) ,
                 'dependency' => $json_job['dependency'] ?? NULL,
                 'features'   => $json_job['features'] ?? NULL,
                 'gres'       => $json_job['gres_detail'] ?? NULL,
@@ -331,7 +331,7 @@ abstract class AbstractClient implements Client {
 
     protected function _get_date_from_unix_if_defined(array $job_arr, string $param, string $default = 'undefined') : string {
         if(! isset($job_arr[$param])){
-            return "?";
+            return $default;
         }
 
         if($job_arr[$param]['set']){

@@ -6,6 +6,22 @@ use DateTime;
 use Exception;
 use TemplateLoader;
 
+/**
+ * Get options from the filter form.
+ * @return array Array of filter options
+ *
+ * Filter options:
+ * - cluster (CSV list)
+ * - account (CSV list)
+ * - job_name (CSV list)
+ * - constraints (CSV list)
+ * - exit_code (numeric)
+ * - partition (CSV list)
+ * - state (CSV state list)
+ * - end_time (UNIX timestamp)
+ * - node (node string)
+ * - users (CSV user list)
+ */
 function get_slurmdb_filter_form_evaluation() : array {
     // BEGIN evaluate filter form
     $filter = array();

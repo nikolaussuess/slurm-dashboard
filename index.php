@@ -130,18 +130,6 @@ if( isset($_SESSION['USER']) ){
 
             // Get submitted filter form (reads $_GET and $_POST)
             $filter = \view\actions\get_slurmdb_filter_form_evaluation();
-            # Filter options:
-            # - cluster (CSV list)
-            # - account (CSV list)
-            # - job_name (CSV list)
-            # - constraints (CSV list)
-            # - exit_code (numeric)
-            # - partition (CSV list)
-            # - state (CSV state list)
-            # - start_time (UNIX timestamp)
-            # - end_time (UNIX timestamp)
-            # - node (node string)
-            # - users (CSV user list)
 
             $contents .= "<h2>Jobs</h2>";
 

@@ -1,5 +1,7 @@
 <?php
 
+require_once "jwt.inc.php";
+
 interface Request {
     function request_json(string $endpoint, string $namespace, string $api_version, int $ttl = 5);
     static function socket_exists() : bool;
@@ -26,8 +28,12 @@ class UnixRequest implements Request {
 
         // Prepare the HTTP request
         $request = "GET /{$namespace}/{$api_version}/{$endpoint} HTTP/1.1\r\n" .
-            "Host: localhost\r\n" .
-            "Connection: close\r\n\r\n";
+            "Host: localhost\r\n";
+        if(\client\jwt\JwtAuthentication::is_supported()){
+            $request .= "X-SLURM-USER-NAME: " . $_SESSION['USER'] . "\r\n";
+            $request .= "X-SLURM-USER-TOKEN: " . \client\jwt\JwtAuthentication::gen_jwt($_SESSION['USER']) . "\r\n";
+        }
+        $request .= "Connection: close\r\n\r\n";
         // Send the request
         fwrite($this->socket, $request);
 
@@ -66,8 +72,12 @@ class UnixRequest implements Request {
 
         // Prepare the HTTP request
         $request = "GET /{$full_endpoint} HTTP/1.1\r\n" .
-            "Host: localhost\r\n" .
-            "Connection: close\r\n\r\n";
+            "Host: localhost\r\n";
+        if(\client\jwt\JwtAuthentication::is_supported()){
+            $request .= "X-SLURM-USER-NAME: " . $_SESSION['USER'] . "\r\n";
+            $request .= "X-SLURM-USER-TOKEN: " . \client\jwt\JwtAuthentication::gen_jwt($_SESSION['USER']) . "\r\n";
+        }
+        $request .= "Connection: close\r\n\r\n";
         // Send the request
         fwrite($this->socket, $request);
 

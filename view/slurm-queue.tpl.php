@@ -71,7 +71,40 @@ EOF;
         $contents .=    "<td>" . $job['time_limit'] . "</td>";
         $contents .=    "<td>" . ($job['node_count'] != NULL ? $job['node_count'] : "?") . "</td>";
         $contents .=    "<td>" . $job['nodes'] . "</td>";
-        $contents .=    '<td><a href="?action=job&job_id=' . $job['job_id'] . '">[Details]</a></td>';
+        $contents .= <<<EOF
+<td>
+    <div class="btn-group">
+        <a href="?action=job&job_id={$job['job_id']}" class="btn btn-info" type="button">
+            Details
+        </a>
+        <button type="button" class="btn btn-danger dropdown-toggle dropdown-toggle-split" data-bs-toggle="dropdown" aria-expanded="false">
+            <span class="visually-hidden">Toggle Dropdown</span>
+        </button>
+EOF;
+        if( \client\utils\jwt\JwtAuthentication::is_supported() ){
+            $contents .= <<<EOF
+        <ul class="dropdown-menu">
+            <li><a class="dropdown-item" href="?action=cancel-job&job_id={$job['job_id']}">Cancel job</a></li>
+        </ul>
+EOF;
+        }
+        else {
+            $contents .= <<<EOF
+        <ul class="dropdown-menu">
+            <li><a class="dropdown-item disabled" 
+                   href="?action=cancel-job&job_id={$job['job_id']}"
+                   aria-disabled="true" 
+                   data-bs-toggle="tooltip"
+                   data-bs-placement="right"
+                   title="This feature is not supported by the current configuration.">Cancel job</a></li>
+        </ul>
+EOF;
+        }
+
+        $contents .= <<<EOF
+    </div>
+</td>
+EOF;
 
     }
     $contents .= <<<EOF

@@ -42,3 +42,23 @@ function addSuccess(string $s): void {
 
     $successmsg .= '<li>' . $s . '</li>';
 }
+
+
+function internalServerError(Throwable $exception) : void {
+    error_log(
+        "slurm-dashboard: Uncaught Exception: " . $exception->getMessage() .
+        "; at " . $exception->getFile() . ":" . $exception->getLine() . " with code " .
+        $exception->getCode() . "; Trace:" . $exception->getTraceAsString()
+    );
+
+    while (ob_get_level()) {
+        ob_end_clean();
+    }
+    http_response_code(500);
+    include __DIR__ . '/error.php';
+}
+
+set_exception_handler('internalServerError');
+set_error_handler(function($errno, $errstr, $errfile, $errline) {
+    throw new ErrorException($errstr, 0, $errno, $errfile, $errline);
+});

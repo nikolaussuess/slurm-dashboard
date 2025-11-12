@@ -211,6 +211,8 @@ interface Client{
      * @unstable
      */
     function get_maintenances() : array;
+
+    function cancel_job($job_id) : array;
 }
 
 class ClientFactory {

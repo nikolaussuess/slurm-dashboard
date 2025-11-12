@@ -313,6 +313,11 @@ abstract class AbstractClient implements Client {
         });
     }
 
+    function cancel_job($job_id) : array {
+        $json = RequestFactory::newRequest()->request_delete("job/" . $job_id, 'slurm', static::api_version);
+        return $json;
+    }
+
 
     protected function _get_number_if_defined(array $arr, string $default = 'undefined') : string {
         if($arr['set'])

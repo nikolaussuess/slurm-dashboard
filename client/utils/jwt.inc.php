@@ -17,8 +17,10 @@ class JwtAuthentication {
     public static function is_supported() : bool {
         if(self::JWT_PATH == TO_BE_REPLACED)
             return FALSE;
-        if(! file_exists(self::JWT_PATH) || ! is_readable(self::JWT_PATH) )
+        if(! file_exists(self::JWT_PATH) || ! is_readable(self::JWT_PATH) ){
+            syslog(LOG_WARNING, "slurm-dashboard: JWT_PATH is set but cannot be found or read.");
             return FALSE;
+        }
         return TRUE;
     }
 
@@ -50,7 +52,7 @@ class JwtAuthentication {
         $payload =  [
             "iat" => time(),
             "exp" => time() + $lifespan,
-            "username" => $user
+            "sun" => $user # slurm user name
         ];
         $payload = self::base64_url_encode(json_encode($payload));
         $signature = self::base64_url_encode(hash_hmac('sha256', "$header.$payload", $signing_key, true));

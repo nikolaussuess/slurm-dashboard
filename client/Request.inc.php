@@ -34,8 +34,8 @@ class UnixRequest implements Request {
         $request = "GET /{$namespace}/{$api_version}/{$endpoint} HTTP/1.1\r\n" .
             "Host: localhost\r\n";
         if(\client\utils\jwt\JwtAuthentication::is_supported()){
-            $request .= "X-SLURM-USER-NAME: " . $_SESSION['USER'] . "\r\n";
-            $request .= "X-SLURM-USER-TOKEN: " . \client\utils\jwt\JwtAuthentication::gen_jwt($_SESSION['USER']) . "\r\n";
+            $request .= "X-SLURM-USER-NAME: " . ($_SESSION['USER']??'slurm') . "\r\n";
+            $request .= "X-SLURM-USER-TOKEN: " . \client\utils\jwt\JwtAuthentication::gen_jwt($_SESSION['USER'] ?? 'slurm') . "\r\n";
         }
         $request .= "Connection: close\r\n\r\n";
         // Send the request
@@ -78,8 +78,8 @@ class UnixRequest implements Request {
         $request = "GET /{$full_endpoint} HTTP/1.1\r\n" .
             "Host: localhost\r\n";
         if(\client\utils\jwt\JwtAuthentication::is_supported()){
-            $request .= "X-SLURM-USER-NAME: " . $_SESSION['USER'] . "\r\n";
-            $request .= "X-SLURM-USER-TOKEN: " . \client\utils\jwt\JwtAuthentication::gen_jwt($_SESSION['USER']) . "\r\n";
+            $request .= "X-SLURM-USER-NAME: " . ($_SESSION['USER'] ?? 'slurm') . "\r\n";
+            $request .= "X-SLURM-USER-TOKEN: " . \client\utils\jwt\JwtAuthentication::gen_jwt($_SESSION['USER'] ?? 'slurm') . "\r\n";
         }
         $request .= "Connection: close\r\n\r\n";
         // Send the request

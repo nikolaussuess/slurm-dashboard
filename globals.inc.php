@@ -45,10 +45,15 @@ function addSuccess(string $s): void {
 
 
 function internalServerError(Throwable $exception) : void {
+    $debug_info='';
+    if(is_callable([$exception, 'get_debug_info']))
+        $debug_info = $exception->get_debug_info();
+
     error_log(
         "slurm-dashboard: Uncaught Exception: " . $exception->getMessage() .
         "; at " . $exception->getFile() . ":" . $exception->getLine() . " with code " .
-        $exception->getCode() . "; Trace:" . $exception->getTraceAsString()
+        $exception->getCode() . "; Trace:" . $exception->getTraceAsString() .
+        "; Debug info: " . $debug_info
     );
 
     while (ob_get_level()) {

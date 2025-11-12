@@ -13,8 +13,12 @@ function get_usage(array $data) : string {
     $templateBuilder->setParam("CPU_USED", $data["alloc_cpus"]);
     $templateBuilder->setParam("CPU_TOTAL", $data["cpus"]);
 
-    $templateBuilder->setParam("MEM_PERCENTAGE", ($data["mem_total"]-$data["mem_free"])/$data["mem_total"]*100);
-    $templateBuilder->setParam("MEM_USED", $data["mem_total"] - $data["mem_free"]);
+    // mem_total is the full memory *that is assigned to Slurm*, not the full memory of the node.
+    // mem_free, however, is the sum of free memory.
+    // Thus, mem_total-mem_free can be negative if and only if in slurm.conf the node does not have the
+    // full RAM memory for RealMemory=. In order to avoid confusions, we set the minimum to 0.
+    $templateBuilder->setParam("MEM_PERCENTAGE", max(0, ($data["mem_total"]-$data["mem_free"])/$data["mem_total"]*100));
+    $templateBuilder->setParam("MEM_USED", max(0,$data["mem_total"] - $data["mem_free"]));
     $templateBuilder->setParam("MEM_TOTAL", $data["mem_total"]);
     $templateBuilder->setParam("ALLOC_MEM_PERCENTAGE", ($data["mem_alloc"])/$data["mem_total"]*100);
     $templateBuilder->setParam("ALLOC_MEM", $data["mem_alloc"]);

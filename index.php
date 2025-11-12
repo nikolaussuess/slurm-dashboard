@@ -163,6 +163,58 @@ if( isset($_SESSION['USER']) ){
 
             break;
 
+        case 'cancel-job':
+
+            if( ! \client\utils\jwt\JwtAuthentication::is_supported() ){
+                addError("Cancelling jobs is currently not supported by the configuration.<br>" .
+                           "If you are an administrator: You have to enable JWT authentication in order to use this feature.");
+                break;
+            }
+
+            // Check if job_id parameter exists.
+            if(! isset($_GET['job_id']) || intval($_GET['job_id']) != $_GET['job_id']){
+                addError("No job id provided or job id is not a valid number.");
+                break;
+            }
+
+            $job_id = $_GET['job_id'];
+
+            // Check for sufficient privileges
+            $job_data = $dao->get_job($job_id);
+
+            if($job_data === NULL){
+                addError("Job " . $_GET['job_id'] . " not in active queue any more.");
+                break;
+            }
+
+            if( ! \auth\current_user_is_admin() && $job_data['user_name'] != $_SESSION['USER'] ){
+                addError(
+                    "The job belongs to user " . $job_data['user_name'] . " but current user is "
+                    . $_SESSION['USER'] . ". Since you are not an administrator, you can only delete your own jobs."
+                );
+                break;
+            }
+
+            if(! isset($_GET['do']) || $_GET['do'] != "cancel") {
+                $templateBuilder = new TemplateLoader("modal_job_cancelling.html");
+                $templateBuilder->setParam("JOBID", $job_id);
+                $contents .= $templateBuilder->build();
+                break;
+            }
+            else {
+                $res = $dao->cancel_job($job_id);
+                if(isset($res['errors']) && !empty($res['errors'])){
+                    \utils\show_errors($res);
+                }
+                else {
+                    addSuccess("Job " . $job_id . " cancelled.");
+                    apcu_delete("slurm/jobs"); // Delete cached entry because we KNOW that it has changed.
+                    apcu_delete("slurm/job/".$job_id); // Delete cached entry because we KNOW that it has changed.
+                    $contents .= \view\actions\get_slurm_queue($dao->get_jobs(), 0);
+                }
+            }
+            break;
+
         default:
             http_response_code(404);
             $contents .= "404 Not Found.";
@@ -179,6 +231,12 @@ if( isset($_SESSION['USER']) ){
     <script src="/lib/jquery/jquery-3.7.1.min.js" integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
     <script src="/lib/popper.js/popper.min.js" integrity="sha384-I7E8VVD/ismYTF4hNIPjVp/Zjvgyol6VFvRkX/vR+Vc4jQkC+hVqc2pM8ODewa9r" crossorigin="anonymous"></script>
     <script src="/lib/bootstrap/js/bootstrap.min.js" integrity="sha384-0pUGZvbkm6XF6gxjEnlmuGrJXVbNuzT9qBBavbLwCsOGabYfZo0T0to5eqruptLy" crossorigin="anonymous"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
+            const tooltipList = [...tooltipTriggerList].map(el => new bootstrap.Tooltip(el));
+        });
+    </script>
 
     <link rel="stylesheet" href="/style.css" crossorigin="anonymous">
     <meta name="viewport" content="width=device-width, initial-scale=1" />

@@ -42,8 +42,7 @@ class DependencyResolver {
         return ["and" => $andParsed];
     }
 
-    private function parseSingleDependency(string $part): array
-    {
+    private function parseSingleDependency(string $part): array {
         $tokens = explode(':', $part);
         $type = strtolower(array_shift($tokens));
         $jobids = [];
@@ -82,16 +81,18 @@ class DependencyResolver {
      * Recursively collects all transitive dependencies.
      * Adds `fulfilled` property based on annotation or job state.
      */
-    public function getTransitiveDependencies(string $jobid, array &$visited = []): array
-    {
-        if (isset($visited[$jobid])) return [];
+    public function getTransitiveDependencies(string $jobid, array &$visited = []): array {
+        if (isset($visited[$jobid]))
+            return [];
         $visited[$jobid] = true;
 
         $job = $this->get_job($jobid);
-        if (!$job) return [];
+        if (!$job)
+            return [];
 
         $depString = $job['dependency'] ?? '';
-        if ($depString === "") return [];
+        if ($depString === "")
+            return [];
 
         $parsed = $this->parseSlurmDependency($depString);
         $results = [];
@@ -136,8 +137,7 @@ class DependencyResolver {
     /**
      * Render HTML list including fulfillment
      */
-    public function renderDependencyListHTML(string $jobid): string
-    {
+    public function renderDependencyListHTML(string $jobid): string {
         $deps = $this->getTransitiveDependencies($jobid);
         if (empty($deps)) {
             return "Job {$jobid} has no dependencies or all dependencies are already satisfied.";

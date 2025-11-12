@@ -7,6 +7,8 @@ namespace client\utils;
  */
 class DependencyResolver {
 
+    private \client\Client $dao;
+
     function __construct(\client\Client $dao) {
         $this->dao = $dao;
     }
@@ -98,7 +100,7 @@ class DependencyResolver {
         $results = [];
 
         foreach ($parsed["and"] as $depGroup) {
-            $depItems = isset($depGroup["or"]) ? $depGroup["or"] : [$depGroup];
+            $depItems = $depGroup["or"] ?? [$depGroup];
             foreach ($depItems as $dep) {
                 foreach ($dep["jobids"] as $jidEntry) {
                     $jid = $jidEntry["jobid"];

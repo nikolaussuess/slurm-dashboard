@@ -7,7 +7,7 @@ date_default_timezone_set('Europe/Vienna');
 require_once 'TemplateLoader.inc.php';
 require_once 'globals.inc.php';
 require_once 'client/Client.inc.php';
-require_once 'client/DependencyResolver.inc.php';
+require_once 'client/utils/DependencyResolver.inc.php';
 require_once 'auth/auth.inc.php';
 require_once 'utils.inc.php';
 

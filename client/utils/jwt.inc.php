@@ -1,6 +1,6 @@
 <?php
 
-namespace client\jwt;
+namespace client\utils\jwt;
 
 use const \auth\TO_BE_REPLACED;
 

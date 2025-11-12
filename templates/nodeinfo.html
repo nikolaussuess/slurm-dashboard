@@ -21,7 +21,7 @@
             </td>
         </tr>
 
-        <tr title="The sum of all RAM memory currently used on that node. This includes buffer and cache memory, which is currently in use but available.">
+        <tr title="The sum of all RAM memory currently used on that node. This might include buffer and cache memory, which is currently in use but available. However, mem_used is calculated as mem_total-mem_free. Since mem_free is the total free memory of the node but mem_total is only the memory that is available for slurm (which might be lower than the actual RAM of the node), this value could be negative. We truncate at 0.">
             <td>Memory:</td>
             <td>
                 <div class="progress">

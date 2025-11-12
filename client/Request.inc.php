@@ -1,5 +1,9 @@
 <?php
 
+namespace client;
+
+use Error;
+
 interface Request {
     function request_json(string $endpoint, string $namespace, string $api_version, int $ttl = 5);
     static function socket_exists() : bool;

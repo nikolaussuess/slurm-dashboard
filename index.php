@@ -7,6 +7,7 @@ date_default_timezone_set('Europe/Vienna');
 require_once 'TemplateLoader.inc.php';
 require_once 'globals.inc.php';
 require_once 'client/Client.inc.php';
+require_once 'client/utils/DependencyResolver.inc.php';
 require_once 'auth/auth.inc.php';
 require_once 'utils.inc.php';
 
@@ -97,7 +98,8 @@ if( isset($_SESSION['USER']) ){
                 $contents .= "<p>Job " . $_GET['job_id'] . " not in active queue anymore.</p>";
             }
             else {
-                $contents .= \view\actions\get_slurm_jobinfo($query);
+                $dependency_resolver = new \client\utils\DependencyResolver($dao);
+                $contents .= \view\actions\get_slurm_jobinfo($query, $dependency_resolver->renderDependencyListHTML($_GET['job_id']) ?? '');
             }
 
             # SLURMDB information

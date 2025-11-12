@@ -25,18 +25,23 @@ However, any slurm version `>= 23.11.x` should work. If you encounter any issues
 - display and filter job history (from `slurmdbd`)
 - display list of users with their respective accounts (for administrators and privileged users only)
 - show planned maintenances (`flags=maint`) that were created with e.g. `scontrol create reservation starttime=2024-11-02T13:30:00 duration=5 user=root flags=maint nodes=mynode`
+- list transitive dependencies for a job
 
 ![Job queue](./imgs/queue.png?raw=true "Job queue")
 
 ![Job history](./imgs/job_history.png?raw=true "Job history")
 
 ### Planned features
+#### Currently work in progress
 - Authentication (at `slurmrestd`) via JWT.
-- Allow administrators to requeue / cancel / ... jobs.
-- Allow users to requeue and cancel their own jobs.
-- Allow users to submit jobs via a web interface.
+- Allow administrators to requeue / cancel / ... jobs (requires JWT).
+- Allow users to requeue and cancel their own jobs (requires JWT).
 
-But currently none of these features is under active development.
+All of the above already works (see branch `feature-cancel-jobs`), but still needs some testing and documentation.
+
+#### Currently not under active development
+- Allow users to submit jobs via a web interface.
+- Support TCP sockets (in addition to unix sockets).
 
 ## Requirements
 - PHP (currently only tested with PHP 8.2)<br>

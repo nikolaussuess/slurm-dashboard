@@ -4,12 +4,10 @@ namespace view\actions;
 
 use TemplateLoader;
 
-function get_slurm_jobinfo(array $query) : string {
+function get_slurm_jobinfo(array $query, string $transitive_dependencies = '') : string {
 
     $contents = '<h3>Job queue information</h3>';
 
-    $job_id = $query['job_id'];
-    $job_name = $query['job_name'];
     $job_state_text = \utils\get_job_state_view($query);
     $user = $query['user_name'] . " (" . $query['user_id'] . ')';
     $group = $query['group_name'] . " (" . $query['group_id'] . ')';
@@ -39,6 +37,7 @@ function get_slurm_jobinfo(array $query) : string {
     $templateBuilder->setParam("CPUS_PER_TASK",     $query['cpus_per_task'] ?? '' );
     $templateBuilder->setParam("DEADLINE",          $query['deadline'] ?? ''      );
     $templateBuilder->setParam("DEPENDENCY",        $query['dependency'] ?? ''    );
+    $templateBuilder->setParam("TRANSITIVE_DEPENDENCIES", $transitive_dependencies      );
     $templateBuilder->setParam("FEATURES",          $query['features']                  );
     $templateBuilder->setParam("GRES_DETAIL",       implode(",", $query['gres']));
     $templateBuilder->setParam("CPUS",              $query['cpus']                      );

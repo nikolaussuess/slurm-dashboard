@@ -1,6 +1,10 @@
 <?php
 
+namespace client;
+
 require_once "jwt.inc.php";
+
+use Error;
 
 interface Request {
     function request_json(string $endpoint, string $namespace, string $api_version, int $ttl = 5);

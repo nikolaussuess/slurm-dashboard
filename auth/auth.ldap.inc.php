@@ -62,7 +62,8 @@ namespace auth {
             // Bind to the LDAP server
             if (@ldap_bind($ldapConn, $ldap_dn, $ldap_password)) {
                 // Search for the user
-                $filter = "(uid=$username)"; // Change this filter based on your LDAP schema
+                $escaped_username = ldap_escape($username, '', LDAP_ESCAPE_FILTER)
+                $filter = "(uid=$escaped_username)";
                 $result = ldap_search($ldapConn, self::BASE, $filter);
                 $entries = ldap_get_entries($ldapConn, $result);
 
@@ -115,14 +116,16 @@ namespace auth {
         }
 
         function get_data_for_user(string $uid): array {
-            $filter = "(uid=$uid)";
-            $attributes = ["uid", "displayName", "department", "departmentNumber", "mail"];
 
             // Prevent LDAP injection
             if( \auth\validate_username($uid) !== TRUE ){
                 addError("Invalid username.");
                 return array();
             }
+
+            $escaped_uid = ldap_escape($uid, '', LDAP_ESCAPE_FILTER);
+            $filter = "(uid=$escaped_uid)";
+            $attributes = ["uid", "displayName", "department", "departmentNumber", "mail"];
 
             if( apcu_exists("ldap" . '/' . $filter)){
                 return apcu_fetch("ldap" . '/' . $filter);

@@ -7,7 +7,7 @@ function get_usage(array $data) : string {
     $contents = '';
 
     $templateBuilder = new TemplateLoader("nodeinfo.html");
-    $templateBuilder->setParam("NODENAME", $data['node_name']);
+    $templateBuilder->setParam("NODENAME", htmlspecialchars($data['node_name'], ENT_QUOTES, 'UTF-8'));
 
     $templateBuilder->setParam("CPU_PERCENTAGE", $data["alloc_cpus"]/$data["cpus"]*100);
     $templateBuilder->setParam("CPU_USED", $data["alloc_cpus"]);
@@ -69,26 +69,26 @@ function get_usage(array $data) : string {
 
     $feature_str = "";
     foreach ($data["features"] as $feature){
-        $feature_str .= '<span class="feature">' . $feature . '</span> ';
+        $feature_str .= '<span class="feature">' . htmlspecialchars($feature, ENT_QUOTES, 'UTF-8') . '</span> ';
     }
     $templateBuilder->setParam("FEATURES", $feature_str);
 
     $feature_str = "";
     foreach ($data["active_features"] as $feature){
-        $feature_str .= '<span class="feature">' . $feature . '</span> ';
+        $feature_str .= '<span class="feature">' . htmlspecialchars($feature, ENT_QUOTES, 'UTF-8') . '</span> ';
     }
     $templateBuilder->setParam("ACTIVE_FEATURES", $feature_str);
 
     $templateBuilder->setParam("ADDRESS", $data["address"]);
-    $templateBuilder->setParam("HOSTNAME", $data["hostname"]);
-    $templateBuilder->setParam("OPERATING_SYSTEM", $data["operating_system"] ?? '');
-    $templateBuilder->setParam("OWNER", $data["owner"] ?? '');
-    $templateBuilder->setParam("TRES", $data["tres"] ?? '');
-    $templateBuilder->setParam("TRES_USED", $data["tres_used"] ?? '');
+    $templateBuilder->setParam("HOSTNAME", htmlspecialchars($data["hostname"], ENT_QUOTES, 'UTF-8'));
+    $templateBuilder->setParam("OPERATING_SYSTEM", htmlspecialchars($data["operating_system"] ?? '', ENT_QUOTES, 'UTF-8'));
+    $templateBuilder->setParam("OWNER", htmlspecialchars($data["owner"] ?? '', ENT_QUOTES, 'UTF-8'));
+    $templateBuilder->setParam("TRES", htmlspecialchars($data["tres"] ?? '', ENT_QUOTES, 'UTF-8'));
+    $templateBuilder->setParam("TRES_USED", htmlspecialchars($data["tres_used"] ?? '', ENT_QUOTES, 'UTF-8'));
     $templateBuilder->setParam("BOOT_TIME", $data["boot_time"] ?? '');
     $templateBuilder->setParam("LAST_BUSY", $data["last_busy"] ?? '');
     $templateBuilder->setParam("PARTITIONS", count($data["partitions"]) > 0 ? '<li><span class="monospaced">' . implode('</li><li><span class="monospaced">', $data["partitions"]) . '</span></li>' : '');
-    $templateBuilder->setParam("RESERVATION", $data["reservation"] ?? '');
+    $templateBuilder->setParam("RESERVATION", htmlspecialchars($data["reservation"] ?? '', ENT_QUOTES, 'UTF-8'));
     $templateBuilder->setParam("SLURM_VERSION", $data["slurm_version"] ?? '');
 
     $contents .= $templateBuilder->build();

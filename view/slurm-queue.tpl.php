@@ -98,7 +98,10 @@ EOF;
                       title="This feature is not supported by the current configuration.">
                     Cancel job
                 </span>
+                </li>
+            <li>
                 <a class="dropdown-item" href="#" data-bs-toggle="tooltip" title="Tooltip test">Hover me</a>
+            </li>
         </ul>
 EOF;
         }

@@ -90,12 +90,15 @@ However, any slurm version `>= 23.11.x` should work. If you encounter any issues
       AuthAltTypes=auth/jwt
       AuthAltParameters=jwt_key=/var/spool/slurm/statesave/jwt_hs256.key
       ```
-      - Restart `slurmctl` and `slurmdbd` (e.g., with `scontrol reconfigure`) and look for errors.
+      - Restart `slurmctl` and `slurmdbd` (e.g., with `scontrol reconfigure`) and look for errors. Reading the logs (`slurmctld.log`, `slurmdbd.log` and `/var/log/syslog`) might help.
     - Copy the key to the node where the dashboard is running. Use locations and permissions so that other users cannot read the key. For example, copy the key to `/var/lib/slurm-dashboard` and set the ownership:
     ```
     # Somehow copy the key, e.g. with scp ...
     scp ...
+    mkdir -p /var/lib/slurm-dashboard
     mv jwt.key /var/lib/slurm-dashboard
+    chown slurm-dashboard:slurm-dashboard /var/lib/slurm-dashboard
+    chmod 644 /var/lib/slurm-dashboard
     chown slurm-dashboard:slurm-dashboard /var/lib/slurm-dashboard/jwt.key
     chmod 0400 /var/lib/slurm-dashboard/jwt.key
     ```
@@ -134,7 +137,7 @@ However, any slurm version `>= 23.11.x` should work. If you encounter any issues
     ...
 </VirtualHost>
 ```
-5) Optionally, enable SSL etc.
+5) Optionally (but strongly recommended), enable SSL etc.
 6) Edit `globals.inc.php` to set the constants (passwords, names, paths, ...):
 ```php
 <?php

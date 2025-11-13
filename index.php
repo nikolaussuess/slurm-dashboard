@@ -234,7 +234,9 @@ if( isset($_SESSION['USER']) ){
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
-            const tooltipList = [...tooltipTriggerList].map(el => new bootstrap.Tooltip(el));
+            const tooltipList = [...tooltipTriggerList].map(el =>
+                new bootstrap.Tooltip(el, { container: 'body' })
+            );
         });
     </script>
 

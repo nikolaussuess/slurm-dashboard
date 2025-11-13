@@ -14,7 +14,13 @@ class DependencyResolver {
     }
 
     public function get_job(string $jobid): ?array {
-        return $this->dao->get_job($jobid);
+        // The job we depend on might not be in the job queue any more.
+        // This would result in STATE=UNKNOWN for jobs even though they have completed.
+        $job = $this->dao->get_job($jobid);
+        if( $job == NULL ){
+            $job = $this->dao->get_job_from_slurmdb($jobid);
+        }
+        return $job;
     }
 
     /**
@@ -105,13 +111,19 @@ class DependencyResolver {
                 foreach ($dep["jobids"] as $jidEntry) {
                     $jid = $jidEntry["jobid"];
                     $depJob = $this->get_job($jid);
-                    $state = $depJob["job_state"] ?? "UNKNOWN";
+                    $state = $depJob["job_state"] ?? ["UNKNOWN"];
 
                     // Determine fulfillment
                     $fulfilled = $jidEntry["fulfilled"];
                     if ($fulfilled === null) {
                         // Heuristic: COMPLETED = fulfilled, anything else = unfulfilled
-                        $fulfilled = strtoupper($state) === "COMPLETED";
+                        if (is_array($state)) {
+                            $fulfilled = in_array("COMPLETED", $state, true);
+                            print_r($state);
+                        } else {
+                            $fulfilled = $state === "COMPLETED";
+                            print_r($state);
+                        }
                     }
 
                     $results[] = [

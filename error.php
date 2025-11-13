@@ -4,7 +4,7 @@ include_once "globals.inc.php";
 // Protect from direct access
 if (!isset($exception) || !($exception instanceof Throwable)) {
     header("Location: /index.php?action=404");
-    throw new ErrorException("Website not available.", 403);
+    exit;
 }
 
 ?>

@@ -1,10 +1,6 @@
 <?php
 
 namespace auth {
-    /**
-     * Placeholder and default value in the auth classes for variables that must be overwritten.
-     */
-    const TO_BE_REPLACED = '<TO BE REPLACED>';
 
     interface AuthenticationMethod {
         /**

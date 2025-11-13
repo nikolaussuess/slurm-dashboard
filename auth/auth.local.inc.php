@@ -9,7 +9,7 @@ namespace auth {
      * I.e., this class connects with password authentication to a server via SSH.
      */
     class Local implements AuthenticationMethod {
-        private const SERVER_URL = TO_BE_REPLACED;
+        private const SERVER_URL = SSH_SERVER_URL;
         public const METHOD_NAME = 'local';
 
         public static function is_supported(): bool {

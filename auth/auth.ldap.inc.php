@@ -7,10 +7,10 @@ namespace auth {
      * Authentication via LDAP.
      */
     class LDAP implements AuthenticationMethod {
-        private const URI = TO_BE_REPLACED;
-        private const BASE = TO_BE_REPLACED;
-        private const ADMIN_USER = TO_BE_REPLACED;
-        private const ADMIN_PASSWORD = TO_BE_REPLACED;
+        private const URI = LDAP_URI;
+        private const BASE = LDAP_BASE;
+        private const ADMIN_USER = LDAP_ADMIN_USER;
+        private const ADMIN_PASSWORD = LDAP_ADMIN_PASSWORD;
         public const METHOD_NAME = 'ldap';
 
         private mixed $ldapConn;

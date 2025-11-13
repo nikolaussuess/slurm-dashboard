@@ -100,16 +100,25 @@ if( isset($_SESSION['USER']) ){
             $query = $dao->get_job($_GET['job_id']);
             if( $query == NULL ){
                 $contents .= "<p>Job " . $_GET['job_id'] . " not in active queue anymore.</p>";
+                // Here, it is not a 404 if the job is not found, because a job
+                // is removed vom the queue when it is finished but persists in slurmdb.
+                $in_slurm_queue = FALSE;
             }
             else {
                 $dependency_resolver = new \client\utils\DependencyResolver($dao);
                 $contents .= \view\actions\get_slurm_jobinfo($query, $dependency_resolver->renderDependencyListHTML($_GET['job_id']) ?? '');
+                $in_slurm_queue = TRUE;
             }
 
             # SLURMDB information
             $query = $dao->get_job_from_slurmdb($_GET['job_id']);
-            if(count($query) == 0){
+            if($query == NULL){
                 $contents .= "<p>Job " . $_GET['job_id'] . " not found in <span class='monospaced'>slurmdb</span>.</p>";
+                // Here, it is a 404 if the job cannot be found.
+                // However, there might have been a delay while writing into slurmdb. So we only consider it to be a
+                // 404 if it was neither in slurmdb nor in slurm queue.
+                if( ! $in_slurm_queue)
+                    http_response_code(404);
             }
             else {
                 $contents .= \view\actions\get_slurmdb_jobinfo($query);

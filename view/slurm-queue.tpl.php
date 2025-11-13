@@ -96,12 +96,11 @@ EOF;
                       data-bs-toggle="tooltip" 
                       data-bs-placement="right"
                       title="This feature is not supported by the current configuration.">
-                      <a class="disabled" 
+                      <a class="dropdown-item disabled" 
                          href="?action=cancel-job&job_id={$job['job_id']}"
                          aria-disabled="true">
                         Cancel job
                       </a>
-                    Cancel job
                 </span>
             </li>
         </ul>

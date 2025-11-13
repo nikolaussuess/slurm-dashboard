@@ -91,12 +91,14 @@ EOF;
         else {
             $contents .= <<<EOF
         <ul class="dropdown-menu">
-            <li><a class="dropdown-item disabled" 
-                   href="?action=cancel-job&job_id={$job['job_id']}"
-                   aria-disabled="true" 
-                   data-bs-toggle="tooltip"
-                   data-bs-placement="right"
-                   title="This feature is not supported by the current configuration.">Cancel job</a></li>
+            <li>
+                <span class="dropdown-item disabled" 
+                      data-bs-toggle="tooltip" 
+                      data-bs-placement="right"
+                      title="This feature is not supported by the current configuration.">
+                    Cancel job
+                </span>
+                <a class="dropdown-item" href="#" data-bs-toggle="tooltip" title="Tooltip test">Hover me</a>
         </ul>
 EOF;
         }

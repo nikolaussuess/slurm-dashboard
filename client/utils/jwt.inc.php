@@ -22,9 +22,9 @@ class JwtAuthentication {
             syslog(LOG_WARNING, "slurm-dashboard: JWT_PATH is set but cannot be found or read.");
             throw new ConfigurationError(
                 "JWT authentication is enabled but misconfigured.",
-                0,
-                NULL,
-                "JWT_PATH is set but cannot be found or read."
+                'JWT authentication path = ' . self::JWT_PATH . ", exists = " .
+                    file_exists(self::JWT_PATH) . ", is readable = " . is_readable(self::JWT_PATH),
+                "JWT authentication failed. If you are a user and the error persists, please contact " . ADMIN_EMAIL
             );
         }
         return TRUE;

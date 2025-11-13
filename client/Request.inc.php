@@ -27,9 +27,8 @@ class UnixRequest implements Request {
         if (!$this->socket) {
             throw new RequestFailedException(
                 "Unable to connect to socket.",
-                $errno,
-                NULL,
-                $errstr
+                "errno=$errno, errstr=$errstr",
+                "Unable to connect to socket. If you are a user and the error persists, please contact " . ADMIN_EMAIL
             );
         }
     }
@@ -122,9 +121,9 @@ class UnixRequest implements Request {
             #addError("JSON decode error: " . json_last_error_msg());
             throw new RequestFailedException(
                 "Server response could not be interpreted.",
-                json_last_error(),
+                json_last_error_msg(),
                 NULL,
-                json_last_error_msg()
+                json_last_error()
             );
         }
 
@@ -163,9 +162,9 @@ class UnixRequest implements Request {
             #addError("JSON decode error: " . json_last_error_msg());
             throw new RequestFailedException(
                 "Server response could not be interpreted.",
-                json_last_error(),
+                json_last_error_msg(),
                 NULL,
-                json_last_error_msg()
+                json_last_error()
             );
         }
 
@@ -190,10 +189,13 @@ class RequestFactory {
             return new UnixRequest();
 
         throw new ConfigurationError(
-            "Unknown socket type. Wrong configuration in globals.inc.php",
-            0,
-            NULL,
-            "CONNECTION_MODE=" . CONNECTION_MODE
+            "Unknown socket type.",
+            "CONNECTION_MODE has an unknown value, i.e. CONNECTION_MODE=" . CONNECTION_MODE,
+            'Wrong configuration for requests. Could not contact server.
+            <ul>
+                <li>If you are an admin, please set the parameter <kbd>CONNECTION_MODE</kbd> in config.inc.php.</li>
+                <li>If you are a user and the error persists, please contact " . ADMIN_EMAIL. "</li>
+            </ul>'
         );
     }
 
@@ -202,10 +204,13 @@ class RequestFactory {
             return UnixRequest::socket_exists();
 
         throw new ConfigurationError(
-            "Unknown socket type. Wrong configuration in globals.inc.php",
-            0,
-            NULL,
-            "CONNECTION_MODE=" . CONNECTION_MODE
+            "Unknown socket type.",
+            "CONNECTION_MODE has an unknown value, i.e. CONNECTION_MODE=" . CONNECTION_MODE,
+            'Wrong configuration for requests. Could not contact server.
+            <ul>
+                <li>If you are an admin, please set the parameter <kbd>CONNECTION_MODE</kbd> in config.inc.php.</li>
+                <li>If you are a user and the error persists, please contact " . ADMIN_EMAIL. "</li>
+            </ul>'
         );
     }
 }

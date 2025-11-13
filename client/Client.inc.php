@@ -223,14 +223,13 @@ class ClientFactory {
             $response = RequestFactory::newRequest()->request_json2("openapi/v3", 0);
             if(! isset($response['info']['x-slurm']['data_parsers']) ){
                 throw new ConfigurationError(
+                    "Could not autodetect supported SLURM REST API versions",
+                    '$response["info"]["x-slurm"]["data_parsers"] is not set',
                     "Could not autodetect supported SLURM REST API versions. This is likely, because your SLURM version does not support it, yet.
                     <ul>
                         <li>If you are an admin, please set the parameter <kbd>REST_API_VERSION</kbd> in config.inc.php.</li>
                         <li>If you are a user and the error persists, please contact " . ADMIN_EMAIL. "</li>
                     </ul>",
-                    0,
-                    NULL,
-                    '$response["info"]["x-slurm"]["data_parsers"] is not set'
                 );
             }
             $parsers = array_column($response['info']['x-slurm']['data_parsers'], 'plugin');

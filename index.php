@@ -31,10 +31,9 @@ if( isset($_GET['action']) && $_GET['action'] == "logout"){
 // Check if the socket exists and add a warning otherwise
 if( ! $dao->is_available() ){
     throw new \exceptions\RequestFailedException(
-        "Cannot create socket. Is <kbd>slurmrestd</kbd> running? Please report this issue to " . ADMIN_EMAIL,
-        0,
-        NULL,
-        '$dao->is_available() failed'
+        "Cannot create socket.",
+        '$dao->is_available() failed',
+        "Cannot create socket. Is <kbd>slurmrestd</kbd> running? Please report this issue to " . ADMIN_EMAIL
     );
 }
 

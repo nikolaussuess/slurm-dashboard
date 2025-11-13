@@ -53,7 +53,7 @@ if (!isset($exception) || !($exception instanceof Throwable)) {
 <?php if($exception instanceof \exceptions\BaseException || $exception instanceof \exceptions\BaseError): ?>
     <p>An internal server error occurred because of the following reason:</p>
     <div class="alert alert-danger" role="alert" style="display: block">
-        <?php print htmlspecialchars($exception->getMessage()); ?>
+        <?php print $exception->get_html_message(); ?>
     </div>
 <?php else: ?>
     <p>An unknown internal server occurred.</p>

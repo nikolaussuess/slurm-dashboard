@@ -7,8 +7,12 @@ require_once 'BaseException.inc.php';
 
 class RequestFailedException extends BaseException {
 
-    public function __construct($message = "Request failed.", $code = 0, Throwable $previous = null, $debug_info=NULL){
-        parent::__construct($message, $code, $previous, $debug_info);
+    public function __construct($message='Request failed.',
+                                $debug_info=NULL,
+                                $html_message=NULL,
+                                $code = 0,
+                                Throwable $previous = null){
+        parent::__construct($message, $debug_info, $html_message, $code, $previous);
     }
 
 }

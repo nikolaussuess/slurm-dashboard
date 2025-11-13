@@ -92,15 +92,17 @@ EOF;
             $contents .= <<<EOF
         <ul class="dropdown-menu">
             <li>
-                <span class="dropdown-item disabled" 
+                <span class="dropdown-item" 
                       data-bs-toggle="tooltip" 
                       data-bs-placement="right"
                       title="This feature is not supported by the current configuration.">
+                      <a class="disabled" 
+                         href="?action=cancel-job&job_id={$job['job_id']}"
+                         aria-disabled="true">
+                        Cancel job
+                      </a>
                     Cancel job
                 </span>
-                </li>
-            <li>
-                <a class="dropdown-item" href="#" data-bs-toggle="tooltip" title="Tooltip test">Hover me</a>
             </li>
         </ul>
 EOF;

@@ -119,10 +119,8 @@ class DependencyResolver {
                         // Heuristic: COMPLETED = fulfilled, anything else = unfulfilled
                         if (is_array($state)) {
                             $fulfilled = in_array("COMPLETED", $state, true);
-                            print_r($state);
                         } else {
                             $fulfilled = $state === "COMPLETED";
-                            print_r($state);
                         }
                     }
 

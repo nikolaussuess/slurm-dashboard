@@ -17,28 +17,24 @@ Currently tested with the following Slurm versions:
 However, any slurm version `>= 23.11.x` should work. If you encounter any issues, please write a bug report.
 
 ## Current features
-- display cluster usage information (state, CPUs, memory, gpus per node)
-- display the current job queue, including a job detail page
-- authentication via LDAP or local, and it additionally checks whether the user exists in the accounting database
-- communication with `slurmrestd` via unix socket
-- caching of the `slurmrestd` responses (using APCu)
-- display and filter job history (from `slurmdbd`)
-- display list of users with their respective accounts (for administrators and privileged users only)
-- show planned maintenances (`flags=maint`) that were created with e.g. `scontrol create reservation starttime=2024-11-02T13:30:00 duration=5 user=root flags=maint nodes=mynode`
-- list transitive dependencies for a job
+- Display cluster usage information (state, CPUs, memory, gpus per node).
+- Display the current job queue, including a job detail page.
+- Authentication via LDAP or local, and it additionally checks whether the user exists in the accounting database.
+- Communication with `slurmrestd` via unix socket.
+- Caching of the `slurmrestd` responses (using APCu).
+- Display and filter job history (from `slurmdbd`).
+- Display list of users with their respective accounts (for administrators and privileged users only).
+- Show planned maintenances (`flags=maint`) that were created with e.g. `scontrol create reservation starttime=2024-11-02T13:30:00 duration=5 user=root flags=maint nodes=mynode`.
+- List transitive dependencies for a job.
+- Authentication (at `slurmrestd`) via JWT (optional).
+- Allow administrators to requeue / cancel / ... jobs (requires JWT).
+- Allow users to requeue and cancel their own jobs (requires JWT).
 
 ![Job queue](./imgs/queue.png?raw=true "Job queue")
 
 ![Job history](./imgs/job_history.png?raw=true "Job history")
 
 ### Planned features
-#### Currently work in progress
-- Authentication (at `slurmrestd`) via JWT.
-- Allow administrators to requeue / cancel / ... jobs (requires JWT).
-- Allow users to requeue and cancel their own jobs (requires JWT).
-
-All of the above already works (see branch `feature-cancel-jobs`), but still needs some testing and documentation.
-
 #### Currently not under active development
 - Allow users to submit jobs via a web interface.
 - Support TCP sockets (in addition to unix sockets).
@@ -56,23 +52,77 @@ All of the above already works (see branch `feature-cancel-jobs`), but still nee
 - `slurmrestd` using Unix sockets, running with the same user that the website is running with.
 
 ## Setup
-1. Install the requirements.
-2. Add a unix user (and group) `slurm-dashboard`, preferably in the system UID range (e.g. 994 or 996).
-3. Adapt the `slurmrestd` unit file (e.g. `/etc/systemd/slurmrestd.service.d/slurmrestd.conf`) like e.g.:
-```
-[Service]
-# Unset vendor unit ExecStart to avoid cumulative definition
-ExecStart=
-Environment=
-# Disable slurm user security check - might be required.
-#Environment=SLURMRESTD_SECURITY=disable_user_check
-ExecStart=/usr/local/sbin/slurmrestd $SLURMRESTD_OPTIONS unix:/run/slurmrestd/slurmrestd.socket
-RuntimeDirectory=slurmrestd
-RuntimeDirectoryMode=0755
-User=slurm-dashboard
-Group=slurm-dashboard
-```
-4. Add correct user to the apache vhost (e.g. `/etc/apache2/sites-enabled/slurm-dashboard.conf`):
+1) Install the requirements.
+
+2) Add a unix user (and group) `slurm-dashboard`, preferably in the system UID range (e.g. 994 or 996).
+
+3) Now there are two options: With or without JWT authentication. Please note that if you decide not to use JWT, users will not be able to cancel or submit jobs.
+  - If you do not want JWT authentication:
+    - Adapt the `slurmrestd` unit file (e.g. `/etc/systemd/slurmrestd.service.d/slurmrestd.conf`) like e.g.:
+    ```
+    [Service]
+    # Unset vendor unit ExecStart to avoid cumulative definition
+    ExecStart=
+    Environment=
+    # Disable slurm user security check - might be required.
+    #Environment=SLURMRESTD_SECURITY=disable_user_check
+    ExecStart=/usr/local/sbin/slurmrestd $SLURMRESTD_OPTIONS unix:/run/slurmrestd/slurmrestd.socket
+    RuntimeDirectory=slurmrestd
+    RuntimeDirectoryMode=0755
+    User=slurm-dashboard
+    Group=slurm-dashboard
+    ```
+    - Note that users will not be able to submit or cancel jobs.
+ 
+  - If you want JWT authentication:
+    - Follow the instructions [in the official documentation](https://slurm.schedmd.com/jwt.html). In short:
+      - Make sure that you compiled SLURM with JWT and that you have `libjwt-dev` installed.
+      - Generate a JWT key as follows:
+      ```
+      dd if=/dev/random of=/var/spool/slurm/statesave/jwt_hs256.key bs=32 count=1
+      chown slurm:slurm /var/spool/slurm/statesave/jwt_hs256.key
+      chmod 0400 /var/spool/slurm/statesave/jwt_hs256.key
+      chown slurm:slurm /var/spool/slurm/statesave
+      chmod 0755 /var/spool/slurm/statesave
+      ```
+      - Enable JWT auth in both `slurm.conf` and `slurmdbd.conf` (adapt the path if necessary):
+      ```
+      AuthAltTypes=auth/jwt
+      AuthAltParameters=jwt_key=/var/spool/slurm/statesave/jwt_hs256.key
+      ```
+      - Restart `slurmctl` and `slurmdbd` (e.g., with `scontrol reconfigure`) and look for errors.
+    - Copy the key to the node where the dashboard is running. Use locations and permissions so that other users cannot read the key. For example, copy the key to `/var/lib/slurm-dashboard` and set the ownership:
+    ```
+    # Somehow copy the key, e.g. with scp ...
+    scp ...
+    mv jwt.key /var/lib/slurm-dashboard
+    chown slurm-dashboard:slurm-dashboard /var/lib/slurm-dashboard/jwt.key
+    chmod 0400 /var/lib/slurm-dashboard/jwt.key
+    ```
+    - Configure `slurmrestd` to use JWT. Edit `/etc/systemd/system/slurmrestd.service` e.g. as follows:
+    ```ini
+    [Unit]
+    Description=Slurm REST daemon
+    After=network-online.target remote-fs.target slurmctld.service
+    Wants=network-online.target
+    ConditionPathExists=/usr/local/etc/slurm/slurm.conf
+    
+    [Service]
+    # Unset vendor unit ExecStart to avoid cumulative definition
+    ExecStart=
+    Environment=
+    Environment=SLURM_JWT=daemon
+    ExecStart=/usr/local/sbin/slurmrestd $SLURMRESTD_OPTIONS -a rest_auth/jwt unix:/run/slurmrestd/slurmrestd.socket
+    RuntimeDirectory=slurmrestd
+    RuntimeDirectoryMode=0755
+    User=slurm-dashboard
+    Group=slurm-dashboard
+    
+    [Install]
+    WantedBy=multi-user.target
+    ```
+
+4) Add correct user to the apache vhost (e.g. `/etc/apache2/sites-enabled/slurm-dashboard.conf`):
 ```
 <VirtualHost *:80>
     ...
@@ -84,8 +134,8 @@ Group=slurm-dashboard
     ...
 </VirtualHost>
 ```
-5. Optionally, enable SSL etc.
-6. Edit `globals.inc.php` to set the constants (passwords, names, paths, ...):
+5) Optionally, enable SSL etc.
+6) Edit `globals.inc.php` to set the constants (passwords, names, paths, ...):
 ```php
 <?php
 
@@ -181,7 +231,7 @@ $privileged_users = array();
 
 ...
 ```
-7. Start or restart the services:
+7) Start or restart the services:
 ```
 systemctl enable --now slurmrestd
 systemctl enable --now apache2
@@ -189,7 +239,7 @@ systemctl enable --now apache2
 systemctl restart slurmrestd
 systemctl restart apache2
 ```
-8. You might also want to edit the default page in `templates/about.html`.
+8) You might also want to edit the default page in `templates/about.html`.
 
 ### Update
 Once you have set up the dashboard, you can use the following bash script to upgrade to a new version. (It might also be helpful for the initial setup.)

@@ -2,9 +2,9 @@
 
 namespace client;
 
-require_once "utils/jwt.inc.php";
-require_once "exceptions/RequestFailedException.inc.php";
-require_once "exceptions/ConfigurationError.inc.php";
+require_once __DIR__ . '/utils/jwt.inc.php';
+require_once __DIR__ . '/../exceptions/RequestFailedException.inc.php';
+require_once __DIR__ . '/../exceptions/ConfigurationError.inc.php';
 
 use exceptions\ConfigurationError;
 use exceptions\RequestFailedException;

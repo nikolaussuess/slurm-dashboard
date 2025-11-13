@@ -3,7 +3,7 @@
 namespace exceptions;
 
 use Throwable;
-require_once 'BaseError.inc.php';
+require_once __DIR__ . '/BaseError.inc.php';
 
 class ConfigurationError extends BaseError {
 

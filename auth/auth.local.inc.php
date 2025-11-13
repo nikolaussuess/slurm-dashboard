@@ -2,7 +2,7 @@
 
 namespace auth {
 
-    require_once "auth.inc.php";
+    require_once __DIR__ .  "/auth.inc.php";
 
     /**
      * Authentication via local SSH connection.

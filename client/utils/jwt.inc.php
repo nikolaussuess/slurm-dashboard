@@ -12,7 +12,7 @@ use const \auth\TO_BE_REPLACED;
  */
 class JwtAuthentication {
 
-    private const JWT_PATH = TO_BE_REPLACED; #'/var/www/jwt_hs256.key';#
+    private const JWT_PATH = '/var/www/jwt_hs256.key';#TO_BE_REPLACED; #
     private const JWT_DEFAULT_LIFESPAN = 120;
 
     public static function is_supported() : bool {

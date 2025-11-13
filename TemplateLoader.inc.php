@@ -10,7 +10,7 @@ class TemplateLoader {
      * @param $filename string Filename of template html file
      * @param $dirname string Directory where the file is located. Defaults to /templates
      */
-    function __construct(string $filename, string $dirname = 'templates/'){
+    function __construct(string $filename, string $dirname = __DIR__ . '/templates/'){
         $this->contents = file_get_contents($dirname . $filename);
     }
 

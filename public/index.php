@@ -4,20 +4,20 @@
 session_start();
 date_default_timezone_set('Europe/Vienna');
 
-require_once 'TemplateLoader.inc.php';
-require_once 'globals.inc.php';
-require_once 'client/Client.inc.php';
-require_once 'client/utils/DependencyResolver.inc.php';
-require_once 'auth/auth.inc.php';
-require_once 'utils.inc.php';
+require_once __DIR__ . '/../TemplateLoader.inc.php';
+require_once __DIR__ . '/../globals.inc.php';
+require_once __DIR__ . '/../client/Client.inc.php';
+require_once __DIR__ . '/../client/utils/DependencyResolver.inc.php';
+require_once __DIR__ . '/../auth/auth.inc.php';
+require_once __DIR__ . '/../utils.inc.php';
 
-require_once 'view/login.tpl.php';
-require_once 'view/maintenances.tpl.php';
-require_once 'view/usage.tpl.php';
-require_once 'view/job.tpl.php';
-require_once 'view/slurm-queue.tpl.php';
-require_once 'view/job_history.tpl.php';
-require_once 'view/users.tpl.php';
+require_once __DIR__ . '/../view/login.tpl.php';
+require_once __DIR__ . '/../view/maintenances.tpl.php';
+require_once __DIR__ . '/../view/usage.tpl.php';
+require_once __DIR__ . '/../view/job.tpl.php';
+require_once __DIR__ . '/../view/slurm-queue.tpl.php';
+require_once __DIR__ . '/../view/job_history.tpl.php';
+require_once __DIR__ . '/../view/users.tpl.php';
 
 $dao = \client\ClientFactory::newClient();
 $title = "Clusterinfo " . CLUSTER_NAME;

@@ -2,7 +2,7 @@
 
 namespace client;
 
-require_once 'Request.inc.php';
+require_once __DIR__ . '/Request.inc.php';
 use Error;
 use exceptions\ConfigurationError;
 

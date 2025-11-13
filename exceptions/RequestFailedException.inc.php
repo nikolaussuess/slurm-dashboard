@@ -3,7 +3,7 @@
 namespace exceptions;
 
 use Throwable;
-require_once 'BaseException.inc.php';
+require_once __DIR__ . '/BaseException.inc.php';
 
 class RequestFailedException extends BaseException {
 

@@ -3,9 +3,7 @@ include_once "globals.inc.php";
 
 // Protect from direct access
 if (!isset($exception) || !($exception instanceof Throwable)) {
-    $exception = NULL;
-    $errormsg = '<li>You have called error.php directly, but you should not.</li>';
-    unset($successmsg);
+    throw new ErrorException("Website not available.", 403);
 }
 
 ?>
@@ -60,24 +58,6 @@ if (!isset($exception) || !($exception instanceof Throwable)) {
 <?php endif; ?>
     <p>The dashboard is currently not available. If the error persists, please write an email to <?php print ADMIN_EMAIL; ?>.</p>
 
-<?php if(!empty($errormsg)): ?>
-    <p>Note: Before the exception, there were the following errors:</p>
-    <div class="alert alert-danger" role="alert" style="display: <?php echo !empty($errormsg) ? "block" : "none"; ?>">
-        <strong>Error:</strong>
-        <ul>
-            <?php print $errormsg; ?>
-        </ul>
-    </div>
-<?php endif; ?>
-    <p>Note: Before the exception, there were the following success messages:</p>
-<?php if(!empty($successmsg)): ?>
-    <div class="alert alert-success" role="alert" style="display: <?php echo !empty($successmsg) ? "block" : "none"; ?>">
-        <strong>Success:</strong>
-        <ul>
-            <?php print $successmsg; ?>
-        </ul>
-    </div>
-<?php endif; ?>
     <p></p>
 </div>
 

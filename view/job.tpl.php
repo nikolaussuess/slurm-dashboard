@@ -40,9 +40,9 @@ function get_slurm_jobinfo(array $query, string $transitive_dependencies = '') :
     $templateBuilder->setParam("TRANSITIVE_DEPENDENCIES", $transitive_dependencies      );
     $templateBuilder->setParam("FEATURES",          htmlspecialchars($query['features'], ENT_QUOTES, 'UTF-8'));
     $templateBuilder->setParam("GRES_DETAIL",       htmlspecialchars(implode(",", $query['gres']), ENT_QUOTES, 'UTF-8'));
-    $templateBuilder->setParam("CPUS",              $query['cpus']                      );
-    $templateBuilder->setParam("NODE_COUNT",        $query['node_count']                );
-    $templateBuilder->setParam("TASKS",             $query['tasks']                     );
+    $templateBuilder->setParam("CPUS",              $query['cpus'] ?? ''           );
+    $templateBuilder->setParam("NODE_COUNT",        $query['node_count'] ?? ''     );
+    $templateBuilder->setParam("TASKS",             $query['tasks'] ?? ''          );
     $templateBuilder->setParam("MEMORY_PER_CPU",   $query['memory_per_cpu'] ?? '' );
     $templateBuilder->setParam("MEMORY_PER_NODE",   $query['memory_per_node'] ?? '' );
     $templateBuilder->setParam("REQUEUE",           $requeue                            );

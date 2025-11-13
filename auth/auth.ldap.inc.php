@@ -62,7 +62,7 @@ namespace auth {
             // Bind to the LDAP server
             if (@ldap_bind($ldapConn, $ldap_dn, $ldap_password)) {
                 // Search for the user
-                $escaped_username = ldap_escape($username, '', LDAP_ESCAPE_FILTER)
+                $escaped_username = ldap_escape($username, '', LDAP_ESCAPE_FILTER);
                 $filter = "(uid=$escaped_username)";
                 $result = ldap_search($ldapConn, self::BASE, $filter);
                 $entries = ldap_get_entries($ldapConn, $result);

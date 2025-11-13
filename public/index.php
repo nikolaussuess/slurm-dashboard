@@ -122,8 +122,10 @@ if( isset($_SESSION['USER']) ){
                 // Here, it is a 404 if the job cannot be found.
                 // However, there might have been a delay while writing into slurmdb. So we only consider it to be a
                 // 404 if it was neither in slurmdb nor in slurm queue.
-                if( ! $in_slurm_queue)
+                if( ! $in_slurm_queue) {
                     http_response_code(404);
+                    $title = '404 Not Found';
+                }
             }
             else {
                 $contents .= \view\actions\get_slurmdb_jobinfo($query);

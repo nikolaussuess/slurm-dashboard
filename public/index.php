@@ -83,6 +83,7 @@ if( isset($_SESSION['USER']) ){
     switch($action){
 
         case "usage":
+            $title = 'Cluster usage';
             $contents .= "<h2>Current cluster usage</h2>";
             foreach ($dao->getNodeList() as $node) {
                 $contents .= \view\actions\get_usage($dao->get_node_info($node));
@@ -91,12 +92,16 @@ if( isset($_SESSION['USER']) ){
 
         case "job":
             if( ! isset($_GET['job_id'])){
+                http_response_code(404);
                 addError("No job ID given.");
+                $title = '404 Not Found';
+                $contents .= "404 Not Found.";
                 break;
             }
 
             # SLURM QUEUE information
             $contents .= "<h2>Job " . $_GET['job_id'] . "</h2>";
+            $title = 'Job ' . $_GET['job_id'];
             $query = $dao->get_job($_GET['job_id']);
             if( $query == NULL ){
                 $contents .= "<p>Job " . $_GET['job_id'] . " not in active queue anymore.</p>";
@@ -128,6 +133,8 @@ if( isset($_SESSION['USER']) ){
 
         case "jobs":
 
+            $title = 'Slurm queue';
+
             // Filter
             // Exclude partition p_low if parameter exclude_p_low=1
             $exclude_p_low = isset($_GET['exclude_p_low']) && $_GET['exclude_p_low'] == 1;
@@ -147,6 +154,7 @@ if( isset($_SESSION['USER']) ){
             $filter = \view\actions\get_slurmdb_filter_form_evaluation();
 
             $contents .= "<h2>Jobs</h2>";
+            $title = 'Job history';
 
             $accounts = $dao->get_account_list();
             $users = $dao->get_users_list();
@@ -177,8 +185,10 @@ if( isset($_SESSION['USER']) ){
             break;
 
         case 'cancel-job':
+            $title = "Cancel job";
 
             if( ! \client\utils\jwt\JwtAuthentication::is_supported() ){
+                http_response_code(503); // Service unavailable
                 addError("Cancelling jobs is currently not supported by the configuration.<br>" .
                            "If you are an administrator: You have to enable JWT authentication in order to use this feature.");
                 break;
@@ -186,6 +196,7 @@ if( isset($_SESSION['USER']) ){
 
             // Check if job_id parameter exists.
             if(! isset($_GET['job_id']) || intval($_GET['job_id']) != $_GET['job_id']){
+                http_send_status(400); // Bad request
                 addError("No job id provided or job id is not a valid number.");
                 break;
             }
@@ -201,6 +212,7 @@ if( isset($_SESSION['USER']) ){
             }
 
             if( ! \auth\current_user_is_admin() && $job_data['user_name'] != $_SESSION['USER'] ){
+                http_response_code(403);
                 addError(
                     "The job belongs to user " . $job_data['user_name'] . " but current user is "
                     . $_SESSION['USER'] . ". Since you are not an administrator, you can only delete your own jobs."
@@ -230,6 +242,7 @@ if( isset($_SESSION['USER']) ){
 
         default:
             http_response_code(404);
+            $title = '404 Not Found';
             $contents .= "404 Not Found.";
     }
 } // endif user_is_logged_in()

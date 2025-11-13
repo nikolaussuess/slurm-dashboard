@@ -24,7 +24,7 @@ class JwtAuthentication {
                 "JWT authentication is enabled but misconfigured.",
                 'JWT authentication path = ' . self::JWT_PATH . ", exists = " .
                     file_exists(self::JWT_PATH) . ", is readable = " . is_readable(self::JWT_PATH),
-                "JWT authentication failed. If you are a user and the error persists, please contact " . ADMIN_EMAIL
+                "JWT authentication failed."
             );
         }
         return TRUE;

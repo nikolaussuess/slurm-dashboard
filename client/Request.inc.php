@@ -28,7 +28,7 @@ class UnixRequest implements Request {
             throw new RequestFailedException(
                 "Unable to connect to socket.",
                 "errno=$errno, errstr=$errstr",
-                "Unable to connect to socket. If you are a user and the error persists, please contact " . ADMIN_EMAIL
+                "Unable to connect to socket."
             );
         }
     }

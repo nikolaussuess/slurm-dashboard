@@ -61,7 +61,6 @@ class JwtAuthentication {
         ];
         $payload = self::base64_url_encode(json_encode($payload));
         $signature = self::base64_url_encode(hash_hmac('sha256', "$header.$payload", $signing_key, true));
-        $jwt = "$header.$payload.$signature";
-        return $jwt;
+        return "$header.$payload.$signature";
     }
 }

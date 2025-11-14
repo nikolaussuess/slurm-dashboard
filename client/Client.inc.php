@@ -2,8 +2,9 @@
 
 namespace client;
 
-require_once 'Request.inc.php';
+require_once __DIR__ . '/Request.inc.php';
 use Error;
+use exceptions\ConfigurationError;
 
 interface Client{
     /**
@@ -211,6 +212,8 @@ interface Client{
      * @unstable
      */
     function get_maintenances() : array;
+
+    function cancel_job($job_id) : array;
 }
 
 class ClientFactory {
@@ -219,15 +222,14 @@ class ClientFactory {
         if( $version == 'auto' ){
             $response = RequestFactory::newRequest()->request_json2("openapi/v3", 0);
             if(! isset($response['info']['x-slurm']['data_parsers']) ){
-                die(
-                    "<b>Error:</b> Could not autodetect supported SLURM REST API versions.
-                    This is likely, because your SLURM version does not support it, yet.
+                throw new ConfigurationError(
+                    "Could not autodetect supported SLURM REST API versions",
+                    '$response["info"]["x-slurm"]["data_parsers"] is not set',
+                    "Could not autodetect supported SLURM REST API versions. This is likely, because your SLURM version does not support it, yet.
                     <ul>
-                        <li>If you are an admin, please set the parameter REST_API_VERSION in config.inc.php.</li>
+                        <li>If you are an admin, please set the parameter <kbd>REST_API_VERSION</kbd> in config.inc.php.</li>
                         <li>If you are a user and the error persists, please contact " . ADMIN_EMAIL. "</li>
-                    </ul>
-                    You can find more information about this dashboard at <a href='https://github.com/nikolaussuess/slurm-dashboard' target='_blank'>https://github.com/nikolaussuess/slurm-dashboard</a>.
-                    "
+                    </ul>",
                 );
             }
             $parsers = array_column($response['info']['x-slurm']['data_parsers'], 'plugin');

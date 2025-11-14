@@ -1,7 +1,7 @@
 <?php
 
 namespace client;
-require_once 'AbstractClient.inc.php';
+require_once __DIR__ . '/AbstractClient.inc.php';
 
 class V0043Client extends AbstractClient {
 

@@ -60,3 +60,11 @@ function get_job_state_view(array $job, string $param_name = 'job_state'): strin
     }
     return $job_state_text;
 }
+
+function show_errors(array $response) : void {
+    if(isset($response['errors']) && !empty($response['errors'])){
+        foreach ($response['errors'] as $error){
+            addError('<b>' . $error['error'] . '</b> (source: ' . $error['source'] . ')<br>' . $error['description']);
+        }
+    }
+}

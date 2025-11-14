@@ -1,10 +1,6 @@
 <?php
 
 namespace auth {
-    /**
-     * Placeholder and default value in the auth classes for variables that must be overwritten.
-     */
-    const TO_BE_REPLACED = '<TO BE REPLACED>';
 
     interface AuthenticationMethod {
         /**
@@ -26,10 +22,10 @@ namespace auth {
 
 namespace {
 
-    require_once 'client/Client.inc.php';
-    require_once 'globals.inc.php';
-    require_once "auth.ldap.inc.php";
-    require_once "auth.local.inc.php";
+    require_once __DIR__ . '/../client/Client.inc.php';
+    require_once __DIR__ . '/../globals.inc.php';
+    require_once __DIR__ . '/auth.ldap.inc.php';
+    require_once __DIR__ . '/auth.local.inc.php';
 
     /**
      * Authentication.

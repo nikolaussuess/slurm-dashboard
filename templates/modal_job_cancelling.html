@@ -1,0 +1,17 @@
+<div class="modal" tabindex="-1" role="dialog" aria-hidden="false" style="display: block">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Cancel job {{JOBID}}</h5>
+            </div>
+            <div class="modal-body">
+                <p><strong>Do you really want to cancel the following job?</strong></p>
+                <p>Job ID {{JOBID}}</p>
+            </div>
+            <div class="modal-footer">
+                <a href="?action=cancel-job&job_id={{JOBID}}&do=cancel" type="button" class="btn btn-primary btn-danger">Cancel job</a>
+                <a href="?action=jobs" type="button" class="btn btn-secondary" data-dismiss="modal">Close</a>
+            </div>
+        </div>
+    </div>
+</div>

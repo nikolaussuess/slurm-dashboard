@@ -17,28 +17,24 @@ Currently tested with the following Slurm versions:
 However, any slurm version `>= 23.11.x` should work. If you encounter any issues, please write a bug report.
 
 ## Current features
-- display cluster usage information (state, CPUs, memory, gpus per node)
-- display the current job queue, including a job detail page
-- authentication via LDAP or local, and it additionally checks whether the user exists in the accounting database
-- communication with `slurmrestd` via unix socket
-- caching of the `slurmrestd` responses (using APCu)
-- display and filter job history (from `slurmdbd`)
-- display list of users with their respective accounts (for administrators and privileged users only)
-- show planned maintenances (`flags=maint`) that were created with e.g. `scontrol create reservation starttime=2024-11-02T13:30:00 duration=5 user=root flags=maint nodes=mynode`
-- list transitive dependencies for a job
+- Display cluster usage information (state, CPUs, memory, gpus per node).
+- Display the current job queue, including a job detail page.
+- Authentication via LDAP or local, and it additionally checks whether the user exists in the accounting database.
+- Communication with `slurmrestd` via unix socket.
+- Caching of the `slurmrestd` responses (using APCu).
+- Display and filter job history (from `slurmdbd`).
+- Display list of users with their respective accounts (for administrators and privileged users only).
+- Show planned maintenances (`flags=maint`) that were created with e.g. `scontrol create reservation starttime=2024-11-02T13:30:00 duration=5 user=root flags=maint nodes=mynode`.
+- List transitive dependencies for a job.
+- Authentication (at `slurmrestd`) via JWT (optional).
+- Allow administrators to requeue / cancel / ... jobs (requires JWT).
+- Allow users to requeue and cancel their own jobs (requires JWT).
 
 ![Job queue](./imgs/queue.png?raw=true "Job queue")
 
 ![Job history](./imgs/job_history.png?raw=true "Job history")
 
 ### Planned features
-#### Currently work in progress
-- Authentication (at `slurmrestd`) via JWT.
-- Allow administrators to requeue / cancel / ... jobs (requires JWT).
-- Allow users to requeue and cancel their own jobs (requires JWT).
-
-All of the above already works (see branch `feature-cancel-jobs`), but still needs some testing and documentation.
-
 #### Currently not under active development
 - Allow users to submit jobs via a web interface.
 - Support TCP sockets (in addition to unix sockets).
@@ -56,35 +52,195 @@ All of the above already works (see branch `feature-cancel-jobs`), but still nee
 - `slurmrestd` using Unix sockets, running with the same user that the website is running with.
 
 ## Setup
-1. Install the requirements.
-2. Add a unix user (and group) `slurm-dashboard`, preferably in the system UID range (e.g. 994 or 996).
-3. Adapt the `slurmrestd` unit file (e.g. `/etc/systemd/slurmrestd.service.d/slurmrestd.conf`) like e.g.:
-```
-[Service]
-# Unset vendor unit ExecStart to avoid cumulative definition
-ExecStart=
-Environment=
-# Disable slurm user security check - might be required.
-#Environment=SLURMRESTD_SECURITY=disable_user_check
-ExecStart=/usr/local/sbin/slurmrestd $SLURMRESTD_OPTIONS unix:/run/slurmrestd/slurmrestd.socket
-RuntimeDirectory=slurmrestd
-RuntimeDirectoryMode=0755
-User=slurm-dashboard
-Group=slurm-dashboard
-```
-4. Add correct user to the apache vhost (e.g. `/etc/apache2/sites-enabled/slurm-dashboard.conf`):
+1) Install the requirements.
+
+2) Add a unix user (and group) `slurm-dashboard`, preferably in the system UID range (e.g. 994 or 996).
+
+3) Now there are two options: With or without JWT authentication. Please note that if you decide not to use JWT, users will not be able to cancel or submit jobs.
+  - If you do not want JWT authentication:
+    - Adapt the `slurmrestd` unit file (e.g. `/etc/systemd/slurmrestd.service.d/slurmrestd.conf`) like e.g.:
+    ```
+    [Service]
+    # Unset vendor unit ExecStart to avoid cumulative definition
+    ExecStart=
+    Environment=
+    # Disable slurm user security check - might be required.
+    #Environment=SLURMRESTD_SECURITY=disable_user_check
+    ExecStart=/usr/local/sbin/slurmrestd $SLURMRESTD_OPTIONS unix:/run/slurmrestd/slurmrestd.socket
+    RuntimeDirectory=slurmrestd
+    RuntimeDirectoryMode=0755
+    User=slurm-dashboard
+    Group=slurm-dashboard
+    ```
+    - Note that users will not be able to submit or cancel jobs.
+ 
+  - If you want JWT authentication:
+    - Follow the instructions [in the official documentation](https://slurm.schedmd.com/jwt.html). In short:
+      - Make sure that you compiled SLURM with JWT and that you have `libjwt-dev` installed.
+      - Generate a JWT key as follows:
+      ```
+      dd if=/dev/random of=/var/spool/slurm/statesave/jwt_hs256.key bs=32 count=1
+      chown slurm:slurm /var/spool/slurm/statesave/jwt_hs256.key
+      chmod 0400 /var/spool/slurm/statesave/jwt_hs256.key
+      chown slurm:slurm /var/spool/slurm/statesave
+      chmod 0755 /var/spool/slurm/statesave
+      ```
+      - Enable JWT auth in both `slurm.conf` and `slurmdbd.conf` (adapt the path if necessary):
+      ```
+      AuthAltTypes=auth/jwt
+      AuthAltParameters=jwt_key=/var/spool/slurm/statesave/jwt_hs256.key
+      ```
+      - Restart `slurmctl` and `slurmdbd` (e.g., with `scontrol reconfigure`) and look for errors. Reading the logs (`slurmctld.log`, `slurmdbd.log` and `/var/log/syslog`) might help.
+    - Copy the key to the node where the dashboard is running. Use locations and permissions so that other users cannot read the key. For example, copy the key to `/var/lib/slurm-dashboard` and set the ownership:
+    ```
+    # Somehow copy the key, e.g. with scp ...
+    scp ...
+    mkdir -p /var/lib/slurm-dashboard
+    mv jwt.key /var/lib/slurm-dashboard
+    chown slurm-dashboard:slurm-dashboard /var/lib/slurm-dashboard
+    chmod 644 /var/lib/slurm-dashboard
+    chown slurm-dashboard:slurm-dashboard /var/lib/slurm-dashboard/jwt.key
+    chmod 0400 /var/lib/slurm-dashboard/jwt.key
+    ```
+    - Configure `slurmrestd` to use JWT. Edit `/etc/systemd/system/slurmrestd.service` e.g. as follows:
+    ```ini
+    [Unit]
+    Description=Slurm REST daemon
+    After=network-online.target remote-fs.target slurmctld.service
+    Wants=network-online.target
+    ConditionPathExists=/usr/local/etc/slurm/slurm.conf
+    
+    [Service]
+    # Unset vendor unit ExecStart to avoid cumulative definition
+    ExecStart=
+    Environment=
+    Environment=SLURM_JWT=daemon
+    ExecStart=/usr/local/sbin/slurmrestd $SLURMRESTD_OPTIONS -a rest_auth/jwt unix:/run/slurmrestd/slurmrestd.socket
+    RuntimeDirectory=slurmrestd
+    RuntimeDirectoryMode=0755
+    User=slurm-dashboard
+    Group=slurm-dashboard
+    
+    [Install]
+    WantedBy=multi-user.target
+    ```
+
+4) Add correct user to the apache vhost (e.g. `/etc/apache2/sites-enabled/slurm-dashboard.conf`):
 ```
 <VirtualHost *:80>
     ...
+    # Assign user ID
     AssignUserId slurm-dashboard slurm-dashboard
+
+    # Set DocumentRoot to subfolder 'public', e.g.:
+    DocumentRoot /var/www/slurm-dashboard/public
     ...
 </VirtualHost>
 ```
-5. Optionally, enable SSL etc.
-6. Adapt `CLUSTER_NAME` and the other constants in `globals.inc.php`.
-7. If you use LDAP authentication: Adapt parameters in `auth/auth.ldap.inc.php`.
-8. If you use local authentication: Adapt parameters in `auth/auth.local.inc.php`.
-9. Start or restart the services:
+5) Optionally (but strongly recommended), enable SSL etc.
+6) Edit `globals.inc.php` to set the constants (passwords, names, paths, ...):
+```php
+<?php
+
+/**
+ * Default value for variables that should be replaced.
+ * Do not edit this value, since it is used in other classes to check the respective module is
+ * configured or not.
+ */
+const TO_BE_REPLACED = '<TO BE REPLACED>';
+
+// BEGIN OF VARIABLES THAT SHOULD BE EDITED
+/**
+ * Name of the cluster
+ */
+const CLUSTER_NAME = TO_BE_REPLACED;
+/**
+ * Name of the admin. Publicly available in error messages.
+ */
+const ADMIN_NAMES = TO_BE_REPLACED;
+/**
+ * E-Mail address of the admin. Publicly available in error messages.
+ */
+const ADMIN_EMAIL = TO_BE_REPLACED;
+/**
+ * Hostname of the login node.
+ */
+const SLURM_LOGIN_NODE = TO_BE_REPLACED;
+/**
+ * Link to a wiki page where one can find more info about the cluster.
+ */
+const WIKI_LINK = TO_BE_REPLACED;
+
+// Rest API connection properties
+/**
+ * Connection more for connections to slurmrestd.
+ * Currently, the only supported value is 'unix'!
+ */
+const CONNECTION_MODE = 'unix';
+/**
+ * OpenAPI version to use for communication with slurmrestd.
+ * Use 'auto' for auto-detection (if supported), or e.g. v0.0.40.
+ * Default is 'auto'.
+ */
+const REST_API_VERSION = 'auto';
+
+// LDAP configuration
+/**
+ * URI for ldap server, e.g. 'dc.example.com'
+ * Optional; leave TO_BE_REPLACED if you do not want to use authentication method LDAP.
+ */
+const LDAP_URI = TO_BE_REPLACED;
+/**
+ * LDAP base, e.g. 'cn=users,dc=i,dc=example,dc=com'
+ * Optional; leave TO_BE_REPLACED if you do not want to use authentication method LDAP.
+ */
+const LDAP_BASE = TO_BE_REPLACED;
+/**
+ * LDAP admin user to query for the users, e.g. 'adminuser'
+ * Optional; leave TO_BE_REPLACED if you do not want to use authentication method LDAP.
+ */
+const LDAP_ADMIN_USER = TO_BE_REPLACED;
+/**
+ * Password for the LDAP admin user.
+ * Optional; leave TO_BE_REPLACED if you do not want to use authentication method LDAP.
+ */
+const LDAP_ADMIN_PASSWORD = TO_BE_REPLACED;
+
+// SSH configuration for local authentication
+/**
+ * Url that is used to connect via SSH to. Can be e.g. the login node.
+ * Example: slurm01.example.com
+ * Optional; leave TO_BE_REPLACED if you do not want to use authentication method local.
+ */
+const SSH_SERVER_URL = TO_BE_REPLACED;
+
+// JWT configuration
+/**
+ * Path to the JWT key.
+ * Optional; leave TO_BE_REPLACED if you do not want to use JWT authentication.
+ */
+const JWT_PATH = TO_BE_REPLACED;
+
+
+/**
+ * Grant some users read access to e.g. the list of SLURM users.
+ * Admins always have access.
+ */
+$privileged_users = array();
+
+/**
+ * Username of the slurm user.
+ * Defaults to 'slurm'.
+ */
+const SLURM_USER = 'slurm';
+
+// END OF VARIABLES THAT SHOULD BE EDITED
+//
+// DO NOT EDIT THIS FILE FROM HERE ON!
+
+...
+```
+7) Start or restart the services:
 ```
 systemctl enable --now slurmrestd
 systemctl enable --now apache2
@@ -92,7 +248,7 @@ systemctl enable --now apache2
 systemctl restart slurmrestd
 systemctl restart apache2
 ```
-10. You might also want to edit the default page in `templates/about.html`.
+8) You might also want to edit the default page in `templates/about.html`.
 
 ### Update
 Once you have set up the dashboard, you can use the following bash script to upgrade to a new version. (It might also be helpful for the initial setup.)
@@ -100,7 +256,7 @@ Once you have set up the dashboard, you can use the following bash script to upg
 ```bash
 #!/bin/bash
 
-# TODO: REPLACE THE FOLLOWING VARIABLES
+# TODO: REPLACE THE FOLLOWING VARIABLES or leave the value "TO_BE_REPLACED"
 # Replace by your web directory
 WEB_DIRECTORY="/var/www/slurm-dashboard"
 DASHBOARD_USER="slurm-dashboard"
@@ -111,12 +267,14 @@ ADMIN_NAMES="[should contain contact info]"
 ADMIN_EMAIL="[should contain an email address - publicly available]"
 WIKI_LINK="https://example.com/my-slurm-wiki"
 
-LDAP_URI='dc.example.com'
-LDAP_BASE='cn=users,dc=i,dc=example,dc=com'
-LDAP_ADMIN_USER='ldapuser'
-LDAP_ADMIN_PASSWORD='replaceme'
+LDAP_URI="TO_BE_REPLACED"            # e.g. 'dc.example.com'
+LDAP_BASE="TO_BE_REPLACED"           # e.g. "'cn=users,dc=i,dc=example,dc=com'
+LDAP_ADMIN_USER="TO_BE_REPLACED"     # e.g. 'ldapuser'
+LDAP_ADMIN_PASSWORD="TO_BE_REPLACED" # e.g. 'replaceme'
 
-SSH_SERVER_URL='localhost'
+SSH_SERVER_URL="TO_BE_REPLACED" # e.g. 'localhost'
+
+JWT_PATH="TO_BE_REPLACED" # e.g. /var/lib/slurm-dashboard/jwt_key.key
 # END OF REPLACE-ME
 
 # PRODUCTIVE INSTANCE
@@ -174,18 +332,22 @@ if [[ $REPLY =~ ^[Yy]$ ]]; then
 
     set -x
 
-    sed -i "s/const CLUSTER_NAME = '<TO BE REPLACED>';/const CLUSTER_NAME = '${CLUSTER_NAME}';/g" globals.inc.php
-    sed -i "s#const ADMIN_NAMES = '<TO BE REPLACED>';#const ADMIN_NAMES = '${ADMIN_NAMES}';#g" globals.inc.php
-    sed -i "s#const ADMIN_EMAIL = '<TO BE REPLACED>';#const ADMIN_EMAIL = '${ADMIN_EMAIL}';#g" globals.inc.php
-    sed -i "s#const WIKI_LINK = '<TO BE REPLACED>';#const WIKI_LINK = '${WIKI_LINK}';#g" globals.inc.php
-    sed -i "s#const SLURM_LOGIN_NODE = '<TO BE REPLACED>';#const SLURM_LOGIN_NODE = '${SLURM_LOGIN_NODE}';#g" globals.inc.php
+    sed -i "s/const CLUSTER_NAME = TO_BE_REPLACED;/const CLUSTER_NAME = '${CLUSTER_NAME}';/g" globals.inc.php
+    sed -i "s#const ADMIN_NAMES = TO_BE_REPLACED;#const ADMIN_NAMES = '${ADMIN_NAMES}';#g" globals.inc.php
+    sed -i "s#const ADMIN_EMAIL = TO_BE_REPLACED;#const ADMIN_EMAIL = '${ADMIN_EMAIL}';#g" globals.inc.php
+    sed -i "s#const WIKI_LINK = TO_BE_REPLACED;#const WIKI_LINK = '${WIKI_LINK}';#g" globals.inc.php
+    sed -i "s#const SLURM_LOGIN_NODE = TO_BE_REPLACED;#const SLURM_LOGIN_NODE = '${SLURM_LOGIN_NODE}';#g" globals.inc.php
 
-    sed -i "s#const URI = TO_BE_REPLACED;#const URI = '${LDAP_URI}';#g" auth/auth.ldap.inc.php
-    sed -i "s#const BASE = TO_BE_REPLACED;#const BASE = '${LDAP_BASE}';#g" auth/auth.ldap.inc.php
-    sed -i "s#const ADMIN_USER = TO_BE_REPLACED;#const ADMIN_USER = '${LDAP_ADMIN_USER}';#g" auth/auth.ldap.inc.php
-    sed -i "s!const ADMIN_PASSWORD = TO_BE_REPLACED;!const ADMIN_PASSWORD = '${LDAP_ADMIN_PASSWORD}" auth/auth.ldap.inc.php
+    sed -i "s#const LDAP_URI = TO_BE_REPLACED;#const LDAP_URI = '${LDAP_URI}';#g" globals.inc.php
+    sed -i "s#const LDAP_BASE = TO_BE_REPLACED;#const LDAP_BASE = '${LDAP_BASE}';#g" globals.inc.php
+    sed -i "s#const LDAP_ADMIN_USER = TO_BE_REPLACED;#const LDAP_ADMIN_USER = '${LDAP_ADMIN_USER}';#g" globals.inc.php
+    sed -i "s!const LDAP_ADMIN_PASSWORD = TO_BE_REPLACED;!const LDAP_ADMIN_PASSWORD = '${LDAP_ADMIN_PASSWORD}" globals.inc.php
 
-    sed -i "s#private const SERVER_URL = TO_BE_REPLACED;#private const SERVER_URL = '${SSH_SERVER_URL}';#g" auth/auth.local.inc.php
+    sed -i "s#const SSH_SERVER_URL = TO_BE_REPLACED;#const SSH_SERVER_URL = '${SSH_SERVER_URL}';#g" globals.inc.php
+
+    sed -i "s#const JWT_PATH = TO_BE_REPLACED;#const JWT_PATH = '${JWT_PATH}';#g" globals.inc.php
+    
+    sed -i "s#const SLURM_USER = 'slurm';#const SLURM_USER = '${SLURM_USER}';#g" globals.inc.php
 
     find $WEB_DIRECTORY -type f -exec chmod 640 {} \;
 fi

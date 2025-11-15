@@ -412,7 +412,10 @@ abstract class AbstractClient implements Client {
             return "?";
         }
 
-        if($job_arr[$param]['set']){
+        if(isset($job_arr[$param]['infinite']) && $job_arr[$param]['infinite'] == 1){
+            return "infinite";
+        }
+        elseif(isset($job_arr[$param]['set']) && $job_arr[$param]['set']){
             $days = floor($job_arr[$param]['number'] / 1440); // 1440 minutes in a day
             $hours = floor(($job_arr[$param]['number'] % 1440) / 60); // 60 minutes in an hour
             $remainingMinutes = $job_arr[$param]['number'] % 60; // Remaining minutes

@@ -117,7 +117,7 @@ if( isset($_SESSION['USER']) ){
                 $data = $dao->get_node_info($node);
 
                 $templateBuilder = new TemplateLoader("nodeinfo.html");
-                $templateBuilder->setParam("NODENAME", $node);
+                $templateBuilder->setParam("NODENAME", htmlspecialchars($node, ENT_QUOTES, 'UTF-8'));
 
                 $templateBuilder->setParam("CPU_PERCENTAGE", $data["nodes"][0]["alloc_cpus"]/$data["nodes"][0]["cpus"]*100);
                 $templateBuilder->setParam("CPU_USED", $data["nodes"][0]["alloc_cpus"]);
@@ -177,26 +177,26 @@ if( isset($_SESSION['USER']) ){
 
                 $feature_str = "";
                 foreach ($data["nodes"][0]["features"] as $feature){
-                    $feature_str .= '<span class="feature">' . $feature . '</span> ';
+                    $feature_str .= '<span class="feature">' . htmlspecialchars($feature, ENT_QUOTES, 'UTF-8') . '</span> ';
                 }
                 $templateBuilder->setParam("FEATURES", $feature_str);
 
                 $feature_str = "";
                 foreach ($data["nodes"][0]["active_features"] as $feature){
-                    $feature_str .= '<span class="feature">' . $feature . '</span> ';
+                    $feature_str .= '<span class="feature">' . htmlspecialchars($feature, ENT_QUOTES, 'UTF-8') . '</span> ';
                 }
                 $templateBuilder->setParam("ACTIVE_FEATURES", $feature_str);
 
                 $templateBuilder->setParam("ADDRESS", $data["nodes"][0]["address"]);
-                $templateBuilder->setParam("HOSTNAME", $data["nodes"][0]["hostname"]);
-                $templateBuilder->setParam("OPERATING_SYSTEM", $data["nodes"][0]["operating_system"]);
-                $templateBuilder->setParam("OWNER", $data["nodes"][0]["owner"]);
-                $templateBuilder->setParam("TRES", $data["nodes"][0]["tres"]);
-                $templateBuilder->setParam("TRES_USED", $data["nodes"][0]["tres_used"]);
+                $templateBuilder->setParam("HOSTNAME", htmlspecialchars($data["nodes"][0]["hostname"], ENT_QUOTES, 'UTF-8'));
+                $templateBuilder->setParam("OPERATING_SYSTEM", htmlspecialchars($data["nodes"][0]["operating_system"], ENT_QUOTES, 'UTF-8'));
+                $templateBuilder->setParam("OWNER", htmlspecialchars($data["nodes"][0]["owner"], ENT_QUOTES, 'UTF-8'));
+                $templateBuilder->setParam("TRES", htmlspecialchars($data["nodes"][0]["tres"], ENT_QUOTES, 'UTF-8'));
+                $templateBuilder->setParam("TRES_USED", htmlspecialchars($data["nodes"][0]["tres_used"], ENT_QUOTES, 'UTF-8'));
                 $templateBuilder->setParam("BOOT_TIME", \utils\get_date_from_unix_if_defined($data["nodes"][0], "boot_time"));
                 $templateBuilder->setParam("LAST_BUSY", \utils\get_date_from_unix_if_defined($data["nodes"][0], "last_busy"));
                 $templateBuilder->setParam("PARTITIONS", count($data["nodes"][0]["partitions"]) > 0 ? '<li><span class="monospaced">' . implode('</li><li><span class="monospaced">', $data["nodes"][0]["partitions"]) . '</span></li>' : '');
-                $templateBuilder->setParam("RESERVATION", $data["nodes"][0]["reservation"] ?? '');
+                $templateBuilder->setParam("RESERVATION", htmlspecialchars($data["nodes"][0]["reservation"] ?? '', ENT_QUOTES, 'UTF-8'));
                 $templateBuilder->setParam("SLURM_VERSION", $data["nodes"][0]["version"] ?? '');
 
                 $contents .= $templateBuilder->build();
@@ -220,25 +220,25 @@ if( isset($_SESSION['USER']) ){
                 $contents .= '<h3>Job queue information</h3>';
 
                 $job_id = $query['jobs'][0]['job_id'];
-                $job_name = $query['jobs'][0]['name'];
+                $job_name = htmlspecialchars($query['jobs'][0]['name'], ENT_QUOTES, 'UTF-8');
                 $job_state_text = \utils\get_job_state_view($query['jobs'][0]);
 
-                $user = $query['jobs'][0]['user_name'] . " (" . $query['jobs'][0]['user_id'] . ')';
-                $group = $query['jobs'][0]['group_name'] . " (" . $query['jobs'][0]['group_id'] . ')';
+                $user = htmlspecialchars($query['jobs'][0]['user_name'] . " (" . $query['jobs'][0]['user_id'] . ')', ENT_QUOTES, 'UTF-8');
+                $group = htmlspecialchars($query['jobs'][0]['group_name'] . " (" . $query['jobs'][0]['group_id'] . ')', ENT_QUOTES, 'UTF-8');
                 $account = $query['jobs'][0]['account'];
                 $partitions = $query['jobs'][0]['partition'];
                 $priority = \utils\get_number_if_defined($query['jobs'][0]['priority']);
-                $submit_line = $query['jobs'][0]['command'] ?? "";
-                $working_directory = $query['jobs'][0]['current_working_directory'] ?? "";
-                $comment = $query['jobs'][0]['comment'];
+                $submit_line = htmlspecialchars($query['jobs'][0]['command'] ?? "", ENT_QUOTES, 'UTF-8');
+                $working_directory = htmlspecialchars($query['jobs'][0]['current_working_directory'] ?? "", ENT_QUOTES, 'UTF-8');
+                $comment = htmlspecialchars($query['jobs'][0]['comment'], ENT_QUOTES, 'UTF-8');
                 $exit_code = \utils\read_exit_code($query['jobs'][0]);
-                $schednodes = $query['jobs'][0]['scheduled_nodes'] ?? '';
-                $reqnodes = $query['jobs'][0]['required_nodes'] ?? '';
-                $nodes = \utils\get_nodes($query['jobs'][0]);
-                $qos = $query['jobs'][0]['qos'];
-                $container = $query['jobs'][0]['container'];
-                $container_id = $query['jobs'][0]['container_id'] ?? "undefined";
-                $allocating_node = $query['jobs'][0]['allocating_node'] ?? "undefined";
+                $schednodes = htmlspecialchars($query['jobs'][0]['scheduled_nodes'] ?? '', ENT_QUOTES, 'UTF-8');
+                $reqnodes = htmlspecialchars($query['jobs'][0]['required_nodes'] ?? '', ENT_QUOTES, 'UTF-8');
+                $nodes = htmlspecialchars(\utils\get_nodes($query['jobs'][0]), ENT_QUOTES, 'UTF-8');
+                $qos = htmlspecialchars($query['jobs'][0]['qos'], ENT_QUOTES, 'UTF-8');
+                $container = htmlspecialchars($query['jobs'][0]['container'], ENT_QUOTES, 'UTF-8');
+                $container_id = htmlspecialchars($query['jobs'][0]['container_id'] ?? "undefined", ENT_QUOTES, 'UTF-8');
+                $allocating_node = htmlspecialchars($query['jobs'][0]['allocating_node'] ?? "undefined", ENT_QUOTES, 'UTF-8');
                 $flags = $query['jobs'][0]['flags'] ?? "undefined";
                 $cores_per_socket = \utils\get_number_if_defined($query['jobs'][0]['cores_per_socket']);
                 $cpus_per_task = \utils\get_number_if_defined($query['jobs'][0]['cpus_per_task']);
@@ -304,45 +304,45 @@ if( isset($_SESSION['USER']) ){
                 $contents .= '<h3>Slurmdb information</h3>';
 
                 $job_id = $query['jobs'][0]['job_id'];
-                $job_name = $query['jobs'][0]['name'];
+                $job_name = htmlspecialchars($query['jobs'][0]['name'], ENT_QUOTES, 'UTF-8');
                 $job_state_text = \utils\get_job_state_view($query['jobs'][0], 'state', 'current');
 
-                $user = $query['jobs'][0]['user'];
-                $group = $query['jobs'][0]['group'];
+                $user = htmlspecialchars($query['jobs'][0]['user'], ENT_QUOTES, 'UTF-8');
+                $group = htmlspecialchars($query['jobs'][0]['group'], ENT_QUOTES, 'UTF-8');
                 $account = $query['jobs'][0]['account'];
                 $partitions = $query['jobs'][0]['partition'];
                 $priority = \utils\get_number_if_defined($query['jobs'][0]['priority']);
-                $submit_line = $query['jobs'][0]['submit_line'];
-                $working_directory = $query['jobs'][0]['current_working_directory'] ?? "";
+                $submit_line = htmlspecialchars($query['jobs'][0]['submit_line'], ENT_QUOTES, 'UTF-8');
+                $working_directory = htmlspecialchars($query['jobs'][0]['current_working_directory'] ?? "", ENT_QUOTES, 'UTF-8');
 
                 $comment = '<ul>';
                 if($query['jobs'][0]['comment']['administrator'] != '')
-                    $comment .= '<li><b>Admin comment:</b> ' .$query['jobs'][0]['comment']['administrator'] . '</li>';
+                    $comment .= '<li><b>Admin comment:</b> ' . htmlspecialchars($query['jobs'][0]['comment']['administrator'], ENT_QUOTES, 'UTF-8') . '</li>';
                 if($query['jobs'][0]['comment']['job'] != '')
-                    $comment .= '<li><b>Job comment:</b> ' .$query['jobs'][0]['comment']['job'] . '</li>';
+                    $comment .= '<li><b>Job comment:</b> ' . htmlspecialchars($query['jobs'][0]['comment']['job'], ENT_QUOTES, 'UTF-8') . '</li>';
                 if($query['jobs'][0]['comment']['system'] != '')
-                    $comment .= '<li><b>System comment:</b> ' .$query['jobs'][0]['comment']['system'] . '</li>';
+                    $comment .= '<li><b>System comment:</b> ' . htmlspecialchars($query['jobs'][0]['comment']['system'], ENT_QUOTES, 'UTF-8') . '</li>';
                 $comment .= '</ul>';
 
                 $exit_code = \utils\read_exit_code($query['jobs'][0]);
                 $nodes = $query['jobs'][0]['nodes'];
                 $qos = $query['jobs'][0]['qos'];
-                $container = $query['jobs'][0]['container'];
+                $container = htmlspecialchars($query['jobs'][0]['container'], ENT_QUOTES, 'UTF-8');
                 $flags = $query['jobs'][0]['flags'] ?? array();
 
-                $gres_detail = isset($query['jobs'][0]['used_gres']) ? $query['jobs'][0]['used_gres'] : "none";
+                $gres_detail = htmlspecialchars($query['jobs'][0]['used_gres'] ?? "none", ENT_QUOTES, 'UTF-8');
                 $tres_detail = '';
                 if(isset($query['jobs'][0]['tres']) && isset($query['jobs'][0]['tres']['allocated'])){
                     $tres_detail .= '<b>Allocated:</b><ul>';
                     foreach($query['jobs'][0]['tres']['allocated'] as $tres){
-                        $tres_detail .= '<li>Name: ' . $tres['name'] . ', type: ' . $tres['type'] . ', count: ' . $tres['count'] . '</li>';
+                        $tres_detail .= '<li>Name: ' . htmlspecialchars($tres['name'], ENT_QUOTES, 'UTF-8') . ', type: ' . htmlspecialchars($tres['type'], ENT_QUOTES, 'UTF-8') . ', count: ' . $tres['count'] . '</li>';
                     }
                     $tres_detail .= '</ul>';
                 }
                 if(isset($query['jobs'][0]['tres']) && isset($query['jobs'][0]['tres']['requested'])){
                     $tres_detail .= '<b>Requested:</b><ul>';
                     foreach($query['jobs'][0]['tres']['requested'] as $tres){
-                        $tres_detail .= '<li>Name: ' . $tres['name'] . ', type: ' . $tres['type'] . ', count: ' . $tres['count'] . '</li>';
+                        $tres_detail .= '<li>Name: ' . htmlspecialchars($tres['name'], ENT_QUOTES, 'UTF-8') . ', type: ' . htmlspecialchars($tres['type'], ENT_QUOTES, 'UTF-8') . ', count: ' . $tres['count'] . '</li>';
                     }
                     $tres_detail .= '</ul>';
                 }
@@ -453,9 +453,9 @@ EOF;
 
                 $contents .= "<tr>";
                 $contents .=    "<td>" . $job['job_id'] . "</td>";
-                $contents .=    "<td>" . $job['name'] . "</td>";
+                $contents .=    "<td>" . htmlspecialchars($job['name'], ENT_QUOTES, 'UTF-8') . "</td>";
                 $contents .=    "<td>" . $job['partition'] . "</td>";
-                $contents .=    "<td>" . $job['user_name'] . " (" . $job['user_id'] . ")</td>";
+                $contents .=    "<td>" . htmlspecialchars($job['user_name'], ENT_QUOTES, 'UTF-8') . " (" . $job['user_id'] . ")</td>";
                 $contents .=    "<td>" . \utils\get_job_state_view($job) . "</td>";
                 $contents .=    "<td>" . \utils\get_date_from_unix_if_defined($job, 'start_time') . "</td>";
                 $contents .=    "<td>" . \utils\get_timelimit_if_defined($job, 'time_limit', "inf") . "</td>";
@@ -644,10 +644,10 @@ EOF;
 
                 $contents .= "<tr>";
                 $contents .=    "<td>" . $job['job_id'] . "</td>";
-                $contents .=    "<td>" . $job['name'] . "</td>";
+                $contents .=    "<td>" . htmlspecialchars($job['name'], ENT_QUOTES, 'UTF-8') . "</td>";
                 $contents .=    "<td>" . $job['account'] . "</td>";
                 $contents .=    "<td>" . $job['partition'] . "</td>";
-                $contents .=    "<td>" . $job['user'] . "</td>";
+                $contents .=    "<td>" . htmlspecialchars($job['user'], ENT_QUOTES, 'UTF-8') . "</td>";
 
                 $contents .=    "<td>" . \utils\get_job_state_view($job, 'state', 'current') . "</td>";
 
@@ -711,7 +711,7 @@ EOF;
 
             foreach($users as $user_arr) {
                 $contents .= "<tr>";
-                $contents .=    "<td>" . $user_arr['name'] . "</td>";
+                $contents .=    "<td>" . htmlspecialchars($user_arr['name'], ENT_QUOTES, 'UTF-8') . "</td>";
                 $contents .=    "<td><ul>";
                 foreach($user_arr['associations'] as $assoc){
                     if($assoc['account'] == $user_arr['default']['account'])

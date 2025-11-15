@@ -191,6 +191,7 @@ abstract class AbstractClient implements Client {
                 'required_nodes' => $json_job['required_nodes'] ?? NULL,
                 'nodes'      => $this->get_nodes($json_job),
                 'qos'        => $json_job['qos'],
+                'nice'       => $json_job['nice'] ?? NULL,
                 'container'  => $json_job['container'],
                 'container_id' => $json_job['container_id'] ?? NULL,
                 'allocating_node' => $json_job['allocating_node'] ?? NULL,
@@ -313,9 +314,30 @@ abstract class AbstractClient implements Client {
         });
     }
 
-    function cancel_job($job_id) : array {
+    function cancel_job(string|int $job_id) : bool {
         $json = RequestFactory::newRequest()->request_delete("job/" . $job_id, 'slurm', static::api_version);
-        return $json;
+        return !isset($json['errors']) || empty($json['errors']);
+    }
+
+    function update_job(array $job_data) : bool{
+        if(isset($job_data['time_limit']) && (
+            !isset($job_data['time_limit']['infinite']) && !isset($job_data['time_limit']['set']) ||
+            isset($job_data['time_liit']['infinite']) && !(intval($job_data['time_limit']['infinite']) == 1 || intval($job_data['time_limit']['infinite']) == 0) ||
+            isset($job_data['time_limit']['set']) && intval($job_data['time_limit']['number']) <= 0
+            )){
+            throw new \exceptions\ValidationException("Wrong format for time_limit.");
+        }
+        if(isset($job_data['nice_value']) && intval($job_data['nice_value']) != $job_data['nice_value']){
+            throw new \exceptions\ValidationException("Wrong format for nice_value.");
+        }
+        if(!isset($job_data['comment'])){
+            throw new \exceptions\ValidationException("Comment was empty.");
+        }
+
+        $json = RequestFactory::newRequest()
+            ->request_post_json("job/" . $job_data['job_id'], 'slurm', static::api_version, $job_data);
+        \utils\show_errors($json);
+        return !isset($json['errors']) || empty($json['errors']);
     }
 
 

@@ -85,6 +85,7 @@ EOF;
             $contents .= <<<EOF
         <ul class="dropdown-menu">
             <li><a class="dropdown-item" href="?action=cancel-job&job_id={$job['job_id']}">Cancel job</a></li>
+            <li><a class="dropdown-item" href="?action=edit-job&job_id={$job['job_id']}">Edit job</a></li>
         </ul>
 EOF;
         }
@@ -100,6 +101,16 @@ EOF;
                          href="?action=cancel-job&job_id={$job['job_id']}"
                          aria-disabled="true">
                         Cancel job
+                      </a>
+                </span>
+                <span class="dropdown-item" 
+                      data-bs-toggle="tooltip" 
+                      data-bs-placement="right"
+                      title="This feature is not supported by the current configuration.">
+                      <a class="dropdown-item disabled" 
+                         href="?action=edit-job&job_id={$job['job_id']}"
+                         aria-disabled="true">
+                        Edit job
                       </a>
                 </span>
             </li>

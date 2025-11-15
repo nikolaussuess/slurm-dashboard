@@ -1,0 +1,95 @@
+<h2>Modify job {{JOBID}}</h2>
+<p>Here you can edit some values for your job. Most changes can only be done before the job is actually running (i.e., state <kbd>PENDING</kbd>) and some require admin privileges.</p>
+
+<form class="p-4 border" method="post" action="?action=edit-job&job_id={{JOBID}}&do=edit">
+
+    <!-- Job/User Info displayed as text (two-column) -->
+    <div class="row mb-3">
+        <label class="col-md-3 col-form-label">Job ID</label>
+        <div class="col-md-9">
+            <p class="form-control-plaintext mb-0">{{JOBID}}</p>
+            <input type="hidden" name="job_id" value="{{JOBID}}">
+        </div>
+    </div>
+
+    <div class="row mb-3">
+        <label class="col-md-3 col-form-label">Job Name</label>
+        <div class="col-md-9">
+            <p class="form-control-plaintext mb-0">{{JOB_NAME}}</p>
+        </div>
+    </div>
+
+    <div class="row mb-3">
+        <label class="col-md-3 col-form-label">User</label>
+        <div class="col-md-9">
+            <p class="form-control-plaintext mb-0">{{USER_NAME}} ({{USER_ID}})</p>
+        </div>
+    </div>
+
+    <!-- Editable fields (stacked full-width) -->
+    <div class="mb-3">
+        <label for="time_limit" class="form-label">
+            Time Limit (current value: <span class="px-1 py-0 rounded font-monospace" style="background-color:#f8d7da;">{{TIME_LIMIT}}</span>)
+        </label>
+        <input type="text" class="form-control" id="time_limit" name="time_limit"
+               placeholder="e.g. 0-02:00 or infinite">
+        <div class="form-text">
+            New time limit (Format: <kbd>D-HH:MM</kbd> or <kbd>infinite</kbd>). Extensions may require admin approval.
+        </div>
+    </div>
+
+    <div class="mb-3">
+        <label for="nice_value" class="form-label">
+            Nice Value (current value: <span class="px-1 py-0 rounded font-monospace" style="background-color:#f8d7da;">{{NICE_VALUE}}</span>)
+        </label>
+        <input type="number" class="form-control" id="nice_value" name="nice_value"
+               placeholder="0" value="{{NICE_VALUE}}">
+        <div class="form-text">
+            Scheduler nice value. Higher lowers priority. Only admins can set negative values.
+        </div>
+    </div>
+
+    <div class="mb-3">
+        <label for="comment" class="form-label">Comment</label>
+        <textarea class="form-control" id="comment" name="comment" rows="3"
+                  placeholder="Optional note">{{COMMENT}}</textarea>
+        <div class="form-text">Free-form annotation for tracking/documentation.</div>
+    </div>
+
+    <!-- Admin-only fields stacked full-width -->
+    <!--
+        <hr class="my-4">
+        <h5 class="mb-3">Admin-Only Settings</h5>
+
+        <div class="mb-3">
+            <label for="priority" class="form-label">
+                Job Priority (current value: <span class="px-1 py-0 rounded font-monospace" style="background-color:#f8d7da;">{{PRIORITY}}</span>)
+            </label>
+            <input type="number" class="form-control" id="priority" name="priority"
+                   placeholder="e.g. 20000" value="">
+            <div class="form-text">Higher values allow earlier scheduling. Admin-only.</div>
+        </div>
+
+        <div class="mb-3">
+            <label for="qos" class="form-label">
+                QoS (current value: <span class="px-1 py-0 rounded font-monospace" style="background-color:#f8d7da;">{{QOS}}</span>)
+            </label>
+            <input type="text" class="form-control" id="qos" name="qos" placeholder="e.g. normal, high" value="">
+            <div class="form-text">Quality of Service class. Admin-only.</div>
+        </div>
+
+        <div class="mb-3">
+            <label for="partition" class="form-label">
+                Partition (current value: <span class="px-1 py-0 rounded font-monospace" style="background-color:#f8d7da;">{{PARTITION}}</span>)
+            </label>
+            <input type="text" class="form-control" id="partition" name="partition" placeholder="e.g. {{ALL_PARTITIONS}}" value="">
+            <div class="form-text">Cluster partition. Admin-only changes.</div>
+        </div>
+    -->
+        <!-- Submit / Cancel -->
+    <div class="mt-3">
+        <button type="submit" class="btn btn-primary">Apply Changes</button>
+        <a href="?action=jobs" class="btn btn-secondary">Cancel</a>
+    </div>
+
+</form>

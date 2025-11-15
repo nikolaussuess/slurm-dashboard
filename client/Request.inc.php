@@ -15,6 +15,7 @@ interface Request {
     static function socket_exists() : bool;
 
     function request_delete(string $endpoint, string $namespace, string $api_version) : mixed;
+    function request_post_json(string $endpoint, string $namespace, string $api_version, array $data) : array;
 }
 
 class UnixRequest implements Request {
@@ -143,6 +144,62 @@ class UnixRequest implements Request {
             $request .= "X-SLURM-USER-TOKEN: " . \client\utils\jwt\JwtAuthentication::gen_jwt($_SESSION['USER']) . "\r\n";
         }
         $request .= "Connection: close\r\n\r\n";
+        // Send the request
+        fwrite($this->socket, $request);
+
+        // Read the response
+        $response = '';
+        while (!feof($this->socket)) {
+            $response .= fread($this->socket, 8192);
+        }
+
+        // Split the response headers and body
+        list($header, $body) = explode("\r\n\r\n", $response, 2);
+        $body = str_replace("Connection: Close", "", $body);
+
+        // Decode the JSON response
+        $data = json_decode($body, true);
+
+        if (json_last_error() !== JSON_ERROR_NONE) {
+            #addError("JSON decode error: " . json_last_error_msg());
+            throw new RequestFailedException(
+                "Server response could not be interpreted.",
+                json_last_error_msg(),
+                NULL,
+                json_last_error()
+            );
+        }
+
+        return $data;
+    }
+
+    function request_post_json(string $endpoint, string $namespace, string $api_version, array $data) : array {
+
+        // Encode POST data as JSON
+        $jsonData = json_encode($data);
+        if ($jsonData === false) {
+            throw new RequestFailedException(
+                "Failed to encode JSON.",
+                json_last_error_msg(),
+                NULL,
+                json_last_error()
+            );
+        }
+
+        // Prepare the HTTP request
+        $request = "POST /{$namespace}/{$api_version}/{$endpoint} HTTP/1.1\r\n" .
+            "Host: localhost\r\n" .
+            "Content-Type: application/json\r\n" .
+            "Content-Length: " . strlen($jsonData) . "\r\n";
+        if(\client\utils\jwt\JwtAuthentication::is_supported()){
+            $request .= "X-SLURM-USER-NAME: " . $_SESSION['USER'] . "\r\n";
+            $request .= "X-SLURM-USER-TOKEN: " . \client\utils\jwt\JwtAuthentication::gen_jwt($_SESSION['USER']) . "\r\n";
+        }
+        $request .= "Connection: close\r\n\r\n";
+
+        // JSON Body
+        $request .= $jsonData;
+
         // Send the request
         fwrite($this->socket, $request);
 

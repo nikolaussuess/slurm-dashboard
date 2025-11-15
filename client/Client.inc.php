@@ -213,7 +213,8 @@ interface Client{
      */
     function get_maintenances() : array;
 
-    function cancel_job($job_id) : array;
+    function cancel_job(string|int $job_id) : bool;
+    function update_job(array $job_data) : bool;
 }
 
 class ClientFactory {

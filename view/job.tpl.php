@@ -29,6 +29,7 @@ function get_slurm_jobinfo(array $query, string $transitive_dependencies = '') :
     $templateBuilder->setParam("REQNODES",    $query['required_nodes'] ?? ''      );
     $templateBuilder->setParam("NODES",             $query['nodes']                     );
     $templateBuilder->setParam("QOS",               $query['qos'] ?? ''           );
+    $templateBuilder->setParam("NICE",              $query['nice'] ?? ''          );
     $templateBuilder->setParam("CONTAINER",         htmlspecialchars($query['container'] ?? '', ENT_QUOTES, 'UTF-8'));
     $templateBuilder->setParam("CONTAINER_ID",      htmlspecialchars($query['container_id'] ?? "", ENT_QUOTES, 'UTF-8'));
     $templateBuilder->setParam("ALLOCATING_NODE",   htmlspecialchars($query['allocating_node'] ?? "", ENT_QUOTES, 'UTF-8'));

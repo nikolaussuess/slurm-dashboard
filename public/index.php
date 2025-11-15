@@ -19,6 +19,7 @@ require_once __DIR__ . '/../view/job.tpl.php';
 require_once __DIR__ . '/../view/slurm-queue.tpl.php';
 require_once __DIR__ . '/../view/job_history.tpl.php';
 require_once __DIR__ . '/../view/users.tpl.php';
+require_once __DIR__ . '/../exceptions/ValidationException.inc.php';
 
 $dao = \client\ClientFactory::newClient();
 $title = "Clusterinfo " . CLUSTER_NAME;
@@ -230,16 +231,108 @@ if( isset($_SESSION['USER']) ){
                 break;
             }
             else {
-                $res = $dao->cancel_job($job_id);
-                if(isset($res['errors']) && !empty($res['errors'])){
-                    \utils\show_errors($res);
+                if( $dao->cancel_job($job_id) ) {
+                    addSuccess("Job " . $job_id . " cancelled.");
                 }
                 else {
-                    addSuccess("Job " . $job_id . " cancelled.");
-                    apcu_delete("slurm/jobs"); // Delete cached entry because we KNOW that it has changed.
-                    apcu_delete("slurm/job/".$job_id); // Delete cached entry because we KNOW that it has changed.
-                    $contents .= \view\actions\get_slurm_queue($dao->get_jobs(), 0);
+                    addError("Something went wrong when cancelling job " . $job_id);
                 }
+                apcu_delete("slurm/jobs"); // Delete cached entry because we KNOW that it has changed.
+                apcu_delete("slurm/job/".$job_id); // Delete cached entry because we KNOW that it has changed.
+                $contents .= \view\actions\get_slurm_queue($dao->get_jobs(), 0);
+            }
+            break;
+
+        case 'edit-job':
+            $title = "Edit job";
+
+            if( ! \client\utils\jwt\JwtAuthentication::is_supported() ){
+                http_response_code(503); // Service unavailable
+                addError("Editing jobs is currently not supported by the configuration.<br>" .
+                    "If you are an administrator: You have to enable JWT authentication in order to use this feature.");
+                break;
+            }
+
+            // Check if job_id parameter exists.
+            if(! isset($_GET['job_id']) || intval($_GET['job_id']) != $_GET['job_id']){
+                http_send_status(400); // Bad request
+                addError("No job id provided or job id is not a valid number.");
+                break;
+            }
+
+            $job_id = $_GET['job_id'];
+
+            // Check for sufficient privileges
+            $job_data = $dao->get_job($job_id);
+
+            if($job_data === NULL){
+                addError("Job " . $_GET['job_id'] . " not in active queue any more.");
+                break;
+            }
+
+            if( ! \auth\current_user_is_admin() && $job_data['user_name'] != $_SESSION['USER'] ){
+                http_response_code(403);
+                addError(
+                    "The job belongs to user " . $job_data['user_name'] . " but current user is "
+                    . $_SESSION['USER'] . ". Since you are not an administrator, you can only modify your own jobs."
+                );
+                break;
+            }
+
+            if(! isset($_GET['do']) || $_GET['do'] != "edit") {
+                $templateBuilder = new TemplateLoader("edit_job_form.html");
+                $templateBuilder->setParam("JOBID", $job_id);
+                $templateBuilder->setParam("JOB_NAME", $job_data['job_name']);
+                $templateBuilder->setParam("USER_NAME", $job_data['user_name']);
+                $templateBuilder->setParam("USER_ID", $job_data['user_id']);
+                $templateBuilder->setParam("TIME_LIMIT", $job_data['time_limit']);
+                $templateBuilder->setParam("NICE_VALUE", $job_data['nice']);
+                $templateBuilder->setParam("COMMENT", $job_data['comment']);
+                $templateBuilder->setParam("PRIORITY", $job_data['priority'] ?? '');
+                $templateBuilder->setParam("QOS", $job_data['qos'] ?? '');
+                $templateBuilder->setParam("PARTITION", $job_data['partition'] ?? '');
+                $contents .= $templateBuilder->build();
+                break;
+            }
+            else {
+
+                $new_job_data = array(
+                    'job_id' => $job_id,
+                );
+                if(isset($_POST['time_limit']) && !empty($_POST['time_limit'])){
+                    $new_job_data['time_limit'] = $_POST['time_limit'];
+                }
+
+
+                if(isset($_POST['time_limit']) && $_POST['time_limit'] == 'infinite'){
+                    $new_job_data['time_limit'] = array('infinite'=>1);
+                }
+                elseif(isset($_POST['time_limit']) && !empty($_POST['time_limit'])){
+                    try {
+                        $new_job_data['time_limit'] = \utils\slurmTimeLimitFromString($_POST['time_limit']);
+                    } catch (InvalidArgumentException $e){
+                        throw new \exceptions\ValidationException(
+                            $e->getMessage()
+                        );
+                    }
+                }
+
+                if(isset($_POST['nice_value']) && !empty($_POST['nice_value'])){
+                    $new_job_data['nice'] = $_POST['nice_value'];
+                }
+                if(isset($_POST['comment'])){
+                    $new_job_data['comment'] = $_POST['comment'];
+                }
+
+                if( $dao->update_job($new_job_data) ) {
+                    addSuccess("Job " . $job_id . " updated.");
+                }
+                else {
+                    addError("Something went wrong when updating job " . $job_id);
+                }
+                apcu_delete("slurm/jobs"); // Delete cached entry because we KNOW that it has changed.
+                apcu_delete("slurm/job/".$job_id); // Delete cached entry because we KNOW that it has changed.
+                $contents .= \view\actions\get_slurm_queue($dao->get_jobs(), 0);
             }
             break;
 

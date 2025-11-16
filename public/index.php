@@ -216,7 +216,7 @@ if( isset($_SESSION['USER']) ){
             }
 
             if( ! \auth\current_user_is_admin() && $job_data['user_name'] != $_SESSION['USER'] ){
-                http_response_code(403);
+                http_response_code(403); // Forbidden
                 addError(
                     "The job belongs to user " . $job_data['user_name'] . " but current user is "
                     . $_SESSION['USER'] . ". Since you are not an administrator, you can only delete your own jobs."
@@ -266,12 +266,17 @@ if( isset($_SESSION['USER']) ){
             $job_data = $dao->get_job($job_id);
 
             if($job_data === NULL){
+                http_send_status(404); // Not found
+                // 410 Gone would also be a valid choice, but if someone mistyped the ID in the url and chose
+                // a larger ID, that ID will likely exist in the future. Since GONE is a permanent error, and we
+                // cannot (easily) check whether the ID ever existed (we could, but that would require a query to
+                // slurmdb), we instead just send 404 Not found which is safe.
                 addError("Job " . $_GET['job_id'] . " not in active queue any more.");
                 break;
             }
 
             if( ! \auth\current_user_is_admin() && $job_data['user_name'] != $_SESSION['USER'] ){
-                http_response_code(403);
+                http_response_code(403); // Forbidden
                 addError(
                     "The job belongs to user " . $job_data['user_name'] . " but current user is "
                     . $_SESSION['USER'] . ". Since you are not an administrator, you can only modify your own jobs."
@@ -288,6 +293,7 @@ if( isset($_SESSION['USER']) ){
                 $templateBuilder->setParam("TIME_LIMIT", $job_data['time_limit']);
                 $templateBuilder->setParam("NICE_VALUE", $job_data['nice']);
                 $templateBuilder->setParam("COMMENT", $job_data['comment']);
+                // Admin-only settings - currently not supported
                 $templateBuilder->setParam("PRIORITY", $job_data['priority'] ?? '');
                 $templateBuilder->setParam("QOS", $job_data['qos'] ?? '');
                 $templateBuilder->setParam("PARTITION", $job_data['partition'] ?? '');
@@ -299,16 +305,20 @@ if( isset($_SESSION['USER']) ){
                 $new_job_data = array(
                     'job_id' => $job_id,
                 );
+
+                // Skip time limit (do not update) if the form field was empty.
+                // Other possible values are:
+                // - infinite
+                // - a value of the form D-HH:MM
                 if(isset($_POST['time_limit']) && !empty($_POST['time_limit'])){
                     $new_job_data['time_limit'] = $_POST['time_limit'];
                 }
-
-
                 if(isset($_POST['time_limit']) && $_POST['time_limit'] == 'infinite'){
                     $new_job_data['time_limit'] = array('infinite'=>1);
                 }
                 elseif(isset($_POST['time_limit']) && !empty($_POST['time_limit'])){
                     try {
+                        // Convert D-HH:MM to minutes (NOT seconds!)
                         $new_job_data['time_limit'] = \utils\slurmTimeLimitFromString($_POST['time_limit']);
                     } catch (InvalidArgumentException $e){
                         throw new \exceptions\ValidationException(
@@ -317,13 +327,16 @@ if( isset($_SESSION['USER']) ){
                     }
                 }
 
+                // Skip updating nice value if field is empty.
                 if(isset($_POST['nice_value']) && !empty($_POST['nice_value'])){
                     $new_job_data['nice'] = $_POST['nice_value'];
                 }
+                // Always update job comment.
                 if(isset($_POST['comment'])){
                     $new_job_data['comment'] = $_POST['comment'];
                 }
 
+                // Perform the update and then show the job queue
                 if( $dao->update_job($new_job_data) ) {
                     addSuccess("Job " . $job_id . " updated.");
                 }

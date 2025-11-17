@@ -9,9 +9,9 @@ const TO_BE_REPLACED = '<TO BE REPLACED>';
 /**
  * Helper to read environment vars with fallback.
  */
-function cfg_env(string $name, $default = TO_BE_REPLACED) : string {
+function cfg_env(string $name, string $default = TO_BE_REPLACED) : string {
     $value = getenv($name);
-    return ($value !== false && $value !== '') ? $value : $default;
+    return ($value !== FALSE && $value !== '') ? $value : $default;
 }
 
 /**

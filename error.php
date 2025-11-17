@@ -1,7 +1,8 @@
 <?php
-include_once "globals.inc.php";
+include_once __DIR__ . "/globals.inc.php";
 
 // Protect from direct access
+// Should not be necessary since index.php is now located in ./public
 if (!isset($exception) || !($exception instanceof Throwable)) {
     header("Location: /index.php?action=404");
     exit;

@@ -2,6 +2,8 @@
 
 namespace client;
 
+use exceptions\RequestFailedException;
+
 /**
  * Abstract implementation of common functions of versions
  * - v0.0.40
@@ -336,6 +338,24 @@ abstract class AbstractClient implements Client {
 
         $json = RequestFactory::newRequest()
             ->request_post_json("job/" . $job_data['job_id'], 'slurm', static::api_version, $job_data);
+        \utils\show_errors($json);
+        return !isset($json['errors']) || empty($json['errors']);
+    }
+
+    function set_node_state(string $nodename, string $new_state) : bool {
+        if( !in_array($nodename, $this->getNodeList()) ){
+            throw new RequestFailedException(
+                "Node name unknown: " . $nodename,
+                "nodename=$nodename, new_state=$new_state"
+            );
+        }
+
+        $data = array(
+            'state'=>$new_state
+        );
+
+        $json = RequestFactory::newRequest()
+            ->request_post_json("node/" . $nodename, 'slurm', static::api_version, $data);
         \utils\show_errors($json);
         return !isset($json['errors']) || empty($json['errors']);
     }

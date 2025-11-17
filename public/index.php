@@ -224,7 +224,7 @@ if( isset($_SESSION['USER']) ){
                 break;
             }
 
-            if(! isset($_GET['do']) || $_GET['do'] != "cancel") {
+            if(! isset($_GET['do']) || $_GET['do'] !== "cancel") {
                 $templateBuilder = new TemplateLoader("modal_job_cancelling.html");
                 $templateBuilder->setParam("JOBID", $job_id);
                 $contents .= $templateBuilder->build();
@@ -346,6 +346,59 @@ if( isset($_SESSION['USER']) ){
                 apcu_delete("slurm/jobs"); // Delete cached entry because we KNOW that it has changed.
                 apcu_delete("slurm/job/".$job_id); // Delete cached entry because we KNOW that it has changed.
                 $contents .= \view\actions\get_slurm_queue($dao->get_jobs(), 0);
+            }
+            break;
+
+        case 'node-set-state':
+
+            $title = "Set node state";
+
+            if( ! \client\utils\jwt\JwtAuthentication::is_supported() ){
+                http_response_code(503); // Service unavailable
+                addError("Setting node states is currently not supported by the configuration.<br>" .
+                    "If you are an administrator: You have to enable JWT authentication in order to use this feature.");
+                break;
+            }
+
+            // Check if job_id parameter exists.
+            if(! isset($_GET['nodename']) || ! isset($_GET['state'])){
+                http_send_status(400); // Bad request
+                addError("No node name or no state provided. Bad request.");
+                break;
+            }
+
+            if( ! \auth\current_user_is_admin() ){
+                http_response_code(403); // Forbidden
+                addError(
+                    "Only admins are allowed to perform this action!"
+                );
+                break;
+            }
+
+            $nodename = $_GET['nodename'];
+            $new_state = $_GET['state'];
+
+            if( ! isset($_GET['do']) || $_GET['do'] !== 'perform' ){
+                $templateBuilder = new TemplateLoader("modal_node_new_state.html");
+                $templateBuilder->setParam("NODE_NAME", $nodename);
+                $templateBuilder->setParam("STATE", $new_state);
+                $contents .= $templateBuilder->build();
+                break;
+            }
+
+            // Perform the update and then show cluster utilization
+            if( $dao->set_node_state($nodename, $new_state) ) {
+                addSuccess("Node $nodename set to new state $new_state.");
+            }
+            else {
+                addError("Something went wrong when updating node " . $nodename);
+            }
+            apcu_delete("slurm/node/".$nodename); // Delete cached entry because we KNOW that it has changed.
+
+            $title = 'Cluster usage';
+            $contents .= "<h2>Current cluster usage</h2>";
+            foreach ($dao->getNodeList() as $node) {
+                $contents .= \view\actions\get_usage($dao->get_node_info($node));
             }
             break;
 

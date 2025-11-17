@@ -215,6 +215,8 @@ interface Client{
 
     function cancel_job(string|int $job_id) : bool;
     function update_job(array $job_data) : bool;
+
+    function set_node_state(string $nodename, string $new_state) : bool;
 }
 
 class ClientFactory {

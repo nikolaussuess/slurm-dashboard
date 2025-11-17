@@ -22,7 +22,7 @@ require_once __DIR__ . '/../view/users.tpl.php';
 require_once __DIR__ . '/../exceptions/ValidationException.inc.php';
 
 $dao = \client\ClientFactory::newClient();
-$title = "Clusterinfo " . CLUSTER_NAME;
+$title = "Clusterinfo " . $config['CLUSTER_NAME'];
 $contents = "";
 
 if( isset($_GET['action']) && $_GET['action'] == "logout"){
@@ -35,7 +35,7 @@ if( ! $dao->is_available() ){
     throw new \exceptions\RequestFailedException(
         "Cannot create socket.",
         '$dao->is_available() failed',
-        "Cannot create socket. Is <kbd>slurmrestd</kbd> running? Please report this issue to " . ADMIN_EMAIL
+        "Cannot create socket. Is <kbd>slurmrestd</kbd> running? Please report this issue to " . config('ADMIN_EMAIL')
     );
 }
 
@@ -67,7 +67,7 @@ if(!isset($_SESSION['USER'])) {
 
 # About page
 if(isset($_GET['action']) && $_GET['action'] == "about"){
-    $title = "About the cluster " . CLUSTER_NAME;
+    $title = "About the cluster " . config("CLUSTER_NAME");
     $contents .= \view\login\get_about_page();
 }
 

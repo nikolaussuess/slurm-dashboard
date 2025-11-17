@@ -45,8 +45,8 @@ class UnixRequest implements Request {
         $request = "GET /{$namespace}/{$api_version}/{$endpoint} HTTP/1.1\r\n" .
             "Host: localhost\r\n";
         if(\client\utils\jwt\JwtAuthentication::is_supported()){
-            $request .= "X-SLURM-USER-NAME: " . ($_SESSION['USER'] ?? SLURM_USER) . "\r\n";
-            $request .= "X-SLURM-USER-TOKEN: " . \client\utils\jwt\JwtAuthentication::gen_jwt($_SESSION['USER'] ?? SLURM_USER) . "\r\n";
+            $request .= "X-SLURM-USER-NAME: " . ($_SESSION['USER'] ?? config('SLURM_USER')) . "\r\n";
+            $request .= "X-SLURM-USER-TOKEN: " . \client\utils\jwt\JwtAuthentication::gen_jwt($_SESSION['USER'] ?? config('SLURM_USER')) . "\r\n";
         }
         $request .= "Connection: close\r\n\r\n";
         // Send the request
@@ -94,8 +94,8 @@ class UnixRequest implements Request {
         $request = "GET /{$full_endpoint} HTTP/1.1\r\n" .
             "Host: localhost\r\n";
         if(\client\utils\jwt\JwtAuthentication::is_supported()){
-            $request .= "X-SLURM-USER-NAME: " . ($_SESSION['USER'] ?? SLURM_USER) . "\r\n";
-            $request .= "X-SLURM-USER-TOKEN: " . \client\utils\jwt\JwtAuthentication::gen_jwt($_SESSION['USER'] ?? SLURM_USER) . "\r\n";
+            $request .= "X-SLURM-USER-NAME: " . ($_SESSION['USER'] ?? config('SLURM_USER')) . "\r\n";
+            $request .= "X-SLURM-USER-TOKEN: " . \client\utils\jwt\JwtAuthentication::gen_jwt($_SESSION['USER'] ?? config('SLURM_USER')) . "\r\n";
         }
         $request .= "Connection: close\r\n\r\n";
         // Send the request
@@ -243,12 +243,12 @@ class UnixRequest implements Request {
 
 class RequestFactory {
     public static function newRequest() : Request {
-        if(CONNECTION_MODE == 'unix')
+        if(config('CONNECTION_MODE') == 'unix')
             return new UnixRequest();
 
         throw new ConfigurationError(
             "Unknown socket type.",
-            "CONNECTION_MODE has an unknown value, i.e. CONNECTION_MODE=" . CONNECTION_MODE,
+            "CONNECTION_MODE has an unknown value, i.e. CONNECTION_MODE=" . config('CONNECTION_MODE'),
             'Wrong configuration for requests. Could not contact server.
             <ul>
                 <li>If you are an admin, please set the parameter <kbd>CONNECTION_MODE</kbd> in config.inc.php.</li>
@@ -258,12 +258,12 @@ class RequestFactory {
     }
 
     public static function socket_exists() : bool {
-        if(CONNECTION_MODE == 'unix')
+        if(config('CONNECTION_MODE') == 'unix')
             return UnixRequest::socket_exists();
 
         throw new ConfigurationError(
             "Unknown socket type.",
-            "CONNECTION_MODE has an unknown value, i.e. CONNECTION_MODE=" . CONNECTION_MODE,
+            "CONNECTION_MODE has an unknown value, i.e. CONNECTION_MODE=" . config('CONNECTION_MODE'),
             'Wrong configuration for requests. Could not contact server.
             <ul>
                 <li>If you are an admin, please set the parameter <kbd>CONNECTION_MODE</kbd> in config.inc.php.</li>

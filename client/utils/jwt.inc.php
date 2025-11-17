@@ -10,19 +10,17 @@ use exceptions\ConfigurationError;
  * authentication at slurmrestd.
  */
 class JwtAuthentication {
-
-    private const JWT_PATH = JWT_PATH;
     private const JWT_DEFAULT_LIFESPAN = 120;
 
     public static function is_supported() : bool {
-        if(self::JWT_PATH == TO_BE_REPLACED)
+        if(config('JWT_PATH') == TO_BE_REPLACED)
             return FALSE;
-        if(! file_exists(self::JWT_PATH) || ! is_readable(self::JWT_PATH) ){
+        if(! file_exists(config('JWT_PATH')) || ! is_readable(config('JWT_PATH')) ){
             syslog(LOG_WARNING, "slurm-dashboard: JWT_PATH is set but cannot be found or read.");
             throw new ConfigurationError(
                 "JWT authentication is enabled but misconfigured.",
-                'JWT authentication path = ' . self::JWT_PATH . ", exists = " .
-                    file_exists(self::JWT_PATH) . ", is readable = " . is_readable(self::JWT_PATH),
+                'JWT authentication path = ' . config('JWT_PATH') . ", exists = " .
+                    file_exists(config('JWT_PATH')) . ", is readable = " . is_readable(config('JWT_PATH')),
                 "JWT authentication failed."
             );
         }
@@ -47,7 +45,7 @@ class JwtAuthentication {
      * @return string JWT key
      */
     static function gen_jwt(string $user, int $lifespan = self::JWT_DEFAULT_LIFESPAN) : string {
-        $signing_key = file_get_contents(self::JWT_PATH);
+        $signing_key = file_get_contents(config('JWT_PATH'));
 
         $header = [
             "alg" => "HS256",

@@ -9,7 +9,6 @@ namespace auth {
      * I.e., this class connects with password authentication to a server via SSH.
      */
     class Local implements AuthenticationMethod {
-        private const SERVER_URL = SSH_SERVER_URL;
         public const METHOD_NAME = 'local';
 
         public static function is_supported(): bool {
@@ -18,7 +17,7 @@ namespace auth {
                 return FALSE;
             }
 
-            if (self::SERVER_URL == TO_BE_REPLACED) {
+            if (config('SSH_SERVER_URL') == TO_BE_REPLACED) {
                 return FALSE;
             }
 
@@ -31,7 +30,7 @@ namespace auth {
          * @return bool TRUE if authentication was successful, FALSE otherwise
          */
         public static function login(string $username, string $password): bool {
-            $ssh = ssh2_connect(self::SERVER_URL);
+            $ssh = ssh2_connect(config('SSH_SERVER_URL'));
             if( $ssh === FALSE ){
                 addError("Could not connect to local authentication server.");
                 return FALSE;

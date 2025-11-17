@@ -57,7 +57,7 @@ if (!isset($exception) || !($exception instanceof Throwable)) {
 <?php else: ?>
     <p>An unknown internal server occurred.</p>
 <?php endif; ?>
-    <p>The dashboard is currently not available. If the error persists, please write an email to <?php print ADMIN_EMAIL; ?>.</p>
+    <p>The dashboard is currently not available. If the error persists, please write an email to <?php print config('ADMIN_EMAIL'); ?>.</p>
 
     <p></p>
 </div>

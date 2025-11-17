@@ -173,7 +173,6 @@ namespace auth {
      * @return bool TRUE if the user is privileged, FALSE otherwise.
      */
     function current_user_is_privileged() : bool {
-        global $privileged_users;
-        return current_user_is_admin() || in_array($_SESSION['USER'], $privileged_users, TRUE);
+        return current_user_is_admin() || in_array($_SESSION['USER'], config('PRIV_USERS'), TRUE);
     }
 }

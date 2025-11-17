@@ -11,7 +11,7 @@ function get_slurm_jobinfo(array $query, string $transitive_dependencies = '') :
     $job_state_text = \utils\get_job_state_view($query);
     $user = htmlspecialchars($query['user_name'] . " (" . $query['user_id'] . ')', ENT_QUOTES, 'UTF-8');
     $group = htmlspecialchars($query['group_name'] . " (" . $query['group_id'] . ')', ENT_QUOTES, 'UTF-8');
-    $requeue = $query['requeue'] ? 'yes' : 'no';
+    $requeue = $query['requeue'] ? 'allowed' : 'not allowed';
 
     $templateBuilder = new TemplateLoader("jobinfo.html");
     $templateBuilder->setParam("JOBID",             $query['job_id']                    );
@@ -44,8 +44,8 @@ function get_slurm_jobinfo(array $query, string $transitive_dependencies = '') :
     $templateBuilder->setParam("CPUS",              $query['cpus'] ?? ''           );
     $templateBuilder->setParam("NODE_COUNT",        $query['node_count'] ?? ''     );
     $templateBuilder->setParam("TASKS",             $query['tasks'] ?? ''          );
-    $templateBuilder->setParam("MEMORY_PER_CPU",   $query['memory_per_cpu'] ?? '' );
-    $templateBuilder->setParam("MEMORY_PER_NODE",   $query['memory_per_node'] ?? '' );
+    $templateBuilder->setParam("MEMORY_PER_CPU",    \utils\format_nullable_int($query['memory_per_cpu'], " MB"));
+    $templateBuilder->setParam("MEMORY_PER_NODE",   \utils\format_nullable_int($query['memory_per_node'], " MB"));
     $templateBuilder->setParam("REQUEUE",           $requeue                            );
     $templateBuilder->setParam("SUBMIT_TIME",       $query['submit_time']               );
     $templateBuilder->setParam("TIME_LIMIT",        $query['time_limit']                );

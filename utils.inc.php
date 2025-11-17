@@ -97,3 +97,7 @@ function slurmTimeLimitFromString(string $time): array {
     // Convert everything to seconds
     return array("set"=> 1, "infinite"=> 0, "number"=>$minutes + 60 * $hours + 1440 * $days);
 }
+
+function format_nullable_int(?int $value, string $suffix = ''): string {
+    return $value === NULL ? '' : (number_format($value, 0, ',', '.') . $suffix);
+}

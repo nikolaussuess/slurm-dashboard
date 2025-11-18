@@ -29,6 +29,8 @@ However, any slurm version `>= 23.11.x` should work. If you encounter any issues
 - Authentication (at `slurmrestd`) via JWT (optional).
 - Allow administrators to requeue / cancel / ... jobs (requires JWT).
 - Allow users to requeue and cancel their own jobs (requires JWT).
+- Allow users to edit their own jobs and allow admins to edit all jobs (requires JWT).
+- Allow administrators to `DRAIN` or undrain nodes (requires JWT).
 
 ![Job queue](./imgs/queue.png?raw=true "Job queue")
 
@@ -72,7 +74,7 @@ However, any slurm version `>= 23.11.x` should work. If you encounter any issues
     User=slurm-dashboard
     Group=slurm-dashboard
     ```
-    - Note that users will not be able to submit or cancel jobs.
+    - Note that users will not be able to submit or cancel jobs (i.e., the dashboard is read-only).
  
   - If you want JWT authentication:
     - Follow the instructions [in the official documentation](https://slurm.schedmd.com/jwt.html). In short:
@@ -125,7 +127,7 @@ However, any slurm version `>= 23.11.x` should work. If you encounter any issues
     WantedBy=multi-user.target
     ```
 
-4) Add correct user to the apache vhost (e.g. `/etc/apache2/sites-enabled/slurm-dashboard.conf`). Also set the environment variables accordingly to configure the dashboard. (Alternatively, you could also edit the `globals.inc.php` file to set them, but this is not recommended anymore.) Make sure that your config file is not readable by other users!
+4) Add correct user to the apache vhost (e.g. `/etc/apache2/sites-enabled/slurm-dashboard.conf`). Also set the environment variables accordingly to configure the dashboard. (Alternatively, you could also edit the `globals.inc.php` file to set them, but this is not recommended anymore.
 ```apacheconf
 <VirtualHost *:80>
     ...
@@ -176,8 +178,13 @@ However, any slurm version `>= 23.11.x` should work. If you encounter any issues
     # SetEnv PRIV_USERS        "user1,user2"
 </VirtualHost>
 ```
-5) Optionally (but strongly recommended), enable SSL etc.
-6) Start or restart the services:
+5) Make sure that your apache2 config file is not readable by other users (especially if it contains passwords)!
+```bash
+chown root:root /etc/apache2/sites-available/slurm-dashboard.conf
+chmod 700 /etc/apache2/sites-available/slurm-dashboard.conf
+```
+6) Optionally (but strongly recommended), enable SSL etc.
+7) Start or restart the services:
 ```
 systemctl enable --now slurmrestd
 systemctl enable --now apache2
@@ -185,7 +192,11 @@ systemctl enable --now apache2
 systemctl restart slurmrestd
 systemctl restart apache2
 ```
-7) You might also want to edit the default page in `templates/about.html`.
+8) You might also want to edit the default page in `templates/about.html`.
+9) Give the files the correct permissions (recommended especially if you set passwords in `globals.inc.php` instead of the apache config):
+```bash
+find /var/www/slurm-dashboard -type f -exec chmod 640 {} \;
+```
 
 ### Update
 Once you have set up the dashboard, you can use the following bash script to upgrade to a new version. (It might also be helpful for the initial setup.)

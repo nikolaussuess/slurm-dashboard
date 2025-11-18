@@ -22,7 +22,7 @@ require_once __DIR__ . '/../view/users.tpl.php';
 require_once __DIR__ . '/../exceptions/ValidationException.inc.php';
 
 $dao = \client\ClientFactory::newClient();
-$title = "Clusterinfo " . $config['CLUSTER_NAME'];
+$title = "Clusterinfo " . config('CLUSTER_NAME');
 $contents = "";
 
 if( isset($_GET['action']) && $_GET['action'] == "logout"){

@@ -79,7 +79,8 @@ However, any slurm version `>= 23.11.x` should work. If you encounter any issues
   - If you want JWT authentication:
     - Follow the instructions [in the official documentation](https://slurm.schedmd.com/jwt.html). In short:
       - Make sure that you compiled SLURM with JWT and that you have `libjwt-dev` installed.
-      - Generate a JWT key as follows:
+      - Generate a JWT key as follows.<br>
+        Note: Instead of storing the key in `/var/spool/slurm/statesave` (or whatever `StateSaveLocation` is defined in `slurm.conf`), you might want to store the key e.g. in a `/var/lib/slurm-dashboard` directory instead. In this case, either specify the path in the `slurmrestd.service` explicitly, or make sure that the path exists and is the same on (a) the controller node where `slurmctl` is running, (b) the slurm database node with `slurmdbd` and (c) the node where the dashboard is running and (d) the node where `slurmrestd` is running (if not the same as (c)).
       ```
       dd if=/dev/random of=/var/spool/slurm/statesave/jwt_hs256.key bs=32 count=1
       chown slurm:slurm /var/spool/slurm/statesave/jwt_hs256.key

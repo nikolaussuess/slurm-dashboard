@@ -161,12 +161,12 @@ function get_filtered_jobs_from_slurmdb(array $jobs) : string {
     $contents = '<div>Found <span style="font-weight: bold">' . count($jobs) . ' jobs</span>.</div>';
 
     $contents .= <<<EOF
-<div class="table-responsive">
-    <table class="tableFixHead table">
+<div class="table-responsive tableFixHead">
+    <table class="table">
         <thead>
             <tr>
                 <th>ID</th>
-                <th>Name</th>
+                <th class="breakable">Name</th>
                 <th>Account</th>
                 <th>Partition</th>
                 <th>User</th>
@@ -185,7 +185,7 @@ EOF;
 
         $contents .= "<tr>";
         $contents .=    "<td>" . $job['job_id'] . "</td>";
-        $contents .=    "<td>" . htmlspecialchars($job['job_name'], ENT_QUOTES, 'UTF-8') . "</td>";
+        $contents .=    "<td class='breakable'>" . htmlspecialchars($job['job_name'], ENT_QUOTES, 'UTF-8') . "</td>";
         $contents .=    "<td>" . htmlspecialchars($job['account'], ENT_QUOTES, 'UTF-8') . "</td>";
         $contents .=    "<td>" . htmlspecialchars($job['partition'], ENT_QUOTES, 'UTF-8') . "</td>";
         $contents .=    "<td>" . htmlspecialchars($job['user_name'], ENT_QUOTES, 'UTF-8') . "</td>";

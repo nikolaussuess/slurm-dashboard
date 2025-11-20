@@ -40,8 +40,8 @@ EOF;
     $contents .= '<div>Found <span style="font-weight: bold">' . count($jobs) . ' jobs</span>.</div>';
 
     $contents .= <<<EOF
-<div class="table-responsive">
-    <table class="tableFixHead table">
+<div class="table-responsive tableFixHead">
+    <table class="table">
         <thead>
             <tr>
                 <th>ID</th>
@@ -51,7 +51,6 @@ EOF;
                 <th>State</th>
                 <th>Start time</th>
                 <th>Time limit</th>
-                <th># Nodes</th>
                 <th>Nodelist</th>
                 <th></th>
             </tr>
@@ -63,14 +62,19 @@ EOF;
 
         $contents .= "<tr>";
         $contents .=    "<td>" . $job['job_id'] . "</td>";
-        $contents .=    "<td>" . $job['job_name'] . "</td>";
+        $contents .=    "<td class='breakable'>" . $job['job_name'] . "</td>";
         $contents .=    "<td>" . $job['partition'] . "</td>";
         $contents .=    "<td>" . $job['user_name'] . " (" . $job['user_id'] . ")</td>";
         $contents .=    "<td>" . \utils\get_job_state_view($job) . "</td>";
         $contents .=    "<td>" . $job['time_start'] . "</td>";
         $contents .=    "<td>" . $job['time_limit'] . "</td>";
-        $contents .=    "<td>" . ($job['node_count'] != NULL ? $job['node_count'] : "?") . "</td>";
-        $contents .=    "<td>" . $job['nodes'] . "</td>";
+        $contents .=    "<td>";
+        if($job['nodes'] != '?')
+            $contents .= $job['nodes'];
+        else
+            $contents .= '<span title="Not yet scheduled. Showing node count instead." class="node-count">' .
+                         ($job['node_count'] != NULL ? $job['node_count'] : "?") . '</span>';
+        $contents .= "</td>";
         $contents .= <<<EOF
 <td>
     <div class="btn-group">

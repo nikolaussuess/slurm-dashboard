@@ -1,8 +1,36 @@
-.tableFixHead thead th { position: sticky; top: 0; }
+.tableFixHead table {
+    width: max-content;
+    min-width: 100%;
+    border-collapse: collapse;
+}
 
-table  { border-collapse: collapse; width: 100%; }
-th, td { padding: 8px 16px; }
-th     { background:#eee; }
+.tableFixHead thead th {
+    position: sticky;
+    top: 0;
+    z-index: 2; /* Needed in Bootstrap tables */
+}
+
+.tableFixHead .breakable {
+    max-width: 250px;        /* limit column width */
+    white-space: normal;
+    word-wrap: break-word;
+    word-break: break-word;
+}
+
+.tableFixHead {
+    max-width: 100%;
+    overflow-x: scroll;
+    overflow-y: scroll;
+    max-height: 80vh;       /* or any height */
+}
+
+table  {
+    border-collapse: collapse;
+}
+
+th, td {
+    padding: 8px 16px;
+}
 
 .alert {
     max-width: 1140px;
@@ -82,4 +110,8 @@ footer {
 button, input, select {
     padding: 10px; /* Make them easier to tap */
     font-size: 1rem; /* Ensure readability */
+}
+
+.node-count {
+    color: gray;
 }

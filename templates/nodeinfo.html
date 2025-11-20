@@ -6,7 +6,16 @@
             <td style="width: 100px">
                 State:
             </td>
-            <td style="background-color: {{STATE_COLOR}}">{{STATE}}</td>
+            <td style="background-color: {{STATE_COLOR}}">
+                {{STATE}}
+                <button type="button" class="btn btn-light dropdown-toggle dropdown-toggle-split" data-bs-toggle="dropdown" aria-expanded="false">
+                    <span class="visually-hidden">Toggle Dropdown</span>
+                </button>
+                <ul class="dropdown-menu">
+                    <li><a class="dropdown-item" href="?action=node-set-state&nodename={{NODENAME}}&state=resume">Resume node</a></li>
+                    <li><a class="dropdown-item" href="?action=node-set-state&nodename={{NODENAME}}&state=drain">Drain node</a></li>
+                </ul>
+            </td>
         </tr>
 
         <tr>

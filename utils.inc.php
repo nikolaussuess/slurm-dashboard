@@ -6,6 +6,8 @@
 
 namespace utils;
 
+use InvalidArgumentException;
+
 function get_date_from_unix_if_defined(array $job_arr, string $param, string $default = 'undefined') : string {
     if(! isset($job_arr[$param])){
         return $default;
@@ -67,4 +69,35 @@ function show_errors(array $response) : void {
             addError('<b>' . $error['error'] . '</b> (source: ' . $error['source'] . ')<br>' . $error['description']);
         }
     }
+}
+
+function validate_time_limit(string $str): bool {
+    $pattern = '/^(?:(\d+)-)?((0)?[0-9]|1[0-9]|2[0-3]):([0-5][0-9])$/';
+    return preg_match($pattern, $str) === 1;
+}
+
+function slurmTimeLimitFromString(string $time): array {
+
+    if($time === "infinite"){
+        return array("set"=> 0, "infinite"=> 1);
+    }
+
+    // Regex to match D-HH:MM:SS or HH:MM:SS
+    $pattern = '/^(?:(\d+)-)?((0)?[0-9]|1[0-9]|2[0-3]):([0-5][0-9])$/';
+
+    if (!preg_match($pattern, $time, $matches)) {
+        throw new InvalidArgumentException("Invalid time limit format: $time");
+    }
+
+    // Extract captured groups
+    $days    = isset($matches[1]) ? (int)$matches[1] : 0;
+    $hours   = (int)$matches[2];
+    $minutes = (int)$matches[3];
+
+    // Convert everything to seconds
+    return array("set"=> 1, "infinite"=> 0, "number"=>$minutes + 60 * $hours + 1440 * $days);
+}
+
+function format_nullable_int(?int $value, string $suffix = ''): string {
+    return $value === NULL ? '' : (number_format($value, 0, ',', '.') . $suffix);
 }

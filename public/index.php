@@ -19,9 +19,10 @@ require_once __DIR__ . '/../view/job.tpl.php';
 require_once __DIR__ . '/../view/slurm-queue.tpl.php';
 require_once __DIR__ . '/../view/job_history.tpl.php';
 require_once __DIR__ . '/../view/users.tpl.php';
+require_once __DIR__ . '/../exceptions/ValidationException.inc.php';
 
 $dao = \client\ClientFactory::newClient();
-$title = "Clusterinfo " . CLUSTER_NAME;
+$title = "Clusterinfo " . config('CLUSTER_NAME');
 $contents = "";
 
 if( isset($_GET['action']) && $_GET['action'] == "logout"){
@@ -34,7 +35,7 @@ if( ! $dao->is_available() ){
     throw new \exceptions\RequestFailedException(
         "Cannot create socket.",
         '$dao->is_available() failed',
-        "Cannot create socket. Is <kbd>slurmrestd</kbd> running? Please report this issue to " . ADMIN_EMAIL
+        "Cannot create socket. Is <kbd>slurmrestd</kbd> running? Please report this issue to " . config('ADMIN_EMAIL')
     );
 }
 
@@ -66,7 +67,7 @@ if(!isset($_SESSION['USER'])) {
 
 # About page
 if(isset($_GET['action']) && $_GET['action'] == "about"){
-    $title = "About the cluster " . CLUSTER_NAME;
+    $title = "About the cluster " . config("CLUSTER_NAME");
     $contents .= \view\login\get_about_page();
 }
 
@@ -215,7 +216,7 @@ if( isset($_SESSION['USER']) ){
             }
 
             if( ! \auth\current_user_is_admin() && $job_data['user_name'] != $_SESSION['USER'] ){
-                http_response_code(403);
+                http_response_code(403); // Forbidden
                 addError(
                     "The job belongs to user " . $job_data['user_name'] . " but current user is "
                     . $_SESSION['USER'] . ". Since you are not an administrator, you can only delete your own jobs."
@@ -223,23 +224,181 @@ if( isset($_SESSION['USER']) ){
                 break;
             }
 
-            if(! isset($_GET['do']) || $_GET['do'] != "cancel") {
+            if(! isset($_GET['do']) || $_GET['do'] !== "cancel") {
                 $templateBuilder = new TemplateLoader("modal_job_cancelling.html");
                 $templateBuilder->setParam("JOBID", $job_id);
                 $contents .= $templateBuilder->build();
                 break;
             }
             else {
-                $res = $dao->cancel_job($job_id);
-                if(isset($res['errors']) && !empty($res['errors'])){
-                    \utils\show_errors($res);
+                if( $dao->cancel_job($job_id) ) {
+                    addSuccess("Job " . $job_id . " cancelled.");
                 }
                 else {
-                    addSuccess("Job " . $job_id . " cancelled.");
-                    apcu_delete("slurm/jobs"); // Delete cached entry because we KNOW that it has changed.
-                    apcu_delete("slurm/job/".$job_id); // Delete cached entry because we KNOW that it has changed.
-                    $contents .= \view\actions\get_slurm_queue($dao->get_jobs(), 0);
+                    addError("Something went wrong when cancelling job " . $job_id);
                 }
+                apcu_delete("slurm/jobs"); // Delete cached entry because we KNOW that it has changed.
+                apcu_delete("slurm/job/".$job_id); // Delete cached entry because we KNOW that it has changed.
+                $contents .= \view\actions\get_slurm_queue($dao->get_jobs(), 0);
+            }
+            break;
+
+        case 'edit-job':
+            $title = "Edit job";
+
+            if( ! \client\utils\jwt\JwtAuthentication::is_supported() ){
+                http_response_code(503); // Service unavailable
+                addError("Editing jobs is currently not supported by the configuration.<br>" .
+                    "If you are an administrator: You have to enable JWT authentication in order to use this feature.");
+                break;
+            }
+
+            // Check if job_id parameter exists.
+            if(! isset($_GET['job_id']) || intval($_GET['job_id']) != $_GET['job_id']){
+                http_send_status(400); // Bad request
+                addError("No job id provided or job id is not a valid number.");
+                break;
+            }
+
+            $job_id = $_GET['job_id'];
+
+            // Check for sufficient privileges
+            $job_data = $dao->get_job($job_id);
+
+            if($job_data === NULL){
+                http_send_status(404); // Not found
+                // 410 Gone would also be a valid choice, but if someone mistyped the ID in the url and chose
+                // a larger ID, that ID will likely exist in the future. Since GONE is a permanent error, and we
+                // cannot (easily) check whether the ID ever existed (we could, but that would require a query to
+                // slurmdb), we instead just send 404 Not found which is safe.
+                addError("Job " . $_GET['job_id'] . " not in active queue any more.");
+                break;
+            }
+
+            if( ! \auth\current_user_is_admin() && $job_data['user_name'] != $_SESSION['USER'] ){
+                http_response_code(403); // Forbidden
+                addError(
+                    "The job belongs to user " . $job_data['user_name'] . " but current user is "
+                    . $_SESSION['USER'] . ". Since you are not an administrator, you can only modify your own jobs."
+                );
+                break;
+            }
+
+            if(! isset($_GET['do']) || $_GET['do'] != "edit") {
+                $templateBuilder = new TemplateLoader("edit_job_form.html");
+                $templateBuilder->setParam("JOBID", $job_id);
+                $templateBuilder->setParam("JOB_NAME", $job_data['job_name']);
+                $templateBuilder->setParam("USER_NAME", $job_data['user_name']);
+                $templateBuilder->setParam("USER_ID", $job_data['user_id']);
+                $templateBuilder->setParam("TIME_LIMIT", $job_data['time_limit']);
+                $templateBuilder->setParam("NICE_VALUE", $job_data['nice']);
+                $templateBuilder->setParam("COMMENT", $job_data['comment']);
+                // Admin-only settings - currently not supported
+                $templateBuilder->setParam("PRIORITY", $job_data['priority'] ?? '');
+                $templateBuilder->setParam("QOS", $job_data['qos'] ?? '');
+                $templateBuilder->setParam("PARTITION", $job_data['partition'] ?? '');
+                $contents .= $templateBuilder->build();
+                break;
+            }
+            else {
+
+                $new_job_data = array(
+                    'job_id' => $job_id,
+                );
+
+                // Skip time limit (do not update) if the form field was empty.
+                // Other possible values are:
+                // - infinite
+                // - a value of the form D-HH:MM
+                if(isset($_POST['time_limit']) && !empty($_POST['time_limit'])){
+                    $new_job_data['time_limit'] = $_POST['time_limit'];
+                }
+                if(isset($_POST['time_limit']) && $_POST['time_limit'] == 'infinite'){
+                    $new_job_data['time_limit'] = array('infinite'=>1);
+                }
+                elseif(isset($_POST['time_limit']) && !empty($_POST['time_limit'])){
+                    try {
+                        // Convert D-HH:MM to minutes (NOT seconds!)
+                        $new_job_data['time_limit'] = \utils\slurmTimeLimitFromString($_POST['time_limit']);
+                    } catch (InvalidArgumentException $e){
+                        throw new \exceptions\ValidationException(
+                            $e->getMessage()
+                        );
+                    }
+                }
+
+                // Skip updating nice value if field is empty.
+                if(isset($_POST['nice_value']) && !empty($_POST['nice_value'])){
+                    $new_job_data['nice'] = $_POST['nice_value'];
+                }
+                // Always update job comment.
+                if(isset($_POST['comment'])){
+                    $new_job_data['comment'] = $_POST['comment'];
+                }
+
+                // Perform the update and then show the job queue
+                if( $dao->update_job($new_job_data) ) {
+                    addSuccess("Job " . $job_id . " updated.");
+                }
+                else {
+                    addError("Something went wrong when updating job " . $job_id);
+                }
+                apcu_delete("slurm/jobs"); // Delete cached entry because we KNOW that it has changed.
+                apcu_delete("slurm/job/".$job_id); // Delete cached entry because we KNOW that it has changed.
+                $contents .= \view\actions\get_slurm_queue($dao->get_jobs(), 0);
+            }
+            break;
+
+        case 'node-set-state':
+
+            $title = "Set node state";
+
+            if( ! \client\utils\jwt\JwtAuthentication::is_supported() ){
+                http_response_code(503); // Service unavailable
+                addError("Setting node states is currently not supported by the configuration.<br>" .
+                    "If you are an administrator: You have to enable JWT authentication in order to use this feature.");
+                break;
+            }
+
+            // Check if job_id parameter exists.
+            if(! isset($_GET['nodename']) || ! isset($_GET['state'])){
+                http_send_status(400); // Bad request
+                addError("No node name or no state provided. Bad request.");
+                break;
+            }
+
+            if( ! \auth\current_user_is_admin() ){
+                http_response_code(403); // Forbidden
+                addError(
+                    "Only admins are allowed to perform this action!"
+                );
+                break;
+            }
+
+            $nodename = $_GET['nodename'];
+            $new_state = $_GET['state'];
+
+            if( ! isset($_GET['do']) || $_GET['do'] !== 'perform' ){
+                $templateBuilder = new TemplateLoader("modal_node_new_state.html");
+                $templateBuilder->setParam("NODE_NAME", $nodename);
+                $templateBuilder->setParam("STATE", $new_state);
+                $contents .= $templateBuilder->build();
+                break;
+            }
+
+            // Perform the update and then show cluster utilization
+            if( $dao->set_node_state($nodename, $new_state) ) {
+                addSuccess("Node $nodename set to new state $new_state.");
+            }
+            else {
+                addError("Something went wrong when updating node " . $nodename);
+            }
+            apcu_delete("slurm/node/".$nodename); // Delete cached entry because we KNOW that it has changed.
+
+            $title = 'Cluster usage';
+            $contents .= "<h2>Current cluster usage</h2>";
+            foreach ($dao->getNodeList() as $node) {
+                $contents .= \view\actions\get_usage($dao->get_node_info($node));
             }
             break;
 

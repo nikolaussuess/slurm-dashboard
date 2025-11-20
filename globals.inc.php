@@ -6,91 +6,128 @@
  * configured or not.
  */
 const TO_BE_REPLACED = '<TO BE REPLACED>';
-
-// BEGIN OF VARIABLES THAT SHOULD BE EDITED
 /**
- * Name of the cluster
+ * Helper to read environment vars with fallback.
  */
-const CLUSTER_NAME = TO_BE_REPLACED;
-/**
- * Name of the admin. Publicly available in error messages.
- */
-const ADMIN_NAMES = TO_BE_REPLACED;
-/**
- * E-Mail address of the admin. Publicly available in error messages.
- */
-const ADMIN_EMAIL = TO_BE_REPLACED;
-/**
- * Hostname of the login node.
- */
-const SLURM_LOGIN_NODE = TO_BE_REPLACED;
-/**
- * Link to a wiki page where one can find more info about the cluster.
- */
-const WIKI_LINK = TO_BE_REPLACED;
-
-// Rest API connection properties
-/**
- * Connection more for connections to slurmrestd.
- * Currently, the only supported value is 'unix'!
- */
-const CONNECTION_MODE = 'unix';
-/**
- * OpenAPI version to use for communication with slurmrestd.
- * Use 'auto' for auto-detection (if supported), or e.g. v0.0.40.
- * Default is 'auto'.
- */
-const REST_API_VERSION = 'auto';
-
-// LDAP configuration
-/**
- * URI for ldap server, e.g. 'dc.example.com'
- * Optional; leave TO_BE_REPLACED if you do not want to use authentication method LDAP.
- */
-const LDAP_URI = TO_BE_REPLACED;
-/**
- * LDAP base, e.g. 'cn=users,dc=i,dc=example,dc=com'
- * Optional; leave TO_BE_REPLACED if you do not want to use authentication method LDAP.
- */
-const LDAP_BASE = TO_BE_REPLACED;
-/**
- * LDAP admin user to query for the users, e.g. 'adminuser'
- * Optional; leave TO_BE_REPLACED if you do not want to use authentication method LDAP.
- */
-const LDAP_ADMIN_USER = TO_BE_REPLACED;
-/**
- * Password for the LDAP admin user.
- * Optional; leave TO_BE_REPLACED if you do not want to use authentication method LDAP.
- */
-const LDAP_ADMIN_PASSWORD = TO_BE_REPLACED;
-
-// SSH configuration for local authentication
-/**
- * Url that is used to connect via SSH to. Can be e.g. the login node.
- * Example: slurm01.example.com
- * Optional; leave TO_BE_REPLACED if you do not want to use authentication method local.
- */
-const SSH_SERVER_URL = TO_BE_REPLACED;
-
-// JWT configuration
-/**
- * Path to the JWT key.
- * Optional; leave TO_BE_REPLACED if you do not want to use JWT authentication.
- */
-const JWT_PATH = TO_BE_REPLACED;
-
+function cfg_env(string $name, string $default = TO_BE_REPLACED) : string {
+    $value = getenv($name);
+    return ($value !== FALSE && $value !== '') ? $value : $default;
+}
 
 /**
- * Grant some users read access to e.g. the list of SLURM users.
- * Admins always have access.
+ * Main configuration array.
+ * You can override the values here, but it is recommended to set them as environment variables.
  */
-$privileged_users = array();
+$config = [
 
-/**
- * Username of the slurm user.
- * Defaults to 'slurm'.
- */
-const SLURM_USER = 'slurm';
+    /**
+     * Name of the cluster.
+     */
+    'CLUSTER_NAME' => cfg_env('CLUSTER_NAME'),
+
+    /**
+     * Name of the admin. Publicly available in error messages.
+     */
+    'ADMIN_NAMES' => cfg_env('ADMIN_NAMES'),
+
+    /**
+     * E-Mail address of the admin. Publicly available in error messages.
+     */
+    'ADMIN_EMAIL' => cfg_env('ADMIN_EMAIL'),
+
+    /**
+     * Hostname of the login node.
+     */
+    'SLURM_LOGIN_NODE' => cfg_env('SLURM_LOGIN_NODE'),
+
+    /**
+     * Link to a wiki page where one can find more info about the cluster.
+     */
+    'WIKI_LINK' => cfg_env('WIKI_LINK'),
+
+    // ------------------------------------------------------------------
+    // REST API CONNECTION PROPERTIES
+    // ------------------------------------------------------------------
+
+    /**
+     * Connection mode for connections to slurmrestd.
+     * Currently, the only supported value is 'unix'!
+     */
+    'CONNECTION_MODE' => cfg_env('CONNECTION_MODE', 'unix'),
+
+    /**
+     * OpenAPI version to use for communication with slurmrestd.
+     * Use 'auto' for auto-detection (if supported), or e.g. v0.0.40.
+     * Default is 'auto'.
+     */
+    'REST_API_VERSION' => cfg_env('REST_API_VERSION', 'auto'),
+
+    // ------------------------------------------------------------------
+    // LDAP CONFIGURATION
+    // ------------------------------------------------------------------
+
+    /**
+     * URI for LDAP server, e.g. 'dc.example.com'.
+     * Optional; leave TO_BE_REPLACED if you do not want to use LDAP authentication.
+     */
+    'LDAP_URI' => cfg_env('LDAP_URI'),
+
+    /**
+     * LDAP base, e.g. 'cn=users,dc=i,dc=example,dc=com'.
+     * Optional; leave TO_BE_REPLACED if you do not want to use LDAP authentication.
+     */
+    'LDAP_BASE' => cfg_env('LDAP_BASE'),
+
+    /**
+     * LDAP admin user used for querying users, e.g. 'adminuser'.
+     * Optional; leave TO_BE_REPLACED if you do not want to use LDAP authentication.
+     */
+    'LDAP_ADMIN_USER' => cfg_env('LDAP_ADMIN_USER'),
+
+    /**
+     * Password for the LDAP admin user.
+     * Optional; leave TO_BE_REPLACED if you do not want to use LDAP authentication.
+     */
+    'LDAP_ADMIN_PASSWORD' => cfg_env('LDAP_ADMIN_PASSWORD'),
+
+    // ------------------------------------------------------------------
+    // SSH CONFIGURATION (LOCAL AUTHENTICATION)
+    // ------------------------------------------------------------------
+
+    /**
+     * URL used for SSH connections, e.g. the login node.
+     * Example: slurm01.example.com.
+     * Optional; leave TO_BE_REPLACED if you do not want to use local authentication.
+     */
+    'SSH_SERVER_URL' => cfg_env('SSH_SERVER_URL'),
+
+    // ------------------------------------------------------------------
+    // JWT CONFIGURATION
+    // ------------------------------------------------------------------
+
+    /**
+     * Path to the JWT key.
+     * Optional; leave TO_BE_REPLACED if you do not want to use JWT authentication.
+     */
+    'JWT_PATH' => cfg_env('JWT_PATH'),
+
+    // ------------------------------------------------------------------
+    // MISC
+    // ------------------------------------------------------------------
+
+    /**
+     * Username of the Slurm user.
+     * Defaults to 'slurm'.
+     */
+    'SLURM_USER' => cfg_env('SLURM_USER', 'slurm'),
+
+    'PRIV_USERS' => explode(',', getenv('PRIV_USERS') ?: '')
+];
+
+function config($key = null) {
+    global $config;
+    return $key ? $config[$key] : $config;
+}
 
 // END OF VARIABLES THAT SHOULD BE EDITED
 //
@@ -110,10 +147,6 @@ function addError(string $s): void {
     global $errormsg;
     global $error;
     $error = TRUE;
-
-    #$user = isset($_SESSION['USER']) ? $_SESSION['USER'] : "-";
-    #$ip = $_SERVER['REMOTE_ADDR'];
-    #$host = $_SERVER['HTTP_HOST'] ?? '-';
 
     $errormsg .= '<li>' . $s . '</li>';
 }

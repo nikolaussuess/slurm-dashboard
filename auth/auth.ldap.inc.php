@@ -7,10 +7,6 @@ namespace auth {
      * Authentication via LDAP.
      */
     class LDAP implements AuthenticationMethod {
-        private const URI = LDAP_URI;
-        private const BASE = LDAP_BASE;
-        private const ADMIN_USER = LDAP_ADMIN_USER;
-        private const ADMIN_PASSWORD = LDAP_ADMIN_PASSWORD;
         public const METHOD_NAME = 'ldap';
 
         private mixed $ldapConn;
@@ -21,10 +17,10 @@ namespace auth {
                 return FALSE;
             }
 
-            if (self::URI == TO_BE_REPLACED ||
-                self::BASE == TO_BE_REPLACED ||
-                self::ADMIN_USER == TO_BE_REPLACED ||
-                self::ADMIN_PASSWORD == TO_BE_REPLACED) {
+            if (config('LDAP_URI') == TO_BE_REPLACED ||
+                config('LDAP_BASE') == TO_BE_REPLACED ||
+                config('LDAP_ADMIN_USER') == TO_BE_REPLACED ||
+                config('LDAP_ADMIN_PASSWORD') == TO_BE_REPLACED) {
                 return FALSE;
             }
 
@@ -37,7 +33,7 @@ namespace auth {
          * @return bool TRUE if authentication was successful, FALSE otherwise
          */
         public static function login(string $username, string $password): bool {
-            $ldapConn = ldap_connect(self::URI);
+            $ldapConn = ldap_connect(config('LDAP_URI'));
             if (!$ldapConn) {
                 addError("Could not connect to LDAP server.");
                 return FALSE;
@@ -54,8 +50,8 @@ namespace auth {
             ldap_start_tls($ldapConn); // Start TLS
 
 
-            $ldap_dn = 'cn=' . self::ADMIN_USER . ',' . self::BASE;
-            $ldap_password = self::ADMIN_PASSWORD;
+            $ldap_dn = 'cn=' . config('LDAP_ADMIN_USER') . ',' . config('LDAP_BASE');
+            $ldap_password = config('LDAP_ADMIN_PASSWORD');
 
             $login_ok = FALSE;
 
@@ -64,7 +60,7 @@ namespace auth {
                 // Search for the user
                 $escaped_username = ldap_escape($username, '', LDAP_ESCAPE_FILTER);
                 $filter = "(uid=$escaped_username)";
-                $result = ldap_search($ldapConn, self::BASE, $filter);
+                $result = ldap_search($ldapConn, config('LDAP_BASE'), $filter);
                 $entries = ldap_get_entries($ldapConn, $result);
 
                 if ($entries['count'] > 0) {
@@ -82,7 +78,7 @@ namespace auth {
                     $login_ok = FALSE;
                 }
             } else {
-                addError('LDAP ERROR: Failed to bind as admin. Please contact ' . ADMIN_EMAIL);
+                addError('LDAP ERROR: Failed to bind as admin. Please contact ' . config('ADMIN_EMAIL'));
                 $login_ok = FALSE;
             }
 
@@ -96,7 +92,7 @@ namespace auth {
                 throw new \Exception("LDAP not supported on this server!");
             }
 
-            $this->ldapConn = ldap_connect(self::URI);
+            $this->ldapConn = ldap_connect(config('LDAP_URI'));
             if (!$this->ldapConn) {
                 throw new \Exception("Could not connect to LDAP server.", 403);
             }
@@ -106,12 +102,12 @@ namespace auth {
             ldap_start_tls($this->ldapConn); // Start TLS
 
 
-            $ldap_dn = 'cn=' . self::ADMIN_USER . ',' . self::BASE;
-            $ldap_password = self::ADMIN_PASSWORD;
+            $ldap_dn = 'cn=' . config('LDAP_ADMIN_USER') . ',' . config('LDAP_BASE');
+            $ldap_password = config('LDAP_ADMIN_PASSWORD');
 
             // Bind to the LDAP server
             if (! @ldap_bind($this->ldapConn, $ldap_dn, $ldap_password)) {
-                throw new \Exception('LDAP ERROR: Failed to bind as admin. Please contact ' . ADMIN_EMAIL);
+                throw new \Exception('LDAP ERROR: Failed to bind as admin. Please contact ' . config('ADMIN_EMAIL'));
             }
         }
 
@@ -131,7 +127,7 @@ namespace auth {
                 return apcu_fetch("ldap" . '/' . $filter);
             }
 
-            $result = ldap_search($this->ldapConn, self::BASE, $filter, $attributes, 0, 1);
+            $result = ldap_search($this->ldapConn, config('LDAP_BASE'), $filter, $attributes, 0, 1);
             if ($result === FALSE) {
                 addError("Error in ldap_search");
                 return array();

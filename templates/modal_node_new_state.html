@@ -1,0 +1,17 @@
+<div class="modal" tabindex="-1" role="dialog" aria-hidden="false" style="display: block">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Set state of node {{NODE_NAME}} to {{STATE}}</h5>
+            </div>
+            <div class="modal-body">
+                <p><strong>Do you really want to set node <kbd>{{NODE_NAME}}</kbd> to state {{STATE}}?</strong></p>
+                <p>Note: You must be an admin in order to being allowed to perform this operation!</p>
+            </div>
+            <div class="modal-footer">
+                <a href="?action=node-set-state&nodename={{NODE_NAME}}&state={{STATE}}&do=perform" type="button" class="btn btn-primary btn-danger">Cancel job</a>
+                <a href="?action=usage" type="button" class="btn btn-secondary" data-dismiss="modal">Close</a>
+            </div>
+        </div>
+    </div>
+</div>

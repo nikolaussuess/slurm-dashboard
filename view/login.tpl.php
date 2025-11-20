@@ -28,10 +28,10 @@ function get_login_form() : string {
 
 function get_about_page() : string {
     $templateBuilder = new TemplateLoader("about.html");
-    $templateBuilder->setParam("CLUSTER_NAME", CLUSTER_NAME);
-    $templateBuilder->setParam("ADMIN_NAMES", ADMIN_NAMES);
-    $templateBuilder->setParam("ADMIN_EMAIL", ADMIN_EMAIL);
-    $templateBuilder->setParam("SLURM_LOGIN_NODE", SLURM_LOGIN_NODE);
-    $templateBuilder->setParam("WIKI_LINK", WIKI_LINK);
+    $templateBuilder->setParam("CLUSTER_NAME", config("CLUSTER_NAME"));
+    $templateBuilder->setParam("ADMIN_NAMES", config('ADMIN_NAMES'));
+    $templateBuilder->setParam("ADMIN_EMAIL", config('ADMIN_EMAIL'));
+    $templateBuilder->setParam("SLURM_LOGIN_NODE", config('SLURM_LOGIN_NODE'));
+    $templateBuilder->setParam("WIKI_LINK", config('WIKI_LINK'));
     return $templateBuilder->build();
 }

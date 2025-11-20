@@ -43,8 +43,7 @@ EOF;
         }
         $contents .=           "</ul></td>";
         $contents .=    "<td>" . $user_arr['default']['account'] . "</td>";
-        global $privileged_users;
-        if( implode(", ", $user_arr['administrator_level']) == 'None' && in_array($user_arr['name'], $privileged_users))
+        if( implode(", ", $user_arr['administrator_level']) == 'None' && in_array($user_arr['name'], config('PRIV_USERS')))
             $contents .=    "<td>Web</td>";
         else
             $contents .=    "<td>" . implode(", ", $user_arr['administrator_level']) . "</td>";

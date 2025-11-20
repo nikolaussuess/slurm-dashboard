@@ -144,7 +144,7 @@ function get_slurmdb_filter_form(array $filter, array $accounts, array $users, a
         $node_list = '<option></option>' . $node_list;
 
     $templateBuilder = new TemplateLoader("job_filter_form.html");
-    $templateBuilder->setParam("CLUSTER", CLUSTER_NAME);
+    $templateBuilder->setParam("CLUSTER", config("CLUSTER_NAME"));
     $templateBuilder->setParam("ACCOUNT_SELECTS", $account_list);
     $templateBuilder->setParam("JOB_NAME", $filter['job_name'] ?? '');
     $templateBuilder->setParam("CONSTRAINTS", $filter['constraints'] ?? '');

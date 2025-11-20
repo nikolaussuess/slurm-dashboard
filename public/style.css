@@ -123,3 +123,7 @@ button, input, select {
 #jobtable-table tr:nth-child(2n+1) td {
     background-color: #fffae9;
 }
+
+.deleted-user td {
+    color: gray;
+}

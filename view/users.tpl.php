@@ -32,7 +32,15 @@ EOF;
     }
 
     foreach($users as $user_arr) {
-        $contents .= "<tr>";
+
+        $deleted = FALSE;
+        if( isset($user_arr['flags']) && is_array($user_arr['flags']))
+            $deleted = in_array("DELETED", $user_arr['flags']);
+
+        if( $deleted )
+            $contents .= '<tr class="deleted-user" title="User was already deleted.">';
+        else
+            $contents .= "<tr>";
         $contents .=    "<td>" . $user_arr['name'] . "</td>";
         $contents .=    "<td><ul>";
         foreach($user_arr['associations'] as $assoc){

@@ -64,7 +64,7 @@ EOF;
         $contents .=    "<td>" . $job['job_id'] . "</td>";
         $contents .=    "<td class='breakable'>" . $job['job_name'] . "</td>";
         $contents .=    "<td>" . $job['partition'] . "</td>";
-        $contents .=    "<td>" . $job['user_name'] . " (" . $job['user_id'] . ")</td>";
+        $contents .=    '<td title="' . $job['user_name'] . " (" . $job['user_id'] . ') ">' . $job['user_name'] ."</td>";
         $contents .=    "<td>" . \utils\get_job_state_view($job) . "</td>";
         $contents .=    "<td>" . $job['time_start'] . "</td>";
         $contents .=    "<td>" . $job['time_limit'] . "</td>";

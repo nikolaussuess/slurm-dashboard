@@ -182,7 +182,7 @@ However, any slurm version `>= 23.11.x` should work. If you encounter any issues
 5) Make sure that your apache2 config file is not readable by other users (especially if it contains passwords)!
 ```bash
 chown root:root /etc/apache2/sites-available/slurm-dashboard.conf
-chmod 700 /etc/apache2/sites-available/slurm-dashboard.conf
+chmod 600 /etc/apache2/sites-available/slurm-dashboard.conf
 ```
 6) Optionally (but strongly recommended), enable SSL etc.
 7) Start or restart the services:

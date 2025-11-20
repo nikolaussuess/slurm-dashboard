@@ -161,7 +161,7 @@ function get_filtered_jobs_from_slurmdb(array $jobs) : string {
     $contents = '<div>Found <span style="font-weight: bold">' . count($jobs) . ' jobs</span>.</div>';
 
     $contents .= <<<EOF
-<div class="table-responsive tableFixHead">
+<div id="jobtable-table" class="table-responsive tableFixHead">
     <table class="table">
         <thead>
             <tr>

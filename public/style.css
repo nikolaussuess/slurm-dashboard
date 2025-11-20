@@ -4,7 +4,7 @@
     border-collapse: collapse;
 }
 
-.tableFixHead thead th {
+.tableFixHead thead {
     position: sticky;
     top: 0;
     z-index: 2; /* Needed in Bootstrap tables */
@@ -114,4 +114,12 @@ button, input, select {
 
 .node-count {
     color: gray;
+}
+
+#jobtable-compact tr:nth-child(4n+1) td,
+#jobtable-compact tr:nth-child(4n+2) td {
+    background-color: #fffae9;
+}
+#jobtable-table tr:nth-child(2n+1) td {
+    background-color: #fffae9;
 }

@@ -93,7 +93,7 @@ However, any slurm version `>= 23.11.x` should work. If you encounter any issues
       AuthAltTypes=auth/jwt
       AuthAltParameters=jwt_key=/var/spool/slurm/statesave/jwt_hs256.key
       ```
-      - Restart `slurmctl` and `slurmdbd` (e.g., with `scontrol reconfigure`) and look for errors. Reading the logs (`slurmctld.log`, `slurmdbd.log` and `/var/log/syslog`) might help.
+      - Restart `slurmctl` and `slurmdbd` (e.g., with `scontrol reconfigure`) and look for errors. Reading the logs (`slurmctld.log`, `slurmdbd.log` and `/var/log/syslog`) might help. (While for `slurmctl` `scontrol reconfigure` seems to be sufficient, for `slurmdbd` it was not in my tests. So, please also run `systemctl restart slurmdbd`.)
     - Copy the key to the node where the dashboard is running. Use locations and permissions so that other users cannot read the key. For example, copy the key to `/var/lib/slurm-dashboard` and set the ownership:
     ```
     # Somehow copy the key, e.g. with scp ...

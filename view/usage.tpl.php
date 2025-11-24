@@ -9,7 +9,7 @@ function get_usage(array $data) : string {
     $templateBuilder = new TemplateLoader("nodeinfo.html");
     $templateBuilder->setParam("NODENAME", htmlspecialchars($data['node_name'], ENT_QUOTES, 'UTF-8'));
 
-    $templateBuilder->setParam("CPU_PERCENTAGE", $data["alloc_cpus"]/$data["cpus"]*100);
+    $templateBuilder->setParam("CPU_PERCENTAGE", number_format($data["alloc_cpus"]/$data["cpus"]*100, 2));
     $templateBuilder->setParam("CPU_USED", $data["alloc_cpus"]);
     $templateBuilder->setParam("CPU_TOTAL", $data["cpus"]);
 
@@ -17,10 +17,10 @@ function get_usage(array $data) : string {
     // mem_free, however, is the sum of free memory.
     // Thus, mem_total-mem_free can be negative if and only if in slurm.conf the node does not have the
     // full RAM memory for RealMemory=. In order to avoid confusions, we set the minimum to 0.
-    $templateBuilder->setParam("MEM_PERCENTAGE", max(0, ($data["mem_total"]-$data["mem_free"])/$data["mem_total"]*100));
+    $templateBuilder->setParam("MEM_PERCENTAGE", number_format(max(0, ($data["mem_total"]-$data["mem_free"])/$data["mem_total"]*100), 2));
     $templateBuilder->setParam("MEM_USED", max(0,$data["mem_total"] - $data["mem_free"]));
     $templateBuilder->setParam("MEM_TOTAL", $data["mem_total"]);
-    $templateBuilder->setParam("ALLOC_MEM_PERCENTAGE", ($data["mem_alloc"])/$data["mem_total"]*100);
+    $templateBuilder->setParam("ALLOC_MEM_PERCENTAGE", number_format($data["mem_alloc"]/$data["mem_total"]*100, 2));
     $templateBuilder->setParam("ALLOC_MEM", $data["mem_alloc"]);
 
     $gres = $data["gres"];
@@ -38,7 +38,7 @@ function get_usage(array $data) : string {
         //echo "GPUs='$gpus', gpus_used='$gpus_used', gres='$gres', gres_used='$gres_used'";
         $gpus_percentage = (int)$gpus_used / (int)$gpus * 100;
     }
-    $templateBuilder->setParam("GPU_PERCENTAGE", $gpus_percentage);
+    $templateBuilder->setParam("GPU_PERCENTAGE", number_format($gpus_percentage, 2));
     $templateBuilder->setParam("GPU_USED", $gpus_used);
     $templateBuilder->setParam("GPU_TOTAL", $gpus);
 

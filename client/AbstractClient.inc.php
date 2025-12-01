@@ -2,6 +2,10 @@
 
 namespace client;
 
+require_once __DIR__ . '/../exceptions/MissingArrayKeyException.php';
+require_once __DIR__ . '/../exceptions/RequestFailedException.inc.php';
+
+use exceptions\MissingArrayKeyException;
 use exceptions\RequestFailedException;
 
 /**
@@ -272,6 +276,22 @@ abstract class AbstractClient implements Client {
     function get_node_info(string $nodename) : array {
         # curl --unix-socket /run/slurmrestd/slurmrestd.socket http://slurm/slurm/v0.0.39/node/nodename
         $json = RequestFactory::newRequest()->request_json("node/{$nodename}", 'slurm', static::api_version);
+
+        // For some reason, $json['nodes'] sometimes does not exist. This yields to a 500 Server Error.
+        // We need to debug it ...
+        if( ! array_key_exists("nodes", $json) ){
+            throw new MissingArrayKeyException(
+                "An implementation error occurred. Could not read response array.",
+                "Response of GET /node/$nodename does not contain a 'nodes' subarray. Has keys: " . implode(',', array_keys($json))
+            );
+        }
+        elseif( count($json['nodes']) === 0 ){
+            throw new MissingArrayKeyException(
+                "An implementation error occurred. Could not read response array.",
+                "Response of GET /node/$nodename does contain 'nodes' but the array is empty."
+            );
+        }
+        // End debug
 
         return array(
             'node_name'  => $nodename,

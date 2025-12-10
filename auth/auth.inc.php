@@ -138,7 +138,11 @@ namespace auth {
      */
     function rate_limit() : bool {
         if( ! isset($_SERVER['REMOTE_ADDR']) ){
-            syslog(LOG_WARNING, "slurm-dashboard: REMOTE_ADDR is not set. Rate limiting does not work.");
+            log_msg(
+                "REMOTE_ADDR is not set. Rate limiting does not work.",
+                LOG_INFO,
+                LOG_MODE_PHP|LOG_MODE_SYSLOG
+            );
             return FALSE;
         }
         $userIp = $_SERVER['REMOTE_ADDR'];
@@ -146,9 +150,12 @@ namespace auth {
 
         // Check if the key exists in APCu
         if (apcu_exists($key)) {
-            syslog(LOG_INFO, "slurm-dashboard: REMOTE_ADDR " .
-                           $_SERVER['REMOTE_ADDR'] .
-                           " has reached the rate limit and has been restricted for 20 seconds.");
+            log_msg(
+                "REMOTE_ADDR " . $_SERVER['REMOTE_ADDR'] .
+                " has reached the rate limit and has been restricted for 20 seconds.",
+                LOG_INFO,
+                LOG_MODE_PHP|LOG_MODE_SYSLOG
+            );
             return TRUE;
         }
         // Key does not exist, allow submission and set it with TTL

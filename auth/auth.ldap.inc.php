@@ -1,7 +1,11 @@
 <?php
 
 namespace auth {
+
     require_once __DIR__ . "/auth.inc.php";
+    require_once __DIR__ . "/../exceptions/AuthenticationError.php";
+
+    use exceptions\AuthenticationError;
 
     /**
      * Authentication via LDAP.
@@ -30,13 +34,16 @@ namespace auth {
         /**
          * @param $username string Username to be checked
          * @param $password string Password
+         * @throws AuthenticationError in case of an (internal) LDAP error
          * @return bool TRUE if authentication was successful, FALSE otherwise
          */
         public static function login(string $username, string $password): bool {
             $ldapConn = ldap_connect(config('LDAP_URI'));
             if (!$ldapConn) {
-                addError("Could not connect to LDAP server.");
-                return FALSE;
+                throw new AuthenticationError(
+                    "LDAP ERROR: Could not connect to LDAP server.",
+                    '$ldapConn is NULL'
+                );
             }
 
             // Prevent LDAP injection
@@ -78,8 +85,8 @@ namespace auth {
                     $login_ok = FALSE;
                 }
             } else {
-                addError('LDAP ERROR: Failed to bind as admin. Please contact ' . config('ADMIN_EMAIL'));
-                $login_ok = FALSE;
+                ldap_unbind($ldapConn);
+                throw new AuthenticationError('LDAP ERROR: Failed to bind as admin.');
             }
 
             ldap_unbind($ldapConn);
@@ -89,12 +96,17 @@ namespace auth {
         function __construct() {
 
             if(! self::is_supported() ){
-                throw new \Exception("LDAP not supported on this server!");
+                throw new AuthenticationError("LDAP not supported on this server!");
             }
 
             $this->ldapConn = ldap_connect(config('LDAP_URI'));
             if (!$this->ldapConn) {
-                throw new \Exception("Could not connect to LDAP server.", 403);
+                throw new AuthenticationError(
+                    "Could not connect to LDAP server.",
+                    '$this->ldapConn is NULL',
+                    NULL,
+                    403
+                );
             }
 
             ldap_set_option($this->ldapConn, LDAP_OPT_PROTOCOL_VERSION, 3);
@@ -107,7 +119,12 @@ namespace auth {
 
             // Bind to the LDAP server
             if (! @ldap_bind($this->ldapConn, $ldap_dn, $ldap_password)) {
-                throw new \Exception('LDAP ERROR: Failed to bind as admin. Please contact ' . config('ADMIN_EMAIL'));
+                throw new AuthenticationError(
+                    'LDAP ERROR: Failed to bind as admin.',
+                    'ldap_bind() as admin user failed',
+                    NULL,
+                    403
+                );
             }
         }
 

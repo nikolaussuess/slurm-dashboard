@@ -16,7 +16,11 @@ class JwtAuthentication {
         if(config('JWT_PATH') == TO_BE_REPLACED)
             return FALSE;
         if(! file_exists(config('JWT_PATH')) || ! is_readable(config('JWT_PATH')) ){
-            syslog(LOG_WARNING, "slurm-dashboard: JWT_PATH is set but cannot be found or read.");
+            log_msg(
+                "slurm-dashboard: JWT_PATH is set but cannot be found or read.",
+                LOG_WARNING,
+                LOG_MODE_SYSLOG|LOG_MODE_PHP
+            );
             throw new ConfigurationError(
                 "JWT authentication is enabled but misconfigured.",
                 'JWT authentication path = ' . config('JWT_PATH') . ", exists = " .

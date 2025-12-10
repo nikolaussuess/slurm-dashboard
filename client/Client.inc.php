@@ -240,7 +240,7 @@ class ClientFactory {
             $parsers = array_column($response['info']['x-slurm']['data_parsers'], 'plugin');
             rsort($parsers, SORT_NATURAL | SORT_FLAG_CASE);
 
-            syslog(LOG_INFO, "slurm-dashboard: Detected the following data parsers: " . implode(', ', $parsers));
+            log_msg("Detected the following data parsers: " . implode(', ', $parsers));
         }
 
         if( ! isset($parsers) )

@@ -3,6 +3,9 @@
 namespace auth {
 
     require_once __DIR__ .  "/auth.inc.php";
+    require_once __DIR__ .  "/../exceptions/AuthenticationError.php";
+
+    use exceptions\AuthenticationError;
 
     /**
      * Authentication via local SSH connection.
@@ -32,8 +35,7 @@ namespace auth {
         public static function login(string $username, string $password): bool {
             $ssh = ssh2_connect(config('SSH_SERVER_URL'));
             if( $ssh === FALSE ){
-                addError("Could not connect to local authentication server.");
-                return FALSE;
+                throw new AuthenticationError("Could not connect to local authentication server.");
             }
 
             $ok = @ssh2_auth_password($ssh, $username, $password);

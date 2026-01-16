@@ -492,7 +492,7 @@ if( isset($_SESSION['USER']) ){
 
     <hr>
     <footer>
-        &copy; 2024-2025 by <a href="https://suess.dev/" target="_blank">Nikolaus Süß</a>, University of Vienna<br>
+        &copy; 2024-2026 by <a href="https://suess.dev/" target="_blank">Nikolaus Süß</a>, University of Vienna<br>
         Source code available on <a href="https://github.com/nikolaussuess/slurm-dashboard" target="_blank">GitHub</a>.
     </footer>
 

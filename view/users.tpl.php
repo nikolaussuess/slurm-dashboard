@@ -6,17 +6,16 @@ use Exception;
 
 function get_users(array $users) : string {
     $contents = <<<EOF
-<div class="table-responsive">
+<div class="table-responsive tableFixHead">
     <table class="tableFixHead table">
         <thead>
             <tr>
                 <th>Name</th>
                 <th>Accounts</th>
-                <th>Default account</th>
-                <th>Admin level</th>
+                <th>Privileges</th>
                 <th>Full name</th>
                 <th>Department</th>
-                <th>E-Mail</th>
+                <th>Mail</th>
             </tr>
         </thead>
         <tbody>
@@ -37,22 +36,28 @@ EOF;
         if( isset($user_arr['flags']) && is_array($user_arr['flags']))
             $deleted = in_array("DELETED", $user_arr['flags']);
 
-        if( $deleted )
+        if( $deleted ){
             $contents .= '<tr class="deleted-user" title="User was already deleted.">';
-        else
+            $contents .=    "<td>" . $user_arr['name'] . " (deleted)</td>";
+        }
+        else {
             $contents .= "<tr>";
-        $contents .=    "<td>" . $user_arr['name'] . "</td>";
+            $contents .=    "<td>" . $user_arr['name'] . "</td>";
+        }
         $contents .=    "<td><ul>";
         foreach($user_arr['associations'] as $assoc){
             if($assoc['account'] == $user_arr['default']['account'])
-                $contents .= '<li><b>' . $assoc['account'] . '</b></li>';
+                $contents .= '<li><b title="Default account">' . $assoc['account'] . '</b> (default)</li>';
             else
                 $contents .= '<li>' . $assoc['account'] . '</li>';
         }
         $contents .=           "</ul></td>";
-        $contents .=    "<td>" . $user_arr['default']['account'] . "</td>";
         if( implode(", ", $user_arr['administrator_level']) == 'None' && in_array($user_arr['name'], config('PRIV_USERS')))
-            $contents .=    "<td>Web</td>";
+            $contents .=    "<td title='Web administrators have extended permissions in the dashboard but not in SLURM itself.'>Web admin</td>";
+        elseif( implode(", ", $user_arr['administrator_level']) == 'Administrator')
+            $contents .=    '<td title="Admin on the whole SLURM cluster.">Slurm admin</td>';
+        elseif( implode(", ", $user_arr['administrator_level']) == 'None')
+            $contents .=    '<td title="Normal user">-</td>';
         else
             $contents .=    "<td>" . implode(", ", $user_arr['administrator_level']) . "</td>";
 

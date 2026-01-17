@@ -44,10 +44,6 @@ abstract class AbstractClient implements Client {
         $jobs = [];
         foreach ($json['jobs'] as $json_job){
 
-            /**
-            $contents .=    "<td>" . $job['start_time'] . "</td>";
-            $contents .=    '<td><a href="?action=job&job_id=' . $job['job_id'] . '">[Details]</a></td>';
-             */
             $job = array(
                 'job_id'     => $json_job['job_id'],    // Int
                 'job_name'   => $json_job['name'],      // String
@@ -58,7 +54,8 @@ abstract class AbstractClient implements Client {
                 'nodes'      => $this->get_nodes($json_job),
                 'node_count' => $json_job['node_count']['set'] ? $json_job['node_count']['number'] : NULL,
                 'time_limit' => $this->_get_timelimit_if_defined($json_job, 'time_limit'),
-                'time_start' => $this->_get_date_from_unix_if_defined($json_job, 'start_time')
+                'time_start' => $this->_get_date_from_unix_if_defined($json_job, 'start_time'),
+                'priority'   => $this->_get_number_if_defined($json_job['priority'], ''),
             );
             $jobs[] = $job;
         }

@@ -103,6 +103,7 @@ function get_slurm_queue_table($jobs) : string {
                 <th>Start time</th>
                 <th>Time limit</th>
                 <th>Nodelist</th>
+                <th title="Calculated priority">PR</th>
                 <th></th>
             </tr>
         </thead>
@@ -126,6 +127,7 @@ EOF;
             $contents .= '<span title="Not yet scheduled. Showing node count instead." class="node-count">' .
                 ($job['node_count'] != NULL ? $job['node_count'] : "?") . '</span>';
         $contents .= "</td>";
+        $contents .= '<td>' . $job['priority'] . '</td>';
         $contents .= <<<EOF
 <td>
     <div class="btn-group">
@@ -195,7 +197,7 @@ function get_slurm_queue_compact($jobs) : string {
     <table class="table">
         <thead>
             <tr>
-                <th rowspan="2">ID</th>
+                <th>Job ID</th>
                 <th rowspan="2">Name</th>
                 <th>Partition</th>
                 <th>Start time</th>
@@ -203,6 +205,7 @@ function get_slurm_queue_compact($jobs) : string {
                 <th rowspan="2"></th>
             </tr>
             <tr>
+                <th>Priority</th>
                 <th>User</th>
                 <th>Time limit</th>
                 <th>Nodelist</th>
@@ -214,7 +217,7 @@ EOF;
     foreach( $jobs as $job ) {
 
         $contents .= "<tr>";
-        $contents .=    "<td rowspan='2'>" . $job['job_id'] . "</td>";
+        $contents .=    "<td title='Job-ID'>" . $job['job_id'] . "</td>";
         $contents .=    "<td class='breakable' rowspan='2'>" . $job['job_name'] . "</td>";
         $contents .=    '<td>' . $job['partition'] . "</td>";
         $contents .=    "<td>" . $job['time_start'] . "</td>";
@@ -273,6 +276,7 @@ EOF;
 
     <tr>
 EOF;
+        $contents .=    '<td title="Calculated job priority">' . $job['priority'] . '</td>';
         $contents .=    '<td title="' . $job['user_name'] . " (" . $job['user_id'] . ') ">' . $job['user_name'] ."</td>";
         $contents .=    "<td>" . $job['time_limit'] . "</td>";
 

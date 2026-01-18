@@ -155,8 +155,9 @@ function get_user(string $user_name, array $user_arr, array $shares) : string {
         $ldap_data = $ldap_client->get_data_for_user($user_arr['name']);
         if($ldap_data["count"] === 1){
             $full_name = $ldap_data[0]["displayname"][0];
+            $department .= $ldap_data[0]["department"][0];
             if(isset($ldap_data[0]["departmentnumber"]) && isset($ldap_data[0]["departmentnumber"][0])){
-                $department .= $ldap_data[0]["departmentnumber"][0];
+                $department .= ' (' . $ldap_data[0]["departmentnumber"][0] . ')';
             }
             $mail = '<a href="mailto:' . $ldap_data[0]["mail"][0] . '">' . $ldap_data[0]["mail"][0] . '</a>';
             $telephone = $ldap_data[0]["telephonenumber"][0] ?? '';

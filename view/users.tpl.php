@@ -181,7 +181,7 @@ function get_user(string $user_name, array $user_arr, array $shares) : string {
                 data-bs-trigger="click focus"
                 data-bs-placement="top"
                 title="shares_raw (Raw Shares) represents the assigned fairshare weight of an association (user, account, or account hierarchy node). It defines how much of the cluster's resources an association is entitled to relative to others, independent of current or past usage.">
-            <i title="Click here for more information">&#128712;</i>
+            <i title="Click here for more information">&#9432;</i>
         </button>
     </td>
     <td>{$share['shares']}</td>
@@ -195,7 +195,7 @@ function get_user(string $user_name, array $user_arr, array $shares) : string {
                data-bs-trigger="click focus"
                data-bs-placement="top"
                title="Normalized share value; i.e., shares_raw divided by the sum of all (relevant) sibling accounts.">
-            <i title="Click here for more information">&#128712;</i>
+            <i title="Click here for more information">&#9432;</i>
         </button>
     </td>
     <td>{$share['shares_normalized']}</td>
@@ -209,7 +209,7 @@ function get_user(string $user_name, array $user_arr, array $shares) : string {
                 data-bs-trigger="click focus"
                 data-bs-placement="top"
                 title="Raw Usage is the total amount of compute resource usage that has been charged to a user or account in the SLURM accounting system. It is measured in TRES-seconds (e.g., CPU-seconds or GPU seconds, depending on the configuration).">
-            <i title="Click here for more information">&#128712;</i>
+            <i title="Click here for more information">&#9432;</i>
         </button>
     </td>
     <td>{$share['usage']}</td>
@@ -223,7 +223,7 @@ function get_user(string $user_name, array $user_arr, array $shares) : string {
                 data-bs-trigger="click focus"
                 data-bs-placement="top"
                 title="Effective Usage is a usage value that augments raw usage by including usage from sibling associations in the hierarchy. It represents how much of the cluster’s capacity effectively appears to have been used by an account or user, after accounting for both their own usage and the usage of their siblings relative to their shares.">
-            <i title="Click here for more information">&#128712;</i>
+            <i title="Click here for more information">&#9432;</i>
         </button>
     </td>
     <td>{$share['effective_usage']}</td>
@@ -238,7 +238,7 @@ function get_user(string $user_name, array $user_arr, array $shares) : string {
                 data-bs-placement="top"
                 data-bs-html="true"
                 title="The Fairshare factor is a floating-point number between 0.0 and 1.0 that SLURM computes to reflect how much of its fair share of cluster resources an account, user, or association has used relative to its entitlement (shares). It might be used by the priority/multifactor scheduling plugin to influence job priorities (depending on the configuration).<ul><li>Closer to 1.0 → Under-served (you have used less than your share) → higher priority</li><li>Closer to 0.0 → Over-served (you have used more than your share) → lower priority</li></ul>">
-            <i title="Click here for more information">&#128712;</i>
+            <i title="Click here for more information">&#9432;</i>
         </button>
     </td>
     <td>{$share['fairshare_factor']}</td>

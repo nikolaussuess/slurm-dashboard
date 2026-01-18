@@ -121,10 +121,10 @@ button, input, select {
 #jobtable-compact tr:nth-child(4n+2) td {
     background-color: #fffae9;
 }
-#jobtable-table tr:nth-child(2n+1) td {
+#jobtable-table tr:nth-child(2n+1) td, #usertable-table tr:not(.deleted-user):nth-child(2n+1) td {
     background-color: #fffae9;
 }
 
-.deleted-user td {
-    color: gray;
+#usertable-table tr td.deleted-user, .deleted-user td {
+    background-color: #e4e4e4;
 }

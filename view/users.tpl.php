@@ -8,7 +8,7 @@ use TemplateLoader;
 function get_users(array $users) : string {
     $contents = <<<EOF
 <div class="table-responsive tableFixHead">
-    <table class="tableFixHead table">
+    <table class="table" id="usertable-table">
         <thead>
             <tr>
                 <th>Name</th>

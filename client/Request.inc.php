@@ -37,9 +37,9 @@ class UnixRequest implements Request {
 
     function request_json(string $endpoint, string $namespace, string $api_version, int $ttl = 5) : array {
 
-        /*if( @apcu_exists($namespace . '/' . $endpoint)){
+        if( @apcu_exists($namespace . '/' . $endpoint)){
             return apcu_fetch($namespace . '/' . $endpoint);
-        }*/
+        }
 
         // Prepare the HTTP request
         $request = "GET /{$namespace}/{$api_version}/{$endpoint} HTTP/1.1\r\n" .
@@ -62,30 +62,11 @@ class UnixRequest implements Request {
         list($header, $body) = explode("\r\n\r\n", $response, 2);
         $body = trim(str_replace("Connection: Close", "", $body));
 
-        // Debugging ...
-        if(isset($_SESSION['USER']) && $_SESSION['USER'] == "suessn98"){
-            print "<pre>";
-            print_r($header);
-            print "\n\n";
-            flush();
-            print 'strlen(body): ' . strlen($body);
-            print 'first two bytes: ' . bin2hex($body[0]) . "/". bin2hex($body[1]);
-            print 'last three bytes: ' . bin2hex($body[-3]) . "/". bin2hex($body[-2]) . "/". bin2hex($body[-1]);
-            return array();
-
-            print "MB_CHECK_ENCODING:<pre>";
-            flush();
-            var_dump(mb_check_encoding($body, 'UTF-8'));
-            flush();
-            print '</pre>';
-            flush();
-
-            #print "<pre>";
-            #print_r($header);
-            #print "\n\n";
-            #print_r($body);
-            #print "</pre>";
-        }
+        #print "<pre>";
+        #print_r($header);
+        #print "\n\n";
+        #print_r($body);
+        #print "</pre>";
 
         // Decode the JSON response
         $data = json_decode($body, true);

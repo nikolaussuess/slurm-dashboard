@@ -64,11 +64,15 @@ class UnixRequest implements Request {
 
         // Debugging ...
         if($_SESSION['USER'] == "suessn98"){
+
+            var_dump(mb_check_encoding($body, 'UTF-8'));
+
+            /*
             print "<pre>";
             print_r($header);
             print "\n\n";
             print_r($body);
-            print "</pre>";
+            print "</pre>";*/
         }
 
         // Decode the JSON response

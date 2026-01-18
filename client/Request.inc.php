@@ -60,8 +60,7 @@ class UnixRequest implements Request {
 
         // Split the response headers and body
         list($header, $body) = explode("\r\n\r\n", $response, 2);
-        $body = str_replace("Connection: Close", "", $body);
-
+        $body = trim(str_replace("Connection: Close", "", $body));
 
         // Debugging ...
         if(isset($_SESSION['USER']) && $_SESSION['USER'] == "suessn98"){

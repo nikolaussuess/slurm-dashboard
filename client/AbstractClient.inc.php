@@ -19,6 +19,10 @@ abstract class AbstractClient implements Client {
 
     abstract protected function get_nodes(array $job_arr) : string;
 
+    // There is too much difference and a bug in v0.0.40 for /shares
+    // so that a general implementation does not really make sense ...
+    abstract function get_fairshare(?string $user_name) : array;
+
     function is_available() : bool {
         return RequestFactory::socket_exists();
     }
@@ -334,16 +338,6 @@ abstract class AbstractClient implements Client {
         return array_filter($raw_array['reservations'], function ($res){
             return isset($res['flags']) && in_array("MAINT", $res['flags']);
         });
-    }
-
-    function get_fairshare(?string $user_name) : array {
-        $parameters = '';
-        if(!empty($user_name)){
-            $parameters .= '?users='.$user_name;
-        }
-        $json = RequestFactory::newRequest()->request_json("shares{$parameters}", 'slurm', static::api_version);
-
-        return $json;
     }
 
     function cancel_job(string|int $job_id) : bool {

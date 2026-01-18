@@ -15,7 +15,46 @@ class V0040Client extends AbstractClient {
     }
 
     function get_fairshare(?string $user_name) : array {
-        $json = parent::get_fairshare($user_name);
+
+        $parameters = '';
+        if(!empty($user_name)){
+            $parameters .= '?users='.$user_name;
+        }
+        $response = RequestFactory::newRequest()
+            ->request_plain("shares{$parameters}", 'slurm', static::api_version);
+
+        // There is a bug in the v0.0.40 endpoint!
+        // Data might look like
+        //         "usage_normalized": {
+        //          "set": true,
+        //          "infinite": false,
+        //          "number": 0.0
+        //        },
+        //        "usage": 0,
+        //        "fairshare": {
+        //          "factor": 0.62068965517241381,
+        //          "level": Infinity
+        //        },
+        //        "type": [
+        //          "USER"
+        //        ]
+        //      }
+        // but Infinity (without quotes) is no correct JSON and json_decode() does not accept it.
+        // So we replace it by a string ...
+        $body = str_replace('"level": Infinity', '"level": "Infinity"', $response);
+
+        // Decode the JSON response
+        $json = json_decode($body, true);
+
+        if (json_last_error() !== JSON_ERROR_NONE) {
+            throw new \exceptions\RequestFailedException(
+                "Server response could not be interpreted.",
+                json_last_error_msg(),
+                NULL,
+                json_last_error()
+            );
+        }
+
 
         $shares = [];
         foreach ($json['shares']['shares'] as $json_shares){

@@ -16,7 +16,11 @@ class V0043Client extends AbstractClient {
     }
 
     function get_fairshare(?string $user_name) : array {
-        $json = parent::get_fairshare($user_name);
+        $parameters = '';
+        if(!empty($user_name)){
+            $parameters .= '?users='.$user_name;
+        }
+        $json = RequestFactory::newRequest()->request_json("shares{$parameters}", 'slurm', static::api_version);
 
         $shares = [];
         foreach ($json['shares']['shares'] as $json_shares){

@@ -12,6 +12,7 @@ use exceptions\RequestFailedException;
 
 interface Request {
     function request_json(string $endpoint, string $namespace, string $api_version, int $ttl = 5) : array;
+    function request_plain(string $endpoint, string $namespace, string $api_version, int $ttl = 5) : string;
     static function socket_exists() : bool;
 
     function request_delete(string $endpoint, string $namespace, string $api_version) : mixed;
@@ -136,6 +137,43 @@ class UnixRequest implements Request {
 
         @apcu_store($full_endpoint , $data, $ttl);
         return $data;
+    }
+
+    function request_plain(string $endpoint, string $namespace, string $api_version, int $ttl = 5) : string {
+
+        if( @apcu_exists($namespace . '/' . $endpoint)){
+            return apcu_fetch($namespace . '/' . $endpoint);
+        }
+
+        // Prepare the HTTP request
+        $request = "GET /{$namespace}/{$api_version}/{$endpoint} HTTP/1.1\r\n" .
+            "Host: localhost\r\n";
+        if(\client\utils\jwt\JwtAuthentication::is_supported()){
+            $request .= "X-SLURM-USER-NAME: " . ($_SESSION['USER'] ?? config('SLURM_USER')) . "\r\n";
+            $request .= "X-SLURM-USER-TOKEN: " . \client\utils\jwt\JwtAuthentication::gen_jwt($_SESSION['USER'] ?? config('SLURM_USER')) . "\r\n";
+        }
+        $request .= "Connection: close\r\n\r\n";
+        // Send the request
+        fwrite($this->socket, $request);
+
+        // Read the response
+        $response = '';
+        while (!feof($this->socket)) {
+            $response .= fread($this->socket, 8192);
+        }
+
+        // Split the response headers and body
+        list($header, $body) = explode("\r\n\r\n", $response, 2);
+        $body = str_replace("Connection: Close", "", $body);
+
+        #print "<pre>";
+        #print_r($header);
+        #print "\n\n";
+        #print_r($body);
+        #print "</pre>";
+
+        @apcu_store($namespace . '/' . $endpoint , $body, $ttl);
+        return $body;
     }
 
 

@@ -62,10 +62,13 @@ class UnixRequest implements Request {
         list($header, $body) = explode("\r\n\r\n", $response, 2);
         $body = str_replace("Connection: Close", "", $body);
 
-        /*
+
         // Debugging ...
         if(isset($_SESSION['USER']) && $_SESSION['USER'] == "suessn98"){
-
+            print "<pre>";
+            print_r($header);
+            print "\n\n";
+/*
             print "MB_CHECK_ENCODING:<pre>";
             flush();
             var_dump(mb_check_encoding($body, 'UTF-8'));
@@ -88,8 +91,8 @@ class UnixRequest implements Request {
             #print "\n\n";
             #print_r($body);
             #print "</pre>";
+*/
         }
-        */
 
         // Decode the JSON response
         $data = json_decode($body, true);

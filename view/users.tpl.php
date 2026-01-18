@@ -169,12 +169,12 @@ function get_user(string $user_name, array $user_arr, array $shares) : string {
         $fairshare_table .=<<<EOF
 <tr>
     <td colspan="2">
-        <b style="margin-left: 25px">Account <span class="monospaced">{$share['parent']}</span></b>
+        <b class="intent-left-level1">Account <span class="monospaced">{$share['parent']}</span></b>
     </td>
 </tr>
 <tr>
     <td>
-        <span style="margin-left: 50px">Raw shares</span>
+        <span class="intent-left-level2">Raw shares</span>
         <button type="button"
                 class="btn p-0"
                 data-bs-toggle="tooltip"
@@ -188,7 +188,7 @@ function get_user(string $user_name, array $user_arr, array $shares) : string {
 </tr>
 <tr>
     <td>
-        <span style="margin-left: 50px">Normalized shares</span>
+        <span class="intent-left-level2">Normalized shares</span>
         <button type="button"
                class="btn p-0"
                data-bs-toggle="tooltip"
@@ -202,7 +202,7 @@ function get_user(string $user_name, array $user_arr, array $shares) : string {
 </tr>
 <tr>
     <td>
-        <span style="margin-left: 50px">Raw usage</span>
+        <span class="intent-left-level2">Raw usage</span>
         <button type="button"
                 class="btn p-0"
                 data-bs-toggle="tooltip"
@@ -216,7 +216,7 @@ function get_user(string $user_name, array $user_arr, array $shares) : string {
 </tr>
 <tr>
     <td>
-        <span style="margin-left: 50px">Effective usage</span>
+        <span class="intent-left-level2">Effective usage</span>
         <button type="button"
                 class="btn p-0"
                 data-bs-toggle="tooltip"
@@ -230,7 +230,7 @@ function get_user(string $user_name, array $user_arr, array $shares) : string {
 </tr>
 <tr>
     <td>
-        <span style="margin-left: 50px">Fairshare factor</span>
+        <span class="intent-left-level2">Fairshare factor</span>
         <button type="button"
                 class="btn p-0"
                 data-bs-toggle="tooltip"
@@ -248,7 +248,7 @@ EOF;
     if(count($shares) == 0){
         $fairshare_table .= <<<EOF
 <tr>
-    <td colspan="2"><i>Currently no data available.</i></td>
+    <td colspan="2" style="text-align: center"><i>Currently no data available.</i></td>
 </tr>
 EOF;
 

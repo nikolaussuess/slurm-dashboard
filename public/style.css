@@ -129,6 +129,38 @@ button, input, select {
     background-color: #e4e4e4;
 }
 
+@media (min-width: 768px) {
+    .intent-left-level1 {
+        margin-left: 25px;
+    }
+
+    .intent-left-level2 {
+        margin-left: 25px;
+    }
+    /* Keine Symbole auf Desktop */
+    .intent-left-level1::before,
+    .intent-left-level2::before {
+        content: none;
+    }
+}
+/* Mobile: kleiner als 768px */
+@media (max-width: 767px) {
+    .intent-left-level1,
+    .intent-left-level2 {
+        margin-left: 0; /* kein Einrücken */
+    }
+
+    /* Pfeil vor dem Text einfügen */
+    .intent-left-level1::before {
+        content: "\25B8"; /* Unicode für ▶ */
+        display: inline-block;
+        width: 1em;
+        margin-right: 5px;
+        color: #0dcaf0; /* optional Farbe */
+    }
+}
+
+
 .tooltip-inner {
     text-align: left;
 }

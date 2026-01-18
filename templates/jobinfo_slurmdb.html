@@ -1,49 +1,157 @@
 <div class="table-responsive">
     <table class="table">
         <tr>
-            <td>Job ID</td>
+            <td>
+                Job ID
+                <button type="button"
+                        class="btn p-0"
+                        data-bs-toggle="tooltip"
+                        data-bs-trigger="click focus"
+                        data-bs-placement="top"
+                        title="Unique numeric identifier assigned by Slurm to this job.">
+                    <i title="Click here for more information">&#9432;</i>
+                </button>
+            </td>
             <td>{{JOBID}}</td>
         </tr>
         <tr>
-            <td>Job name</td>
+            <td>
+                Job name
+                <button type="button"
+                        class="btn p-0"
+                        data-bs-toggle="tooltip"
+                        data-bs-trigger="click focus"
+                        data-bs-placement="top"
+                        title="User-defined name of the job, normally from the --job-name option.">
+                    <i title="Click here for more information">&#9432;</i>
+                </button>
+            </td>
             <td>{{JOBNAME}}</td>
         </tr>
         <tr>
             <td>
-                State:
+                State
+                <button type="button"
+                        class="btn p-0"
+                        data-bs-toggle="tooltip"
+                        data-bs-trigger="click focus"
+                        data-bs-placement="top"
+                        title="Current status of the job (e.g., PENDING, RUNNING, COMPLETED).">
+                    <i title="Click here for more information">&#9432;</i>
+                </button>
             </td>
             <td>{{JOB_STATE}}</td>
         </tr>
         <tr>
-            <td>User</td>
+            <td>
+                User
+                <button type="button"
+                        class="btn p-0"
+                        data-bs-toggle="tooltip"
+                        data-bs-trigger="click focus"
+                        data-bs-placement="top"
+                        title="User account under which the job was submitted.">
+                    <i title="Click here for more information">&#9432;</i>
+                </button>
+            </td>
             <td>{{USER}}</td>
         </tr>
         <tr>
-            <td>Group</td>
+            <td>
+                Group
+                <button type="button"
+                        class="btn p-0"
+                        data-bs-toggle="tooltip"
+                        data-bs-trigger="click focus"
+                        data-bs-placement="top"
+                        title="Primary Unix group of the submitting user.">
+                    <i title="Click here for more information">&#9432;</i>
+                </button>
+            </td>
             <td>{{GROUP}}</td>
         </tr>
         <tr>
-            <td>Account</td>
+            <td>
+                Account
+                <button type="button"
+                        class="btn p-0"
+                        data-bs-toggle="tooltip"
+                        data-bs-trigger="click focus"
+                        data-bs-placement="top"
+                        title="Slurm account used for charging, priority, and usage tracking.">
+                    <i title="Click here for more information">&#9432;</i>
+                </button>
+            </td>
             <td>{{ACCOUNT}}</td>
         </tr>
         <tr>
-            <td>Partitions</td>
+            <td>
+                Partitions
+                <button type="button"
+                        class="btn p-0"
+                        data-bs-toggle="tooltip"
+                        data-bs-trigger="click focus"
+                        data-bs-placement="top"
+                        title="Slurm partitions (queues) where the job is allowed to run.">
+                    <i title="Click here for more information">&#9432;</i>
+                </button>
+            </td>
             <td>{{PARTITIONS}}</td>
         </tr>
         <tr>
-            <td>Submit line</td>
+            <td>
+                Submit line
+                <button type="button"
+                        class="btn p-0"
+                        data-bs-toggle="tooltip"
+                        data-bs-trigger="click focus"
+                        data-bs-placement="top"
+                        title="Exact command or script path used when submitting the job via sbatch.">
+                    <i title="Click here for more information">&#9432;</i>
+                </button>
+            </td>
             <td><span class="monospaced">{{SUBMIT_LINE}}</span></td>
         </tr>
         <tr>
-            <td>Working directory</td>
+            <td>
+                Working directory
+                <button type="button"
+                        class="btn p-0"
+                        data-bs-toggle="tooltip"
+                        data-bs-trigger="click focus"
+                        data-bs-placement="top"
+                        title="Directory used as the job’s working directory at submission time.">
+                    <i title="Click here for more information">&#9432;</i>
+                </button>
+            </td>
             <td><span class="monospaced">{{WORKING_DIRECTORY}}</span></td>
         </tr>
         <tr>
-            <td>Comment</td>
+            <td>
+                Comment
+                <button type="button"
+                        class="btn p-0"
+                        data-bs-toggle="tooltip"
+                        data-bs-trigger="click focus"
+                        data-bs-placement="top"
+                        title="Optional comment attached to the job by the user or administrator.">
+                    <i title="Click here for more information">&#9432;</i>
+                </button>
+            </td>
             <td>{{COMMENT}}</td>
         </tr>
         <tr>
-            <td>Exit code</td>
+            <td>
+                Exit code
+                <button type="button"
+                        class="btn p-0"
+                        data-bs-toggle="tooltip"
+                        data-bs-trigger="click focus"
+                        data-bs-placement="top"
+                        title="Exit status returned by the job’s main script or application.">
+                    <i title="Click here for more information">&#9432;</i>
+                </button>
+            </td>
             <td>{{EXIT_CODE}}</td>
         </tr>
 
@@ -63,11 +171,31 @@
             <th colspan="2">Resources</th>
         </tr>
         <tr>
-            <td>GRES detail</td>
+            <td>
+                GRES detail
+                <button type="button"
+                        class="btn p-0"
+                        data-bs-toggle="tooltip"
+                        data-bs-trigger="click focus"
+                        data-bs-placement="top"
+                        title="Detailed information about requested or allocated generic resources (e.g., GPUs).">
+                    <i title="Click here for more information">&#9432;</i>
+                </button>
+            </td>
             <td><span class="monospaced">{{GRES_DETAIL}}</span></td>
         </tr>
         <tr>
-            <td>TRES detail</td>
+            <td>
+                TRES detail
+                <button type="button"
+                        class="btn p-0"
+                        data-bs-toggle="tooltip"
+                        data-bs-trigger="click focus"
+                        data-bs-placement="top"
+                        title="Detailed information about requested or allocated traceable resources (e.g., CPUs, memory).">
+                    <i title="Click here for more information">&#9432;</i>
+                </button>
+            </td>
             <td>{{TRES_DETAIL}}</td>
         </tr>
 
@@ -76,23 +204,73 @@
             <th colspan="2">Time</th>
         </tr>
         <tr>
-            <td>Submit time</td>
+            <td>
+                Submit time
+                <button type="button"
+                        class="btn p-0"
+                        data-bs-toggle="tooltip"
+                        data-bs-trigger="click focus"
+                        data-bs-placement="top"
+                        title="Timestamp when the job was submitted to Slurm.">
+                    <i title="Click here for more information">&#9432;</i>
+                </button>
+            </td>
             <td>{{SUBMIT_TIME}}</td>
         </tr>
         <tr>
-            <td>Start time</td>
+            <td>
+                Start time
+                <button type="button"
+                        class="btn p-0"
+                        data-bs-toggle="tooltip"
+                        data-bs-trigger="click focus"
+                        data-bs-placement="top"
+                        title="When the job started.">
+                    <i title="Click here for more information">&#9432;</i>
+                </button>
+            </td>
             <td>{{START_TIME}}</td>
         </tr>
         <tr>
-            <td>End time</td>
+            <td>
+                End time
+                <button type="button"
+                        class="btn p-0"
+                        data-bs-toggle="tooltip"
+                        data-bs-trigger="click focus"
+                        data-bs-placement="top"
+                        title="When the job finished.">
+                    <i title="Click here for more information">&#9432;</i>
+                </button>
+            </td>
             <td>{{END_TIME}}</td>
         </tr>
         <tr>
-            <td>Time limit</td>
+            <td>
+                Time limit
+                <button type="button"
+                        class="btn p-0"
+                        data-bs-toggle="tooltip"
+                        data-bs-trigger="click focus"
+                        data-bs-placement="top"
+                        title="Maximum allowed run time for the job (--time). When the limit exceeds, the job is killed.">
+                    <i title="Click here for more information">&#9432;</i>
+                </button>
+            </td>
             <td>{{TIME_LIMIT}}</td>
         </tr>
         <tr>
-            <td>Time elapsed</td>
+            <td>
+                Time elapsed
+                <button type="button"
+                        class="btn p-0"
+                        data-bs-toggle="tooltip"
+                        data-bs-trigger="click focus"
+                        data-bs-placement="top"
+                        title="Elapsed time of the job (i.e., how long the job is/was running).">
+                    <i title="Click here for more information">&#9432;</i>
+                </button>
+            </td>
             <td>{{TIME_ELAPSED}}</td>
         </tr>
         <tr>
@@ -123,15 +301,45 @@
             <th colspan="2">Other information</th>
         </tr>
         <tr>
-            <td>Flags</td>
+            <td>
+                Flags
+                <button type="button"
+                        class="btn p-0"
+                        data-bs-toggle="tooltip"
+                        data-bs-trigger="click focus"
+                        data-bs-placement="top"
+                        title="Internal Slurm flags describing special handling or defaults applied to the job.">
+                    <i title="Click here for more information">&#9432;</i>
+                </button>
+            </td>
             <td><ul>{{FLAGS}}</ul></td>
         </tr>
         <tr>
-            <td>Priority</td>
+            <td>
+                Priority
+                <button type="button"
+                        class="btn p-0"
+                        data-bs-toggle="tooltip"
+                        data-bs-trigger="click focus"
+                        data-bs-placement="top"
+                        title="Scheduling priority of the job in the queue. A larger number means higher priority.">
+                    <i title="Click here for more information">&#9432;</i>
+                </button>
+            </td>
             <td>{{PRIORITY}}</td>
         </tr>
         <tr>
-            <td>QOS</td>
+            <td>
+                QOS
+                <button type="button"
+                        class="btn p-0"
+                        data-bs-toggle="tooltip"
+                        data-bs-trigger="click focus"
+                        data-bs-placement="top"
+                        title="Quality of Service class that determines limits and priority for the job.">
+                    <i title="Click here for more information">&#9432;</i>
+                </button>
+            </td>
             <td>{{QOS}}</td>
         </tr>
     </table>

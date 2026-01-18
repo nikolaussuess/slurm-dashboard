@@ -61,11 +61,15 @@ class UnixRequest implements Request {
         // Split the response headers and body
         list($header, $body) = explode("\r\n\r\n", $response, 2);
         $body = str_replace("Connection: Close", "", $body);
-        #print "<pre>";
-        #print_r($header);
-        #print "\n\n";
-        #print_r($body);
-        #print "</pre>";
+
+        // Debugging ...
+        if($_SESSION['USER'] == "suessn98"){
+            print "<pre>";
+            print_r($header);
+            print "\n\n";
+            print_r($body);
+            print "</pre>";
+        }
 
         // Decode the JSON response
         $data = json_decode($body, true);

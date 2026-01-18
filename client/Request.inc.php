@@ -71,7 +71,7 @@ class UnixRequest implements Request {
             print 'strlen(body): ' . strlen($body);
             print 'first two bytes: ' . bin2hex($body[0]) . "/". bin2hex($body[1]);
             print 'last three bytes: ' . bin2hex($body[-3]) . "/". bin2hex($body[-2]) . "/". bin2hex($body[-1]);
-            //return array();
+            return array();
 
             print "MB_CHECK_ENCODING:<pre>";
             flush();

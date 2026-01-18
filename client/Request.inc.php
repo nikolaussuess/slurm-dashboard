@@ -37,9 +37,9 @@ class UnixRequest implements Request {
 
     function request_json(string $endpoint, string $namespace, string $api_version, int $ttl = 5) : array {
 
-        if( @apcu_exists($namespace . '/' . $endpoint)){
+        /*if( @apcu_exists($namespace . '/' . $endpoint)){
             return apcu_fetch($namespace . '/' . $endpoint);
-        }
+        }*/
 
         // Prepare the HTTP request
         $request = "GET /{$namespace}/{$api_version}/{$endpoint} HTTP/1.1\r\n" .

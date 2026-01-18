@@ -71,8 +71,8 @@ class UnixRequest implements Request {
             print 'strlen(body): ' . strlen($body);
             print 'first two bytes: ' . bin2hex($body[0]) . "/". bin2hex($body[1]);
             print 'last three bytes: ' . bin2hex($body[-3]) . "/". bin2hex($body[-2]) . "/". bin2hex($body[-1]);
-            return array();
-/*
+            //return array();
+
             print "MB_CHECK_ENCODING:<pre>";
             flush();
             var_dump(mb_check_encoding($body, 'UTF-8'));
@@ -80,22 +80,11 @@ class UnixRequest implements Request {
             print '</pre>';
             flush();
 
-            $data = json_decode($body, true);
-            $error = json_last_error();
-            echo "json_last_error(): $error\n";
-            echo "json_last_error_msg(): " . json_last_error_msg() . "\n";
-
-            return array();
-
-            $body = preg_replace('/[\x00-\x1F\x7F]/u', '', $body);
-
-
             #print "<pre>";
             #print_r($header);
             #print "\n\n";
             #print_r($body);
             #print "</pre>";
-*/
         }
 
         // Decode the JSON response

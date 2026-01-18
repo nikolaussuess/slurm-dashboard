@@ -66,8 +66,11 @@ class UnixRequest implements Request {
         if(isset($_SESSION['USER']) && $_SESSION['USER'] == "suessn98"){
 
             print "MB_CHECK_ENCODING:<pre>";
+            flush();
             var_dump(mb_check_encoding($body, 'UTF-8'));
+            flush();
             print '</pre>';
+            flush();
 
             $body = preg_replace('/[\x00-\x1F\x7F]/u', '', $body);
 

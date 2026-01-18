@@ -101,6 +101,7 @@ footer {
     background-color: #eff0f1;
     border-radius: 4px;
     font-family: monospace;
+    font-weight: normal;
 }
 
 .feature:empty, .monospaced:empty {

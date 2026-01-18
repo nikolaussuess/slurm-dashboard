@@ -181,10 +181,27 @@ if( isset($_SESSION['USER']) ){
                 $contents .= "Only admins are allowed to list all users.";
                 break;
             }
-
             // User is administrator and therefore allowed to visit this page.
-            $users = $dao->get_users();
-            $contents .= \view\actions\get_users($users);
+
+            // Show user table if no specific user was requested
+            if( ! isset( $_GET['user_name'] ) || empty($_GET['user_name']) ){
+                $users = $dao->get_users();
+                $contents .= \view\actions\get_users($users);
+            }
+            else {
+                $user_name = $_GET['user_name'];
+                $user_slurm = $dao->get_user($user_name, TRUE);
+                if(empty($user_slurm['users'])){
+                    http_response_code(404); // Not found
+                    addError("User " . $_GET['user_name'] . " does not exist.");
+                    break;
+                }
+                $user_slurm = $user_slurm['users'][0];
+                $shares = $dao->get_fairshare($user_name);
+
+                $title = 'User info';
+                $contents .= \view\actions\get_user($user_name, $user_slurm, $shares);
+            }
 
             break;
 
@@ -200,7 +217,7 @@ if( isset($_SESSION['USER']) ){
 
             // Check if job_id parameter exists.
             if(! isset($_GET['job_id']) || intval($_GET['job_id']) != $_GET['job_id']){
-                http_send_status(400); // Bad request
+                http_response_code(400); // Bad request
                 addError("No job id provided or job id is not a valid number.");
                 break;
             }
@@ -255,7 +272,7 @@ if( isset($_SESSION['USER']) ){
 
             // Check if job_id parameter exists.
             if(! isset($_GET['job_id']) || intval($_GET['job_id']) != $_GET['job_id']){
-                http_send_status(400); // Bad request
+                http_response_code(400); // Bad request
                 addError("No job id provided or job id is not a valid number.");
                 break;
             }
@@ -266,7 +283,7 @@ if( isset($_SESSION['USER']) ){
             $job_data = $dao->get_job($job_id);
 
             if($job_data === NULL){
-                http_send_status(404); // Not found
+                http_response_code(404); // Not found
                 // 410 Gone would also be a valid choice, but if someone mistyped the ID in the url and chose
                 // a larger ID, that ID will likely exist in the future. Since GONE is a permanent error, and we
                 // cannot (easily) check whether the ID ever existed (we could, but that would require a query to
@@ -362,7 +379,7 @@ if( isset($_SESSION['USER']) ){
 
             // Check if job_id parameter exists.
             if(! isset($_GET['nodename']) || ! isset($_GET['state'])){
-                http_send_status(400); // Bad request
+                http_response_code(400); // Bad request
                 addError("No node name or no state provided. Bad request.");
                 break;
             }

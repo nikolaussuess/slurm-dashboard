@@ -256,10 +256,13 @@ abstract class AbstractClient implements Client {
         return NULL;
     }
 
-    function get_user(string $user_name) : array {
+    function get_user(string $user_name, bool $with_deleted = FALSE) : array {
+        $parameters = '?with_assocs';
+        if($with_deleted)
+            $parameters .= '&with_deleted';
         // TODO: We should not just pass the oroginal array ...
         # curl --unix-socket /run/slurmrestd/slurmrestd.socket http://slurm/slurmdb/v0.0.40/user/username?with_assocs
-        $json = RequestFactory::newRequest()->request_json("user/{$user_name}?with_assocs", 'slurmdb', static::api_version);
+        $json = RequestFactory::newRequest()->request_json("user/{$user_name}{$parameters}", 'slurmdb', static::api_version);
         return $json;
     }
 
@@ -331,6 +334,16 @@ abstract class AbstractClient implements Client {
         return array_filter($raw_array['reservations'], function ($res){
             return isset($res['flags']) && in_array("MAINT", $res['flags']);
         });
+    }
+
+    function get_fairshare(?string $user_name) : array {
+        $parameters = '';
+        if(!empty($user_name)){
+            $parameters .= '?users='.$user_name;
+        }
+        $json = RequestFactory::newRequest()->request_json("shares{$parameters}", 'slurm', static::api_version);
+
+        return $json;
     }
 
     function cancel_job(string|int $job_id) : bool {

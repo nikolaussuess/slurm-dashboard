@@ -71,6 +71,12 @@ class UnixRequest implements Request {
             flush();
             print '</pre>';
             flush();
+
+            $data = json_decode($body, true);
+            $error = json_last_error();
+            echo "json_last_error(): $error\n";
+            echo "json_last_error_msg(): " . json_last_error_msg() . "\n";
+
             return array();
 
             $body = preg_replace('/[\x00-\x1F\x7F]/u', '', $body);

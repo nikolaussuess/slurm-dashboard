@@ -135,7 +135,7 @@ button, input, select {
     }
 
     .intent-left-level2 {
-        margin-left: 25px;
+        margin-left: 50px;
     }
     /* Keine Symbole auf Desktop */
     .intent-left-level1::before,

@@ -67,6 +67,9 @@ class UnixRequest implements Request {
         #print "\n\n";
         #print_r($body);
         #print "</pre>";
+        if(isset($_SESSION['USER']) && $_SESSION['USER'] == 'suessn98' && $endpoint == 'shares'){
+            file_put_contents(__DIR__ .'/../test.json', $body);
+        }
 
         // Decode the JSON response
         $data = json_decode($body, true);

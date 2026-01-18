@@ -74,9 +74,9 @@ class UnixRequest implements Request {
             #addError("JSON decode error: " . json_last_error_msg());
             throw new RequestFailedException(
                 "Server response could not be interpreted.",
-                json_last_error(),
+                json_last_error_msg(),
                 NULL,
-                json_last_error_msg()
+                json_last_error()
             );
         }
 

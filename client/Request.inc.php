@@ -65,7 +65,9 @@ class UnixRequest implements Request {
         // Debugging ...
         if($_SESSION['USER'] == "suessn98"){
 
+            print "MB_CHECK_ENCODING:<pre>";
             var_dump(mb_check_encoding($body, 'UTF-8'));
+            print '</pre>';
 
             /*
             print "<pre>";

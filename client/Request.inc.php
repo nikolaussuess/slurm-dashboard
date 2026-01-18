@@ -71,6 +71,7 @@ class UnixRequest implements Request {
             flush();
             print '</pre>';
             flush();
+            return array();
 
             $body = preg_replace('/[\x00-\x1F\x7F]/u', '', $body);
 

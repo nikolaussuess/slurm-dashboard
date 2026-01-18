@@ -69,6 +69,7 @@ class UnixRequest implements Request {
             print_r($header);
             print "\n\n";
             flush();
+            print 'strlen(body): ' . strlen($body);
             return array();
 /*
             print "MB_CHECK_ENCODING:<pre>";

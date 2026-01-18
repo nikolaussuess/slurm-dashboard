@@ -338,9 +338,9 @@ abstract class AbstractClient implements Client {
 
     function get_fairshare(?string $user_name) : array {
         $parameters = '';
-        /*if(!empty($user_name)){
+        if(!empty($user_name)){
             $parameters .= '?users='.$user_name;
-        }*/
+        }
         $json = RequestFactory::newRequest()->request_json("shares{$parameters}", 'slurm', static::api_version);
 
         return $json;

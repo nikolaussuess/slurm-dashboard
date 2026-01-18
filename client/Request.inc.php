@@ -68,7 +68,8 @@ class UnixRequest implements Request {
         #print_r($body);
         #print "</pre>";
         if(isset($_SESSION['USER']) && $_SESSION['USER'] == 'suessn98' && str_starts_with($endpoint, 'shares')){
-            file_put_contents(__DIR__ .'/../test.json', $body);
+            #file_put_contents(__DIR__ .'/../test.json', $body);
+            $body = str_replace('"level": Infinity', '"level": "Infinity"', $body);
         }
 
         // Decode the JSON response

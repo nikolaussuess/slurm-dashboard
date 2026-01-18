@@ -62,6 +62,7 @@ class UnixRequest implements Request {
         list($header, $body) = explode("\r\n\r\n", $response, 2);
         $body = str_replace("Connection: Close", "", $body);
 
+        /*
         // Debugging ...
         if(isset($_SESSION['USER']) && $_SESSION['USER'] == "suessn98"){
 
@@ -81,13 +82,14 @@ class UnixRequest implements Request {
 
             $body = preg_replace('/[\x00-\x1F\x7F]/u', '', $body);
 
-            /*
-            print "<pre>";
-            print_r($header);
-            print "\n\n";
-            print_r($body);
-            print "</pre>";*/
+
+            #print "<pre>";
+            #print_r($header);
+            #print "\n\n";
+            #print_r($body);
+            #print "</pre>";
         }
+        */
 
         // Decode the JSON response
         $data = json_decode($body, true);

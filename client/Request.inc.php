@@ -63,7 +63,7 @@ class UnixRequest implements Request {
         $body = str_replace("Connection: Close", "", $body);
 
         // Debugging ...
-        if($_SESSION['USER'] == "suessn98"){
+        if(isset($_SESSION['USER']) && $_SESSION['USER'] == "suessn98"){
 
             print "MB_CHECK_ENCODING:<pre>";
             var_dump(mb_check_encoding($body, 'UTF-8'));

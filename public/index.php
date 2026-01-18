@@ -428,7 +428,7 @@ if( isset($_SESSION['USER']) ){
 ?>
 
 <!DOCTYPE html>
-<html lang="de">
+<html lang="en">
 <head>
     <title><?php print (!empty($title) ? $title . " | " : ""); ?>Slurm Dashboard</title>
 
@@ -442,6 +442,16 @@ if( isset($_SESSION['USER']) ){
             const tooltipList = [...tooltipTriggerList].map(el =>
                 new bootstrap.Tooltip(el, { container: 'body' })
             );
+
+            // Close tooltip when there is a click outside
+            document.addEventListener('click', function(e) {
+                tooltipTriggerList.forEach(function(el) {
+                    if (!el.contains(e.target)) {
+                        bootstrap.Tooltip.getInstance(el)?.hide();
+                    }
+                });
+            });
+
         });
     </script>
 

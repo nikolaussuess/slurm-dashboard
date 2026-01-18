@@ -128,3 +128,7 @@ button, input, select {
 #usertable-table tr td.deleted-user, .deleted-user td {
     background-color: #e4e4e4;
 }
+
+.tooltip-inner {
+    text-align: left;
+}

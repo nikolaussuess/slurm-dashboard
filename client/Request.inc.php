@@ -69,6 +69,8 @@ class UnixRequest implements Request {
             var_dump(mb_check_encoding($body, 'UTF-8'));
             print '</pre>';
 
+            $body = preg_replace('/[\x00-\x1F\x7F]/u', '', $body);
+
             /*
             print "<pre>";
             print_r($header);

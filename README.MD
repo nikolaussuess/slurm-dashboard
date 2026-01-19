@@ -23,7 +23,7 @@ However, any slurm version `>= 23.11.x` should work. If you encounter any issues
 - Communication with `slurmrestd` via unix socket.
 - Caching of the `slurmrestd` responses (using APCu).
 - Display and filter job history (from `slurmdbd`).
-- Display list of users with their respective accounts (for administrators and privileged users only).
+- Display list of users with their respective accounts (for administrators and privileged users only). Unprivileged users may only view their own user (incl. Fair-share value, accounts and so on).
 - Show planned maintenances (`flags=maint`) that were created with e.g. `scontrol create reservation starttime=2024-11-02T13:30:00 duration=5 user=root flags=maint nodes=mynode`.
 - List transitive dependencies for a job.
 - Authentication (at `slurmrestd`) via JWT (optional).

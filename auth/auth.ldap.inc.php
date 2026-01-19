@@ -138,7 +138,7 @@ namespace auth {
 
             $escaped_uid = ldap_escape($uid, '', LDAP_ESCAPE_FILTER);
             $filter = "(uid=$escaped_uid)";
-            $attributes = ["uid", "displayName", "department", "departmentNumber", "mail"];
+            $attributes = ["uid", "displayName", "department", "departmentNumber", "mail", "telephoneNumber"];
 
             if( apcu_exists("ldap" . '/' . $filter)){
                 return apcu_fetch("ldap" . '/' . $filter);

@@ -4,7 +4,14 @@
 
         <tr style="width: 100px">
             <td style="width: 100px">
-                State:
+                <button type="button"
+                        class="btn p-0"
+                        data-bs-toggle="tooltip"
+                        data-bs-trigger="click focus"
+                        data-bs-placement="top"
+                        title="State of the compute node.">
+                    <i title="Click here for more information">&#9432;</i>&nbsp;State:
+                </button>
             </td>
             <td style="background-color: {{STATE_COLOR}}">
                 {{STATE}}
@@ -19,7 +26,16 @@
         </tr>
 
         <tr>
-            <td style="width: 100px">CPUs:</td>
+            <td style="width: 100px">
+                <button type="button"
+                        class="btn p-0"
+                        data-bs-toggle="tooltip"
+                        data-bs-trigger="click focus"
+                        data-bs-placement="top"
+                        title="Usage of the CPUs on that node.">
+                    <i title="Click here for more information">&#9432;</i>&nbsp;CPUs:
+                </button>
+            </td>
             <td>
                 <div class="progress">
                     <div class="progress-bar"
@@ -30,8 +46,17 @@
             </td>
         </tr>
 
-        <tr title="The sum of all RAM memory currently used on that node. This might include buffer and cache memory, which is currently in use but available. However, mem_used is calculated as mem_total-mem_free. Since mem_free is the total free memory of the node but mem_total is only the memory that is available for slurm (which might be lower than the actual RAM of the node), this value could be negative. We truncate at 0.">
-            <td>Memory:</td>
+        <tr>
+            <td>
+                <button type="button"
+                        class="btn p-0"
+                        data-bs-toggle="tooltip"
+                        data-bs-trigger="click focus"
+                        data-bs-placement="top"
+                        title="The sum of all RAM memory currently used on that node. This might include buffer and cache memory, which is currently in use but available. However, mem_used is calculated as mem_total-mem_free. Since mem_free is the total free memory of the node but mem_total is only the memory that is available for slurm (which might be lower than the actual RAM of the node), this value could be negative. We truncate at 0.">
+                    <i title="Click here for more information">&#9432;</i>&nbsp;Memory:
+                </button>
+            </td>
             <td>
                 <div class="progress">
                     <div class="progress-bar"
@@ -41,8 +66,17 @@
                 {{MEM_USED}} of {{MEM_TOTAL}} MiB RAM in use ({{MEM_PERCENTAGE}} %)
             </td>
         </tr>
-        <tr title="Sum of RAM used by SLURM jobs. Does not include memory used by other processes or the kernel.">
-            <td>RAM of jobs:</td>
+        <tr>
+            <td>
+                <button type="button"
+                        class="btn p-0"
+                        data-bs-toggle="tooltip"
+                        data-bs-trigger="click focus"
+                        data-bs-placement="top"
+                        title="Sum of RAM used by SLURM jobs. Does not include memory used by other processes or the kernel.">
+                    <i title="Click here for more information">&#9432;</i>&nbsp;RAM of jobs:
+                </button>
+            </td>
             <td>
                 <div class="progress">
                     <div class="progress-bar"
@@ -54,7 +88,16 @@
         </tr>
 
         <tr>
-            <td>GPUs:</td>
+            <td>
+                <button type="button"
+                        class="btn p-0"
+                        data-bs-toggle="tooltip"
+                        data-bs-trigger="click focus"
+                        data-bs-placement="top"
+                        title="Number of GPUs in use/available on that compute node.">
+                    <i title="Click here for more information">&#9432;</i>&nbsp;GPUs:
+                </button>
+            </td>
             <td>
                 <div class="progress">
                     <div class="progress-bar"

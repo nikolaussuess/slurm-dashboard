@@ -101,6 +101,7 @@ footer {
     background-color: #eff0f1;
     border-radius: 4px;
     font-family: monospace;
+    font-weight: normal;
 }
 
 .feature:empty, .monospaced:empty {
@@ -120,10 +121,46 @@ button, input, select {
 #jobtable-compact tr:nth-child(4n+2) td {
     background-color: #fffae9;
 }
-#jobtable-table tr:nth-child(2n+1) td {
+#jobtable-table tr:nth-child(2n+1) td, #usertable-table tr:not(.deleted-user):nth-child(2n+1) td {
     background-color: #fffae9;
 }
 
-.deleted-user td {
-    color: gray;
+#usertable-table tr td.deleted-user, .deleted-user td {
+    background-color: #e4e4e4;
+}
+
+@media (min-width: 768px) {
+    .intent-left-level1 {
+        margin-left: 25px;
+    }
+
+    .intent-left-level2 {
+        margin-left: 50px;
+    }
+    /* Keine Symbole auf Desktop */
+    .intent-left-level1::before,
+    .intent-left-level2::before {
+        content: none;
+    }
+}
+/* Mobile: kleiner als 768px */
+@media (max-width: 767px) {
+    .intent-left-level1,
+    .intent-left-level2 {
+        margin-left: 0; /* kein Einrücken */
+    }
+
+    /* Pfeil vor dem Text einfügen */
+    .intent-left-level1::before {
+        content: "\25B8"; /* Unicode für ▶ */
+        display: inline-block;
+        width: 1em;
+        margin-right: 5px;
+        color: #0dcaf0; /* optional Farbe */
+    }
+}
+
+
+.tooltip-inner {
+    text-align: left;
 }

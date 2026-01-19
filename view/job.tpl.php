@@ -10,6 +10,7 @@ function get_slurm_jobinfo(array $query, string $transitive_dependencies = '') :
 
     $job_state_text = \utils\get_job_state_view($query);
     $user = htmlspecialchars($query['user_name'] . " (" . $query['user_id'] . ')', ENT_QUOTES, 'UTF-8');
+    $user_name = htmlspecialchars($query['user_name'], ENT_QUOTES, 'UTF-8');
     $group = htmlspecialchars($query['group_name'] . " (" . $query['group_id'] . ')', ENT_QUOTES, 'UTF-8');
     $requeue = $query['requeue'] ? 'allowed' : 'not allowed';
 
@@ -17,6 +18,7 @@ function get_slurm_jobinfo(array $query, string $transitive_dependencies = '') :
     $templateBuilder->setParam("JOBID",             $query['job_id']                    );
     $templateBuilder->setParam("JOBNAME",           htmlspecialchars($query['job_name'], ENT_QUOTES, 'UTF-8'));
     $templateBuilder->setParam("USER",              $user                               );
+    $templateBuilder->setParam("USER_NAME",         $user_name                          );
     $templateBuilder->setParam("GROUP",             $group                              );
     $templateBuilder->setParam("ACCOUNT",           $query['account']                   );
     $templateBuilder->setParam("PARTITIONS",        $query['partition']                 );

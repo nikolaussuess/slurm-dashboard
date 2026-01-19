@@ -19,6 +19,10 @@ abstract class AbstractClient implements Client {
 
     abstract protected function get_nodes(array $job_arr) : string;
 
+    // There is too much difference and a bug in v0.0.40 for /shares
+    // so that a general implementation does not really make sense ...
+    abstract function get_fairshare(?string $user_name) : array;
+
     function is_available() : bool {
         return RequestFactory::socket_exists();
     }
@@ -256,10 +260,13 @@ abstract class AbstractClient implements Client {
         return NULL;
     }
 
-    function get_user(string $user_name) : array {
+    function get_user(string $user_name, bool $with_deleted = FALSE) : array {
+        $parameters = '?with_assocs';
+        if($with_deleted)
+            $parameters .= '&with_deleted';
         // TODO: We should not just pass the oroginal array ...
         # curl --unix-socket /run/slurmrestd/slurmrestd.socket http://slurm/slurmdb/v0.0.40/user/username?with_assocs
-        $json = RequestFactory::newRequest()->request_json("user/{$user_name}?with_assocs", 'slurmdb', static::api_version);
+        $json = RequestFactory::newRequest()->request_json("user/{$user_name}{$parameters}", 'slurmdb', static::api_version);
         return $json;
     }
 

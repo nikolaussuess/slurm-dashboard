@@ -1,49 +1,157 @@
 <div class="table-responsive">
     <table class="table">
-        <tr title="Unique numeric identifier assigned by Slurm to this job.">
-            <td>Job ID</td>
+        <tr>
+            <td>
+                Job ID
+                <button type="button"
+                        class="btn p-0"
+                        data-bs-toggle="tooltip"
+                        data-bs-trigger="click focus"
+                        data-bs-placement="top"
+                        title="Unique numeric identifier assigned by Slurm to this job.">
+                    <i title="Click here for more information">&#9432;</i>
+                </button>
+            </td>
             <td>{{JOBID}}</td>
         </tr>
-        <tr title="User-defined name of the job, normally from the --job-name option.">
-            <td>Job name</td>
+        <tr>
+            <td>
+                Job name
+                <button type="button"
+                        class="btn p-0"
+                        data-bs-toggle="tooltip"
+                        data-bs-trigger="click focus"
+                        data-bs-placement="top"
+                        title="User-defined name of the job, normally from the --job-name option.">
+                    <i title="Click here for more information">&#9432;</i>
+                </button>
+            </td>
             <td>{{JOBNAME}}</td>
         </tr>
-        <tr title="Current status of the job in the scheduler (e.g., PENDING, RUNNING, COMPLETED).">
+        <tr>
             <td>
-                State:
+                State
+                <button type="button"
+                        class="btn p-0"
+                        data-bs-toggle="tooltip"
+                        data-bs-trigger="click focus"
+                        data-bs-placement="top"
+                        title="Current status of the job in the scheduler (e.g., PENDING, RUNNING, COMPLETED).">
+                    <i title="Click here for more information">&#9432;</i>
+                </button>
             </td>
             <td>{{JOB_STATE}}</td>
         </tr>
-        <tr title="User account under which the job was submitted.">
-            <td>User</td>
-            <td>{{USER}}</td>
+        <tr>
+            <td>
+                User
+                <button type="button"
+                        class="btn p-0"
+                        data-bs-toggle="tooltip"
+                        data-bs-trigger="click focus"
+                        data-bs-placement="top"
+                        title="User account under which the job was submitted.">
+                    <i title="Click here for more information">&#9432;</i>
+                </button>
+            </td>
+            <td><a href="?action=users&user_name={{USER_NAME}}" title="Note: Currently, only admins can view this user details.">{{USER}}</a></td>
         </tr>
-        <tr title="Primary Unix group of the submitting user.">
-            <td>Group</td>
+        <tr>
+            <td>
+                Group
+                <button type="button"
+                        class="btn p-0"
+                        data-bs-toggle="tooltip"
+                        data-bs-trigger="click focus"
+                        data-bs-placement="top"
+                        title="Primary Unix group of the submitting user.">
+                    <i title="Click here for more information">&#9432;</i>
+                </button>
+            </td>
             <td>{{GROUP}}</td>
         </tr>
-        <tr title="Slurm account used for charging, priority, and usage tracking.">
-            <td>Account</td>
+        <tr>
+            <td>
+                Account
+                <button type="button"
+                        class="btn p-0"
+                        data-bs-toggle="tooltip"
+                        data-bs-trigger="click focus"
+                        data-bs-placement="top"
+                        title="Slurm account used for charging, priority, and usage tracking.">
+                    <i title="Click here for more information">&#9432;</i>
+                </button>
+            </td>
             <td>{{ACCOUNT}}</td>
         </tr>
-        <tr title="Slurm partitions (queues) where the job is allowed to run.">
-            <td>Partitions</td>
+        <tr>
+            <td>
+                Partitions
+                <button type="button"
+                        class="btn p-0"
+                        data-bs-toggle="tooltip"
+                        data-bs-trigger="click focus"
+                        data-bs-placement="top"
+                        title="Slurm partitions (queues) where the job is allowed to run.">
+                    <i title="Click here for more information">&#9432;</i>
+                </button>
+            </td>
             <td>{{PARTITIONS}}</td>
         </tr>
-        <tr title="Exact command or script path used when submitting the job via sbatch.">
-            <td>Submit line</td>
+        <tr>
+            <td>
+                Submit line
+                <button type="button"
+                        class="btn p-0"
+                        data-bs-toggle="tooltip"
+                        data-bs-trigger="click focus"
+                        data-bs-placement="top"
+                        title="Exact command or script path used when submitting the job via sbatch.">
+                    <i title="Click here for more information">&#9432;</i>
+                </button>
+            </td>
             <td><span class="monospaced">{{SUBMIT_LINE}}</span></td>
         </tr>
-        <tr title="Directory used as the job’s working directory at submission time.">
-            <td>Working directory</td>
+        <tr>
+            <td>
+                Working directory
+                <button type="button"
+                        class="btn p-0"
+                        data-bs-toggle="tooltip"
+                        data-bs-trigger="click focus"
+                        data-bs-placement="top"
+                        title="Directory used as the job’s working directory at submission time.">
+                    <i title="Click here for more information">&#9432;</i>
+                </button>
+            </td>
             <td><span class="monospaced">{{WORKING_DIRECTORY}}</span></td>
         </tr>
-        <tr title="Optional comment attached to the job by the user or administrator.">
-            <td>Comment</td>
+        <tr>
+            <td>
+                Comment
+                <button type="button"
+                        class="btn p-0"
+                        data-bs-toggle="tooltip"
+                        data-bs-trigger="click focus"
+                        data-bs-placement="top"
+                        title="Optional comment attached to the job by the user or administrator.">
+                    <i title="Click here for more information">&#9432;</i>
+                </button>
+            </td>
             <td>{{COMMENT}}</td>
         </tr>
-        <tr title="Exit status returned by the job’s main script or application.">
-            <td>Exit code</td>
+        <tr>
+            <td>
+                Exit code
+                <button type="button"
+                        class="btn p-0"
+                        data-bs-toggle="tooltip"
+                        data-bs-trigger="click focus"
+                        data-bs-placement="top"
+                        title="Exit status returned by the job’s main script or application.">
+                    <i title="Click here for more information">&#9432;</i>
+                </button>
+            </td>
             <td>{{EXIT_CODE}}</td>
         </tr>
 
@@ -52,20 +160,60 @@
         <tr>
             <th colspan="2">Nodes</th>
         </tr>
-        <tr title="Nodes that Slurm has selected for the job but where execution has not yet started.">
-            <td>Scheduled Nodes</td>
+        <tr>
+            <td>
+                Scheduled Nodes
+                <button type="button"
+                        class="btn p-0"
+                        data-bs-toggle="tooltip"
+                        data-bs-trigger="click focus"
+                        data-bs-placement="top"
+                        title="Nodes that Slurm has selected for the job but where execution has not yet started.">
+                    <i title="Click here for more information">&#9432;</i>
+                </button>
+            </td>
             <td>{{SCHEDNODES}}</td>
         </tr>
-        <tr title="Specific nodes requested by the job via e.g. --nodelist.">
-            <td>Required Nodes</td>
+        <tr>
+            <td>
+                Required Nodes
+                <button type="button"
+                        class="btn p-0"
+                        data-bs-toggle="tooltip"
+                        data-bs-trigger="click focus"
+                        data-bs-placement="top"
+                        title="Specific nodes requested by the job via e.g. --nodelist.">
+                    <i title="Click here for more information">&#9432;</i>
+                </button>
+            </td>
             <td>{{REQNODES}}</td>
         </tr>
-        <tr title="List of nodes where the job is running or has run.">
-            <td>Nodes</td>
+        <tr>
+            <td>
+                Nodes
+                <button type="button"
+                        class="btn p-0"
+                        data-bs-toggle="tooltip"
+                        data-bs-trigger="click focus"
+                        data-bs-placement="top"
+                        title="List of nodes where the job is running or has run.">
+                    <i title="Click here for more information">&#9432;</i>
+                </button>
+            </td>
             <td>{{NODES}}</td>
         </tr>
-        <tr title="Slurm controller or (login) node that performed the resource allocation for this job.">
-            <td>Allocating node</td>
+        <tr>
+            <td>
+                Allocating node
+                <button type="button"
+                        class="btn p-0"
+                        data-bs-toggle="tooltip"
+                        data-bs-trigger="click focus"
+                        data-bs-placement="top"
+                        title="Slurm controller or (login) node that performed the resource allocation for this job.">
+                    <i title="Click here for more information">&#9432;</i>
+                </button>
+            </td>
             <td>{{ALLOCATING_NODE}}</td>
         </tr>
 
@@ -73,36 +221,116 @@
         <tr>
             <th colspan="2">Resources</th>
         </tr>
-        <tr title="Number of CPU cores per socket requested or allocated for the job.">
-            <td>Cores per socket</td>
+        <tr>
+            <td>
+                Cores per socket
+                <button type="button"
+                        class="btn p-0"
+                        data-bs-toggle="tooltip"
+                        data-bs-trigger="click focus"
+                        data-bs-placement="top"
+                        title="Number of CPU cores per socket requested or allocated for the job.">
+                    <i title="Click here for more information">&#9432;</i>
+                </button>
+            </td>
             <td>{{CORES_PER_SOCKET}}</td>
         </tr>
-        <tr title="Number of logical CPUs allocated for each individual task (--cpus-per-task).">
-            <td>CPUs per task</td>
+        <tr>
+            <td>
+                CPUs per task
+                <button type="button"
+                        class="btn p-0"
+                        data-bs-toggle="tooltip"
+                        data-bs-trigger="click focus"
+                        data-bs-placement="top"
+                        title="Number of logical CPUs allocated for each individual task (--cpus-per-task).">
+                    <i title="Click here for more information">&#9432;</i>
+                </button>
+            </td>
             <td>{{CPUS_PER_TASK}}</td>
         </tr>
-        <tr title="Detailed information about requested or allocated generic resources (e.g., GPUs).">
-            <td>GRES detail</td>
+        <tr>
+            <td>
+                GRES detail
+                <button type="button"
+                        class="btn p-0"
+                        data-bs-toggle="tooltip"
+                        data-bs-trigger="click focus"
+                        data-bs-placement="top"
+                        title="Detailed information about requested or allocated generic resources (e.g., GPUs).">
+                    <i title="Click here for more information">&#9432;</i>
+                </button>
+            </td>
             <td><span class="monospaced">{{GRES_DETAIL}}</span></td>
         </tr>
-        <tr title="Total number of logical CPUs allocated to the job across all tasks.">
-            <td>CPUs</td>
+        <tr>
+            <td>
+                CPUs
+                <button type="button"
+                        class="btn p-0"
+                        data-bs-toggle="tooltip"
+                        data-bs-trigger="click focus"
+                        data-bs-placement="top"
+                        title="Total number of logical CPUs allocated to the job across all tasks.">
+                    <i title="Click here for more information">&#9432;</i>
+                </button>
+            </td>
             <td>{{CPUS}}</td>
         </tr>
-        <tr title="Number of compute nodes allocated to the job.">
-            <td>Node count</td>
+        <tr>
+            <td>
+                Node count
+                <button type="button"
+                        class="btn p-0"
+                        data-bs-toggle="tooltip"
+                        data-bs-trigger="click focus"
+                        data-bs-placement="top"
+                        title="Number of compute nodes allocated to the job.">
+                    <i title="Click here for more information">&#9432;</i>
+                </button>
+            </td>
             <td>{{NODE_COUNT}}</td>
         </tr>
-        <tr title="Total number of parallel tasks (--ntasks) in the job.">
-            <td>Tasks</td>
+        <tr>
+            <td>
+                Tasks
+                <button type="button"
+                        class="btn p-0"
+                        data-bs-toggle="tooltip"
+                        data-bs-trigger="click focus"
+                        data-bs-placement="top"
+                        title="Total number of parallel tasks (--ntasks) in the job.">
+                    <i title="Click here for more information">&#9432;</i>
+                </button>
+            </td>
             <td>{{TASKS}}</td>
         </tr>
-        <tr title="Memory required per CPU core (--mem-per-cpu).">
-            <td>Memory per CPU</td>
+        <tr>
+            <td>
+                Memory per CPU
+                <button type="button"
+                        class="btn p-0"
+                        data-bs-toggle="tooltip"
+                        data-bs-trigger="click focus"
+                        data-bs-placement="top"
+                        title="Memory required per CPU core (--mem-per-cpu).">
+                    <i title="Click here for more information">&#9432;</i>
+                </button>
+            </td>
             <td>{{MEMORY_PER_CPU}}</td>
         </tr>
-        <tr title="Memory required per node (--mem).">
-            <td>Memory per node</td>
+        <tr>
+            <td>
+                Memory per node
+                <button type="button"
+                        class="btn p-0"
+                        data-bs-toggle="tooltip"
+                        data-bs-trigger="click focus"
+                        data-bs-placement="top"
+                        title="Memory required per node (--mem).">
+                    <i title="Click here for more information">&#9432;</i>
+                </button>
+            </td>
             <td>{{MEMORY_PER_NODE}}</td>
         </tr>
 
@@ -110,16 +338,46 @@
         <tr>
             <th colspan="2">Time</th>
         </tr>
-        <tr title="Timestamp when the job was submitted to Slurm.">
-            <td>Submit time</td>
+        <tr>
+            <td>
+                Submit time
+                <button type="button"
+                        class="btn p-0"
+                        data-bs-toggle="tooltip"
+                        data-bs-trigger="click focus"
+                        data-bs-placement="top"
+                        title="Timestamp when the job was submitted to Slurm.">
+                    <i title="Click here for more information">&#9432;</i>
+                </button>
+            </td>
             <td>{{SUBMIT_TIME}}</td>
         </tr>
-        <tr title="Maximum allowed run time for the job (--time).">
-            <td>Time limit</td>
+        <tr>
+            <td>
+                Time limit
+                <button type="button"
+                        class="btn p-0"
+                        data-bs-toggle="tooltip"
+                        data-bs-trigger="click focus"
+                        data-bs-placement="top"
+                        title="Maximum allowed run time for the job (--time). When the limit exceeds, the job is killed.">
+                    <i title="Click here for more information">&#9432;</i>
+                </button>
+            </td>
             <td>{{TIME_LIMIT}}</td>
         </tr>
-        <tr title="Latest allowable start time for the job; if it cannot be started in time to meet the deadline, it will not run. Default is no deadline.">
-            <td>Deadline</td>
+        <tr>
+            <td>
+                Deadline
+                <button type="button"
+                        class="btn p-0"
+                        data-bs-toggle="tooltip"
+                        data-bs-trigger="click focus"
+                        data-bs-placement="top"
+                        title="Latest allowable start time for the job; if it cannot be started in time to meet the deadline, it will not run. Default is no deadline.">
+                    <i title="Click here for more information">&#9432;</i>
+                </button>
+            </td>
             <td>{{DEADLINE}}</td>
         </tr>
 
@@ -147,36 +405,116 @@
         <tr>
             <th colspan="2">Other information</th>
         </tr>
-        <tr title="Hardware or node features required by the job (--constraint).">
-            <td>Features</td>
+        <tr>
+            <td>
+                Features
+                <button type="button"
+                        class="btn p-0"
+                        data-bs-toggle="tooltip"
+                        data-bs-trigger="click focus"
+                        data-bs-placement="top"
+                        title="Hardware or node features required by the job (--constraint).">
+                    <i title="Click here for more information">&#9432;</i>
+                </button>
+            </td>
             <td><span class="monospaced">{{FEATURES}}</span></td>
         </tr>
-        <tr title="Internal Slurm flags describing special handling or defaults applied to the job.">
-            <td>Flags</td>
+        <tr>
+            <td>
+                Flags
+                <button type="button"
+                        class="btn p-0"
+                        data-bs-toggle="tooltip"
+                        data-bs-trigger="click focus"
+                        data-bs-placement="top"
+                        title="Internal Slurm flags describing special handling or defaults applied to the job.">
+                    <i title="Click here for more information">&#9432;</i>
+                </button>
+            </td>
             <td><span class="monospaced">{{FLAGS}}</span></td>
         </tr>
         <tr>
-            <td>Requeue</td>
+            <td>
+                Requeue
+                <button type="button"
+                        class="btn p-0"
+                        data-bs-toggle="tooltip"
+                        data-bs-trigger="click focus"
+                        data-bs-placement="top"
+                        title="Whether or not this job can be requeued. A job might be requeued if another job with a higher priority is started. Requeued jobs will start again later, usually from the beginning.">
+                    <i title="Click here for more information">&#9432;</i>
+                </button>
+            </td>
             <td>{{REQUEUE}}</td>
         </tr>
-        <tr title="Other jobs that this job depends on; it starts only once dependencies are satisfied.">
-            <td>Dependency</td>
+        <tr>
+            <td>
+                Dependency
+                <button type="button"
+                        class="btn p-0"
+                        data-bs-toggle="tooltip"
+                        data-bs-trigger="click focus"
+                        data-bs-placement="top"
+                        title="Other jobs that this job depends on; it starts only once dependencies are satisfied.">
+                    <i title="Click here for more information">&#9432;</i>
+                </button>
+            </td>
             <td><span class="monospaced">{{DEPENDENCY}}</span></td>
         </tr>
-        <tr title="Other jobs that this job depends on; it starts only once dependencies are satisfied.">
-            <td>Transitive dependencies</td>
+        <tr>
+            <td>
+                Transitive dependencies
+                <button type="button"
+                        class="btn p-0"
+                        data-bs-toggle="tooltip"
+                        data-bs-trigger="click focus"
+                        data-bs-placement="top"
+                        title="Other jobs that this job depends on; it starts only once dependencies are satisfied.">
+                    <i title="Click here for more information">&#9432;</i>
+                </button>
+            </td>
             <td>{{TRANSITIVE_DEPENDENCIES}}</td>
         </tr>
-        <tr title="Scheduling priority of the job relative to others in the queue.">
-            <td>Priority</td>
+        <tr>
+            <td>
+                Priority
+                <button type="button"
+                        class="btn p-0"
+                        data-bs-toggle="tooltip"
+                        data-bs-trigger="click focus"
+                        data-bs-placement="top"
+                        title="Scheduling priority of the job in the queue. A larger number means higher priority.">
+                    <i title="Click here for more information">&#9432;</i>
+                </button>
+            </td>
             <td>{{PRIORITY}}</td>
         </tr>
-        <tr title="Quality of Service class that determines limits and priority for the job.">
-            <td>QOS</td>
+        <tr>
+            <td>
+                QOS
+                <button type="button"
+                        class="btn p-0"
+                        data-bs-toggle="tooltip"
+                        data-bs-trigger="click focus"
+                        data-bs-placement="top"
+                        title="Quality of Service class that determines limits and priority for the job.">
+                    <i title="Click here for more information">&#9432;</i>
+                </button>
+            </td>
             <td>{{QOS}}</td>
         </tr>
-        <tr title="User-defined priority adjustment: higher nice values reduce the job’s priority in the scheduler. Set with --nice option.">
-            <td>Nice</td>
+        <tr>
+            <td>
+                Nice
+                <button type="button"
+                        class="btn p-0"
+                        data-bs-toggle="tooltip"
+                        data-bs-trigger="click focus"
+                        data-bs-placement="top"
+                        title="User-defined priority adjustment: higher nice values reduce the job’s priority in the scheduler. Set with --nice option.">
+                    <i title="Click here for more information">&#9432;</i>
+                </button>
+            </td>
             <td>{{NICE}}</td>
         </tr>
     </table>

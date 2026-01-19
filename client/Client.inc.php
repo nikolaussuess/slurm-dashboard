@@ -159,10 +159,11 @@ interface Client{
     /**
      * Queries information about user $user_name from slurmdb.
      * @param string $user_name The user to search for.
+     * @param bool $with_deleted Whether deleted users should be queried, too (default FALSE).
      * @return array Infos about the user.
      * @unstable
      */
-    function get_user(string $user_name) : array;
+    function get_user(string $user_name, bool $with_deleted = FALSE) : array;
 
     /**
      * Get a list of all slurm users from slurmdb.
@@ -212,6 +213,8 @@ interface Client{
      * @unstable
      */
     function get_maintenances() : array;
+
+    function get_fairshare(?string $user_name) : array;
 
     function cancel_job(string|int $job_id) : bool;
     function update_job(array $job_data) : bool;

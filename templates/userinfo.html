@@ -1,0 +1,55 @@
+<div class="table-responsive">
+    <table class="table">
+        <tr title="Username">
+            <td>Username</td>
+            <td>{{USERNAME}}</td>
+        </tr>
+        <tr title="Full name of the user (from the LDAP server)">
+            <td>Full name</td>
+            <td>{{FULLNAME}}</td>
+        </tr>
+        <tr title="Department (from the LDAP server)">
+            <td>Department</td>
+            <td>{{DEPARTMENT}}</td>
+        </tr>
+        <tr title="E-Mail address (from the LDAP server)">
+            <td>Mail</td>
+            <td>{{MAIL}}</td>
+        </tr>
+        <tr title="Telephone number (from the LDAP server)">
+            <td>Telephone</td>
+            <td>{{TELEPHONE}}</td>
+        </tr>
+
+        <tr></tr>
+        <tr>
+            <th colspan="2">Slurm data</th>
+        </tr>
+        <tr title="Deleted or active">
+            <td>Status</td>
+            <td>{{STATUS}}</td>
+        </tr>
+        <tr title="Accounts the user is allowed to use">
+            <td>Accounts</td>
+            <td><ul>{{ACCOUNTS}}</ul></td>
+        </tr>
+        <tr title="Default account">
+            <td>Default account</td>
+            <td>{{DEFAULT_ACCOUNT}}</td>
+        </tr>
+        <tr title="Default Quality of Service">
+            <td>Default QOS</td>
+            <td>{{DEFAULT_QOS}}</td>
+        </tr>
+        <tr title="Privileges">
+            <td>Privileges</td>
+            <td>{{PRIVILEGES}}</td>
+        </tr>
+
+        <tr></tr>
+        <tr>
+            <th colspan="2">Fairshare values per account</th>
+        </tr>
+        {{FAIRSHARE}}
+    </table>
+</div>

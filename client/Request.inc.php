@@ -11,11 +11,56 @@ use exceptions\ConfigurationError;
 use exceptions\RequestFailedException;
 
 interface Request {
+    /**
+     * @param string $endpoint Endpoint to call
+     * @param string $namespace slurm or slurmdb
+     * @param string $api_version API version, e.g. v0.0.40
+     * @param int $ttl how long to cache the request
+     * @throws RequestFailedException In case of errors
+     * @return array associative array
+     */
     function request_json(string $endpoint, string $namespace, string $api_version, int $ttl = 5) : array;
+
+    /**
+     * @param string $full_endpoint Endpoint to call (incl. namespace and api version)
+     * @param int $ttl how long to cache the request
+     * @return array associative array
+     */
+    function request_json2(string $full_endpoint, int $ttl = 5) : array;
+
+    /**
+     * @param string $endpoint Endpoint to call
+     * @param string $namespace slurm or slurmdb
+     * @param string $api_version API version, e.g. v0.0.40
+     * @param int $ttl how long to cache the request
+     * @throws RequestFailedException In case of errors
+     * @return string plain body of the response
+     */
     function request_plain(string $endpoint, string $namespace, string $api_version, int $ttl = 5) : string;
+
+    /**
+     * @return bool true if the socket exists, false otherwise
+     */
     static function socket_exists() : bool;
 
+    /**
+     * HTTP delete request, e.g. to cancel a job.
+     * @param string $endpoint Endpoint to call
+     * @param string $namespace slurm or slurmdb
+     * @param string $api_version API version, e.g. v0.0.40
+     * @throws RequestFailedException In case of errors
+     * @return mixed associative array
+     */
     function request_delete(string $endpoint, string $namespace, string $api_version) : mixed;
+
+    /**
+     * Post JSON, e.g. submit jobs or something else
+     * @param string $endpoint Endpoint to call
+     * @param string $namespace slurm or slurmdb
+     * @param string $api_version API version, e.g. v0.0.40
+     * @throws RequestFailedException In case of errors
+     * @return mixed associative array
+     */
     function request_post_json(string $endpoint, string $namespace, string $api_version, array $data) : array;
 }
 
@@ -61,6 +106,7 @@ class UnixRequest implements Request {
 
         // Split the response headers and body
         list($header, $body) = explode("\r\n\r\n", $response, 2);
+        $this->handle_http_headers(trim($header), array("content-type"=>'application/json')); // may throw an exception
         $body = trim(str_replace("Connection: Close", "", $body));
 
         #print "<pre>";
@@ -111,6 +157,7 @@ class UnixRequest implements Request {
 
         // Split the response headers and body
         list($header, $body) = explode("\r\n\r\n", $response, 2);
+        $this->handle_http_headers(trim($header), array("content-type"=>'application/json')); // may throw an exception
         $body = str_replace("Connection: Close", "", $body);
         #print "<pre>";
         #print_r($header);
@@ -160,6 +207,7 @@ class UnixRequest implements Request {
 
         // Split the response headers and body
         list($header, $body) = explode("\r\n\r\n", $response, 2);
+        $this->handle_http_headers(trim($header)); // may throw an exception
         $body = str_replace("Connection: Close", "", $body);
 
         #print "<pre>";
@@ -194,6 +242,7 @@ class UnixRequest implements Request {
 
         // Split the response headers and body
         list($header, $body) = explode("\r\n\r\n", $response, 2);
+        $this->handle_http_headers(trim($header)); // may throw an exception
         $body = str_replace("Connection: Close", "", $body);
 
         // Decode the JSON response
@@ -250,6 +299,7 @@ class UnixRequest implements Request {
 
         // Split the response headers and body
         list($header, $body) = explode("\r\n\r\n", $response, 2);
+        $this->handle_http_headers(trim($header)); // may throw an exception
         $body = str_replace("Connection: Close", "", $body);
 
         // Decode the JSON response
@@ -268,6 +318,66 @@ class UnixRequest implements Request {
         return $data;
     }
 
+    /**
+     * Check if all HTTP headers that we expect are actually here.
+     * @throws RequestFailedException if some header is missing.
+     */
+    function handle_http_headers($header, $expected_headers = array()) {
+        $headers = explode("\r\n", $header);
+        $statusLine = array_shift($headers);
+        preg_match('#HTTP/\d\.\d\s+(\d+)\s+(.*)#', $statusLine, $m);
+
+        $statusCode = (int)$m[1];
+
+        $statusText = $m[2];
+
+        $parsed = [];
+        foreach ($headers as $line) {
+            [$name, $value] = explode(':', $line, 2);
+            $parsed[strtolower(trim($name))] = trim($value);
+        }
+
+        if( $statusCode == 401 ) /* UNAUTHORIZED */ {
+            throw new RequestFailedException(
+                'UNAUTHORIZED',
+                'Server answered 401 UNAUTHORIZED.',
+                NULL,
+                401
+            );
+        }
+
+        foreach( $expected_headers as $expected_header => $expected_value ){
+            $expected_header = strtolower($expected_header);
+            $expected_value = strtolower($expected_value);
+            if( ! array_key_exists($expected_header, $parsed) ){
+                throw new RequestFailedException(
+                    "Server response malformed.",
+                    "Expected header '$expected_header' but was missing.",
+                    NULL,
+                    500
+                );
+            }
+
+            // Special handling for content type
+            if($expected_header == 'content-type' && $parsed[$expected_header] != $expected_value ){
+                throw new RequestFailedException(
+                    "Server response malformed. We got another content type than expected.",
+                    "Expected content-type: $expected_value, but got: $parsed[$expected_header]",
+                    NULL,
+                    500
+                );
+            }
+            // Others
+            elseif( $parsed[$expected_header] != $expected_value ){
+                throw new RequestFailedException(
+                    "Server response malformed.",
+                    "Expected: $expected_value, but got: $parsed[$expected_header]",
+                    NULL,
+                    500
+                );
+            }
+        }
+    }
 
     function __destruct(){
         // Close the socket

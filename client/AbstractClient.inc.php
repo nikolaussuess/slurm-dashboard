@@ -64,6 +64,13 @@ abstract class AbstractClient implements Client {
             $jobs[] = $job;
         }
 
+        // Order by some parameter
+        if($filter != NULL){
+            if(isset($filter['orderby']) && in_array($filter['orderby'], array('job_id', 'user_name', 'priority', 'time_start'))){
+                $jobs = $this->_slurm_queue_order_by($jobs, $filter['orderby']);
+            }
+        }
+
         return $jobs;
     }
 
@@ -516,6 +523,30 @@ abstract class AbstractClient implements Client {
             }
             return FALSE;
         }, ARRAY_FILTER_USE_BOTH);
+    }
+
+    protected function _slurm_queue_order_by(array $jobs, string $orderby) : array {
+        if( !in_array($orderby, array('job_id', 'user_name', 'priority', 'time_start')))
+            return $jobs;
+
+        // 'job_id'     ASC,
+        // 'user_name'  ASC,
+        // 'priority'   DESC,
+        // 'time_start' ASC
+        if($orderby == 'priority') {
+            // DESC
+            usort($jobs, function ($a, $b) use ($orderby) {
+                return $b[$orderby] <=> $a[$orderby];
+            });
+        }
+        else {
+            // ASC
+            usort($jobs, function ($a, $b) use ($orderby) {
+                return $a[$orderby] <=> $b[$orderby];
+            });
+        }
+
+        return $jobs;
     }
 
 }

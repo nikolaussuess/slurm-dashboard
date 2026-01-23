@@ -14,25 +14,39 @@ function get_slurm_queue($jobs, $exclude_p_low) : string {
     // The filtering is done locally on the web server.
     // JavaScript is required.
     $contents .= <<<EOF
-<div class="form-check form-switch">
-  <input 
+<div class="d-flex flex-wrap align-items-center gap-3">
+
+  <div class="form-check form-switch m-0">
+    <input 
         class="form-check-input" 
         type="checkbox" 
         role="switch" 
-        id="show_p_low" 
-        onclick="if( this.checked ) window.location.href = '?action=jobs&exclude_p_low=1'; else window.location.href = '?action=jobs';"
-EOF;
-
-    if($exclude_p_low)
-        $contents .= ' checked ';
-
-    $contents .= <<<EOF
+        id="show_p_low"
         >
-  <label 
-        class="form-check-label" 
-        for="show_p_low">
-            Hide partition <span title="Every user can use partition p_low. The aim of the partition p_low is to use any (currently) unused resources for experiments that should finish at some point, but it does not matter when. Any normal job will have higher priority than a job in p_low and will hence interrupt (REQUEUE) these jobs."><span class="monospaced">p_low</span></span>
-  </label>
+    <label class="form-check-label" for="show_p_low">
+      Hide partition <span class="monospaced">p_low</span>
+      <button type="button"
+              class="btn p-0"
+              data-bs-toggle="tooltip"
+              data-bs-trigger="click focus"
+              data-bs-placement="top"
+              title="Every user can use partition p_low. The aim of the partition p_low is to use any (currently) unused resources for experiments that should finish at some point, but it does not matter when. Any normal job will have higher priority than a job in p_low and will hence interrupt (REQUEUE) these jobs.">
+          <i title="Click here for more information">&#9432;</i>
+      </button>
+      
+    </label>
+  </div>
+
+  <div class="d-flex align-items-center gap-2 ms-auto">
+    <b>Order by:</b>
+    <select id="orderBySelect" class="form-select form-select-sm" style="width:auto">
+      <option value="job_id">Job ID</option>
+      <option value="user_name">Username</option>
+      <option value="priority">Priority</option>
+      <option value="time_start">Start time</option>
+    </select>
+  </div>
+
 </div>
 EOF;
 
@@ -53,6 +67,8 @@ EOF;
     else
         $contents .= get_slurm_queue_compact($jobs);
 
+    $orderBy = $_GET['orderby'] ?? 'job_id';
+
     $contents .= <<<EOF
 <div class="d-flex align-items-center gap-2">
   <b>View:</b> 
@@ -70,16 +86,52 @@ EOF;
 
 <script>
     const toggle = document.getElementById("viewToggle");
+    const orderBySelect = document.getElementById("orderBySelect");
+    const togglePLow = document.getElementById("show_p_low");
     toggle.checked = ("$preferred_view" === "table");
+    togglePLow.checked = ("$exclude_p_low" === "1");
+    orderBySelect.value = "$orderBy";
 
+    
     toggle.addEventListener("change", function () {
-
         // Build new URL
         const newView = this.checked ? "table" : "compact";
-        const url = `?action=jobs&exclude_p_low={$exclude_p_low}&preferred_view=`+newView;
+        const url = `?action=jobs`+
+                    `&exclude_p_low=$exclude_p_low`+
+                    `&preferred_view=`+newView+
+                    `&orderby=`+orderBySelect.value;
 
         window.location.href = url;
     });
+    
+    togglePLow.addEventListener("change", function () {
+        // Build new URL
+        const newView = this.checked ? "1" : "0";
+        const url = `?action=jobs`+
+                    `&exclude_p_low=`+newView+
+                    `&preferred_view=$preferred_view`+
+                    `&orderby=`+orderBySelect.value;
+
+        window.location.href = url;
+    });
+    
+    orderBySelect.addEventListener("change", function () {
+        // Build new URL
+        const newView = this.value;
+        const url = `?action=jobs`+
+                    `&exclude_p_low=$exclude_p_low`+
+                    `&preferred_view=$preferred_view`+
+                    `&orderby=`+newView;
+
+        window.location.href = url;
+    });
+    
+    
+    // To allow to click on the table column headers for sorting
+    function setOrderBy(value) {
+        orderBySelect.value = value;
+        orderBySelect.dispatchEvent(new Event("change", { bubbles: true }));
+    }
 </script>
 
 EOF;

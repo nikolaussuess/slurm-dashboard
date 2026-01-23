@@ -145,6 +145,8 @@ if( isset($_SESSION['USER']) ){
             $filter = array();
             if($exclude_p_low)
                 $filter['exclude_p_low'] = 1;
+            if(isset($_GET['orderby']))
+                $filter['orderby'] = $_GET['orderby'];
 
             $jobs = $dao->get_jobs($filter);
 

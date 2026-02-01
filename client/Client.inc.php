@@ -227,6 +227,18 @@ class ClientFactory {
         if( $version === NULL )
             $version = config('REST_API_VERSION');
 
+        if( dashboard_is_unconfigured() ){
+            // We catch this here, because otherwise people accessing the dashboard via the IP
+            // address might result in a lot of "UNAUTHORIZED" log messages if the environment
+            // variables are only set for specific virtual hosts.
+            throw new ConfigurationError(
+                "Dashboard not configured (at this address).",
+                "Some required environment variables are missing.",
+                "Dashboard not configured (at this server address). UNAUTHORIZED ACCESS",
+                403
+            );
+        }
+
         if( $version == 'auto' ){
             $response = RequestFactory::newRequest()->request_json2("openapi/v3", 0);
             if(! isset($response['info']['x-slurm']['data_parsers']) ){

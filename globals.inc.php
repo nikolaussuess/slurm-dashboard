@@ -136,8 +136,21 @@ function config($key = null) {
 const LOG_MODE_PHP = 1;
 const LOG_MODE_SYSLOG = 2;
 
+function dashboard_is_unconfigured() : bool {
+    return config('CLUSTER_NAME') == TO_BE_REPLACED || config('SLURM_LOGIN_NODE') == TO_BE_REPLACED;
+}
+
 openlog('slurm-dashboard: ', LOG_PID, LOG_USER);
 function log_msg(string $message, int $error_level = LOG_INFO, int $mode = LOG_MODE_PHP): void{
+
+    // We do NOT log if the dashboard is not configured at all.
+    // We catch this here, because otherwise people accessing the dashboard via the IP
+    // address might result in a lot of "UNAUTHORIZED" log messages if the environment
+    // variables are only set for specific virtual hosts (which might be good to exclude
+    // bots from accessing the login page).
+    if( dashboard_is_unconfigured() )
+        return;
+
     if ($mode & LOG_MODE_SYSLOG) {
         syslog($error_level, $message);
     }

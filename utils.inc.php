@@ -94,7 +94,7 @@ function slurmTimeLimitFromString(string $time): array {
     $hours   = (int)$matches[2];
     $minutes = (int)$matches[4];
 
-    // Convert everything to seconds
+    // Convert everything to minutes
     return array("set"=> 1, "infinite"=> 0, "number"=>$minutes + 60 * $hours + 1440 * $days);
 }
 

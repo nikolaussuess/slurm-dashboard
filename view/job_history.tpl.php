@@ -37,7 +37,7 @@ function get_slurmdb_filter_form_evaluation() : array {
                 $filter['start_time'] = $start_time;
             } catch (Exception $e) {
                 addError("Start time value (" . htmlspecialchars($filter['start_time_value'], ENT_QUOTES, 'UTF-8') . ") invalid: " .
-                    $e->getMessage() . "; Ignoring value");
+                    htmlspecialchars($e->getMessage(), ENT_QUOTES, 'UTF-8') . "; Ignoring value");
             }
         }
 
@@ -49,8 +49,8 @@ function get_slurmdb_filter_form_evaluation() : array {
                 $end_time = $dateTimeObject->getTimestamp();
                 $filter['end_time'] = $end_time;
             } catch (Exception $e) {
-                addError("End time value (" . htmlspecialchars($filter['end_time_value'], ENT_QUOTES, 'UTF-8') . ") invalid: " . $e->getMessage() .
-                    "; Ignoring value");
+                addError("End time value (" . htmlspecialchars($filter['end_time_value'], ENT_QUOTES, 'UTF-8') . ") invalid: " .
+                    htmlspecialchars($e->getMessage(), ENT_QUOTES, 'UTF-8') . "; Ignoring value");
             }
         }
 

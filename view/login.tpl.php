@@ -23,6 +23,7 @@ function get_login_form() : string {
     $templateBuilder->setParam("action", "login");
     $templateBuilder->setParam("buttontext", "Login");
     $templateBuilder->setParam("methods", $methods_string);
+    $templateBuilder->setParam("CSRF_TOKEN", \auth\get_csrf_token());
     return $templateBuilder->build();
 }
 

@@ -9,7 +9,7 @@ function get_maintenances(array $maintenances) : string {
     foreach( $maintenances as $maintenance ){
         $contents .= '<li>Node(s) ';
         if(isset($maintenance['node_list']))
-            $contents .= '<span class="monospaced">' . $maintenance['node_list'] . '</span>';
+            $contents .= '<span class="monospaced">' . htmlspecialchars($maintenance['node_list'], ENT_QUOTES, 'UTF-8') . '</span>';
         else
             $contents .= '(any)';
         $contents .= " will be unavailable from " . \utils\get_date_from_unix_if_defined($maintenance, 'start_time')

@@ -2,7 +2,7 @@
 
 namespace view\actions;
 
-function get_slurm_queue($jobs, $exclude_p_low) : string {
+function get_slurm_queue($jobs, $exclude_p_low, string $nonce = '') : string {
     $contents = "<h2>Jobs</h2>";
 
     // Allow to exclude jobs of partition p_low
@@ -53,12 +53,10 @@ EOF;
 
     $contents .= '<div>Found <span style="font-weight: bold">' . count($jobs) . ' jobs</span>.</div>';
 
-    if(isset($_GET['preferred_view'])){
+    if(isset($_GET['preferred_view']) && ($_GET['preferred_view'] === "compact" || $_GET['preferred_view'] === "table")){
         $preferred_view = $_GET['preferred_view'];
-        if($preferred_view === "compact" || $preferred_view === "table")
-            $_SESSION['preferred_view'] = $preferred_view;
-    }
-    else {
+        $_SESSION['preferred_view'] = $preferred_view;
+    } else {
         $preferred_view = $_SESSION['preferred_view'] ?? "compact";
     }
 
@@ -67,7 +65,8 @@ EOF;
     else
         $contents .= get_slurm_queue_compact($jobs);
 
-    $orderBy = $_GET['orderby'] ?? 'job_id';
+    $valid_order_fields = ['job_id', 'user_name', 'priority', 'time_start'];
+    $orderBy = in_array($_GET['orderby'] ?? '', $valid_order_fields, true) ? $_GET['orderby'] : 'job_id';
 
     $contents .= <<<EOF
 <div class="d-flex align-items-center gap-2">
@@ -84,7 +83,7 @@ EOF;
 
 
 
-<script>
+<script nonce="$nonce">
     const toggle = document.getElementById("viewToggle");
     const orderBySelect = document.getElementById("orderBySelect");
     const togglePLow = document.getElementById("show_p_low");
@@ -164,22 +163,26 @@ EOF;
 
     foreach( $jobs as $job ) {
 
+        $job_name_e = htmlspecialchars($job['job_name'], ENT_QUOTES, 'UTF-8');
+        $partition_e = htmlspecialchars($job['partition'], ENT_QUOTES, 'UTF-8');
+        $user_e     = htmlspecialchars($job['user_name'], ENT_QUOTES, 'UTF-8');
+        $user_id_e  = htmlspecialchars((string)$job['user_id'], ENT_QUOTES, 'UTF-8');
         $contents .= "<tr>";
         $contents .=    "<td>" . $job['job_id'] . "</td>";
-        $contents .=    "<td class='breakable'>" . $job['job_name'] . "</td>";
-        $contents .=    "<td>" . $job['partition'] . "</td>";
-        $contents .=    '<td title="' . $job['user_name'] . " (" . $job['user_id'] . ') ">' . $job['user_name'] ."</td>";
+        $contents .=    "<td class='breakable'>" . $job_name_e . "</td>";
+        $contents .=    "<td>" . $partition_e . "</td>";
+        $contents .=    '<td title="' . $user_e . " (" . $user_id_e . ') ">' . $user_e . "</td>";
         $contents .=    "<td>" . \utils\get_job_state_view($job) . "</td>";
         $contents .=    "<td>" . $job['time_start'] . "</td>";
         $contents .=    "<td>" . $job['time_limit'] . "</td>";
         $contents .=    "<td>";
         if($job['nodes'] != '?')
-            $contents .= $job['nodes'];
+            $contents .= htmlspecialchars($job['nodes'], ENT_QUOTES, 'UTF-8');
         else
             $contents .= '<span title="Not yet scheduled. Showing node count instead." class="node-count">' .
                 ($job['node_count'] != NULL ? $job['node_count'] : "?") . '</span>';
         $contents .= "</td>";
-        $contents .= '<td>' . $job['priority'] . '</td>';
+        $contents .= '<td>' . (int)$job['priority'] . '</td>';
         $contents .= <<<EOF
 <td>
     <div class="btn-group">
@@ -268,10 +271,14 @@ EOF;
 
     foreach( $jobs as $job ) {
 
+        $job_name_e = htmlspecialchars($job['job_name'], ENT_QUOTES, 'UTF-8');
+        $partition_e = htmlspecialchars($job['partition'], ENT_QUOTES, 'UTF-8');
+        $user_e     = htmlspecialchars($job['user_name'], ENT_QUOTES, 'UTF-8');
+        $user_id_e  = htmlspecialchars((string)$job['user_id'], ENT_QUOTES, 'UTF-8');
         $contents .= "<tr>";
         $contents .=    "<td title='Job-ID'>" . $job['job_id'] . "</td>";
-        $contents .=    "<td class='breakable' rowspan='2'>" . $job['job_name'] . "</td>";
-        $contents .=    '<td>' . $job['partition'] . "</td>";
+        $contents .=    "<td class='breakable' rowspan='2'>" . $job_name_e . "</td>";
+        $contents .=    '<td>' . $partition_e . "</td>";
         $contents .=    "<td>" . $job['time_start'] . "</td>";
         $contents .=    "<td>" . \utils\get_job_state_view($job) . "</td>";
 
@@ -328,13 +335,13 @@ EOF;
 
     <tr>
 EOF;
-        $contents .=    '<td title="Calculated job priority">' . $job['priority'] . '</td>';
-        $contents .=    '<td title="' . $job['user_name'] . " (" . $job['user_id'] . ') ">' . $job['user_name'] ."</td>";
+        $contents .=    '<td title="Calculated job priority">' . (int)$job['priority'] . '</td>';
+        $contents .=    '<td title="' . $user_e . " (" . $user_id_e . ') ">' . $user_e . "</td>";
         $contents .=    "<td>" . $job['time_limit'] . "</td>";
 
         $contents .=    "<td>";
         if($job['nodes'] != '?')
-            $contents .= $job['nodes'];
+            $contents .= htmlspecialchars($job['nodes'], ENT_QUOTES, 'UTF-8');
         else
             $contents .= '<span title="Not yet scheduled. Showing node count instead." class="node-count">' .
                          ($job['node_count'] != NULL ? $job['node_count'] : "?") . '</span>';

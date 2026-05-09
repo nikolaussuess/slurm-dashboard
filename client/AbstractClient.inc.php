@@ -355,16 +355,16 @@ abstract class AbstractClient implements Client {
     function update_job(array $job_data) : bool{
         if(isset($job_data['time_limit']) && (
             !isset($job_data['time_limit']['infinite']) && !isset($job_data['time_limit']['set']) ||
-            isset($job_data['time_liit']['infinite']) && !(intval($job_data['time_limit']['infinite']) == 1 || intval($job_data['time_limit']['infinite']) == 0) ||
+            isset($job_data['time_limit']['infinite']) && !(intval($job_data['time_limit']['infinite']) == 1 || intval($job_data['time_limit']['infinite']) == 0) ||
             isset($job_data['time_limit']['set']) && intval($job_data['time_limit']['number']) <= 0
             )){
             throw new \exceptions\ValidationException("Wrong format for time_limit.");
         }
-        if(isset($job_data['nice_value']) && intval($job_data['nice_value']) != $job_data['nice_value']){
+        if(isset($job_data['nice']) && filter_var($job_data['nice'], FILTER_VALIDATE_INT) === false){
             throw new \exceptions\ValidationException("Wrong format for nice_value.");
         }
         if(!isset($job_data['comment'])){
-            throw new \exceptions\ValidationException("Comment was empty.");
+            throw new \exceptions\ValidationException("Comment was not set.");
         }
 
         $json = RequestFactory::newRequest()

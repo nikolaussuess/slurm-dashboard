@@ -36,12 +36,12 @@ namespace {
     function auth(string $username, string $password, string $method = 'ldap') : bool{
 
         if(\auth\rate_limit()){
-            addError("Rate limit exceeded: Please wait 20 seconds until you try again!");
+            addError("Rate limit exceeded: Please wait 60 seconds until you try again!");
             http_response_code(429); // HTTP/1.1 429 Too Many Requests
             return FALSE;
         }
 
-        if( count_chars($password) < 8 ){
+        if( strlen($password) < 8 ){
             addError("Password too short.");
             return FALSE;
         }
@@ -145,21 +145,22 @@ namespace auth {
             );
             return FALSE;
         }
-        $userIp = $_SERVER['REMOTE_ADDR'];
-        $key = 'login_from_' . md5($userIp);
+        $key = 'login_attempts_from_' . md5($_SERVER['REMOTE_ADDR']);
+        $max_attempts = 3;
 
-        // Check if the key exists in APCu
-        if (apcu_exists($key)) {
+        // apcu_add only writes if the key does not yet exist, preserving the TTL on subsequent calls
+        apcu_add($key, 0, 60);
+        $attempts = apcu_inc($key);
+
+        if ($attempts > $max_attempts) {
             log_msg(
                 "REMOTE_ADDR " . $_SERVER['REMOTE_ADDR'] .
-                " has reached the rate limit and has been restricted for 20 seconds.",
+                " has reached the rate limit and has been restricted for 60 seconds.",
                 LOG_INFO,
                 LOG_MODE_PHP|LOG_MODE_SYSLOG
             );
             return TRUE;
         }
-        // Key does not exist, allow submission and set it with TTL
-        apcu_store($key, time(), 20);
         return FALSE;
     }
 
@@ -181,5 +182,16 @@ namespace auth {
      */
     function current_user_is_privileged() : bool {
         return current_user_is_admin() || in_array($_SESSION['USER'], config('PRIV_USERS'), TRUE);
+    }
+
+    function get_csrf_token(): string {
+        if (!isset($_SESSION['csrf_token'])) {
+            $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+        }
+        return $_SESSION['csrf_token'];
+    }
+
+    function validate_csrf_token(string $token): bool {
+        return isset($_SESSION['csrf_token']) && hash_equals($_SESSION['csrf_token'], $token);
     }
 }

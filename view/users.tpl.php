@@ -26,7 +26,7 @@ EOF;
         try {
             $ldap_client = new \auth\LDAP();
         } catch (Exception $e){
-            addError($e->getMessage());
+            addError(htmlspecialchars($e->getMessage(), ENT_QUOTES, 'UTF-8'));
         }
     }
 
@@ -36,20 +36,22 @@ EOF;
         if( isset($user_arr['flags']) && is_array($user_arr['flags']))
             $deleted = in_array("DELETED", $user_arr['flags']);
 
+        $name_e = htmlspecialchars($user_arr['name'], ENT_QUOTES, 'UTF-8');
         if( $deleted ){
             $contents .= '<tr class="deleted-user" title="User was already deleted.">';
-            $contents .=    '<td><a href="?action=users&user_name='.$user_arr['name'].'">' . $user_arr['name'] . '</a> (deleted)</td>';
+            $contents .=    '<td><a href="?action=users&user_name=' . $name_e . '">' . $name_e . '</a> (deleted)</td>';
         }
         else {
             $contents .= "<tr>";
-            $contents .=    '<td><a href="?action=users&user_name='.$user_arr['name'].'">' . $user_arr['name'] . '</a></td>';
+            $contents .=    '<td><a href="?action=users&user_name=' . $name_e . '">' . $name_e . '</a></td>';
         }
         $contents .=    "<td><ul>";
         foreach($user_arr['associations'] as $assoc){
+            $account_e = htmlspecialchars($assoc['account'], ENT_QUOTES, 'UTF-8');
             if($assoc['account'] == $user_arr['default']['account'])
-                $contents .= '<li><b title="Default account">' . $assoc['account'] . '</b> (default)</li>';
+                $contents .= '<li><b title="Default account">' . $account_e . '</b> (default)</li>';
             else
-                $contents .= '<li>' . $assoc['account'] . '</li>';
+                $contents .= '<li>' . $account_e . '</li>';
         }
         $contents .=           "</ul></td>";
         if( implode(", ", $user_arr['administrator_level']) == 'None' && in_array($user_arr['name'], config('PRIV_USERS')))
@@ -59,7 +61,7 @@ EOF;
         elseif( implode(", ", $user_arr['administrator_level']) == 'None')
             $contents .=    '<td title="Normal user">-</td>';
         else
-            $contents .=    "<td>" . implode(", ", $user_arr['administrator_level']) . "</td>";
+            $contents .=    "<td>" . htmlspecialchars(implode(", ", $user_arr['administrator_level']), ENT_QUOTES, 'UTF-8') . "</td>";
 
         // LDAP
         if( ! \auth\LDAP::is_supported() || $user_arr['name'] == "root" || $ldap_client === NULL ){
@@ -72,10 +74,10 @@ EOF;
             }
             else {
                 for($i = 0; $i < $ldap_data["count"]; $i++){
-                    $contents .=    "<td>" . $ldap_data[$i]["displayname"][0] . "</td>";
-                    $contents .=    "<td>" . $ldap_data[$i]["department"][0];
+                    $contents .=    "<td>" . htmlspecialchars($ldap_data[$i]["displayname"][0] ?? '', ENT_QUOTES, 'UTF-8') . "</td>";
+                    $contents .=    "<td>" . htmlspecialchars($ldap_data[$i]["department"][0] ?? '', ENT_QUOTES, 'UTF-8');
                     if(isset($ldap_data[$i]["departmentnumber"]) && isset($ldap_data[$i]["departmentnumber"][0])){
-                        $contents .= " (" . $ldap_data[$i]["departmentnumber"][0] . ")";
+                        $contents .= " (" . htmlspecialchars($ldap_data[$i]["departmentnumber"][0], ENT_QUOTES, 'UTF-8') . ")";
                     }
                     $contents .= "</td>";
 
@@ -117,13 +119,13 @@ function get_user(string $user_name, array $user_arr, array $shares) : string {
     foreach($user_arr['associations'] as $assoc){
         if($assoc['account'] == $user_arr['default']['account'])
             $accounts .= '<li><b title="Default account">'
-                         . $assoc['account']
-                         . '</b> (default), cluster ' . $assoc['cluster']
-                         . ' (ID ' . $assoc['id'] . ')</li>';
+                         . htmlspecialchars($assoc['account'], ENT_QUOTES, 'UTF-8')
+                         . '</b> (default), cluster ' . htmlspecialchars($assoc['cluster'], ENT_QUOTES, 'UTF-8')
+                         . ' (ID ' . (int)$assoc['id'] . ')</li>';
         else
-            $accounts .= '<li>' . $assoc['account']
-                          . ', cluster ' . $assoc['cluster']
-                          . ' (ID ' . $assoc['id'] . ')</li>';
+            $accounts .= '<li>' . htmlspecialchars($assoc['account'], ENT_QUOTES, 'UTF-8')
+                          . ', cluster ' . htmlspecialchars($assoc['cluster'], ENT_QUOTES, 'UTF-8')
+                          . ' (ID ' . (int)$assoc['id'] . ')</li>';
     }
 
     // Admin privileges
@@ -134,7 +136,7 @@ function get_user(string $user_name, array $user_arr, array $shares) : string {
     elseif( implode(", ", $user_arr['administrator_level']) == 'None')
         $admin_privs =    '<span title="Normal user">-</span>';
     else
-        $admin_privs =    implode(", ", $user_arr['administrator_level']);
+        $admin_privs =    htmlspecialchars(implode(", ", $user_arr['administrator_level']), ENT_QUOTES, 'UTF-8');
 
     // retrieve LDAP data
     $ldap_client = NULL;
@@ -142,7 +144,7 @@ function get_user(string $user_name, array $user_arr, array $shares) : string {
         try {
             $ldap_client = new \auth\LDAP();
         } catch (Exception $e){
-            addError($e->getMessage());
+            addError(htmlspecialchars($e->getMessage(), ENT_QUOTES, 'UTF-8'));
         }
     }
 
@@ -154,22 +156,28 @@ function get_user(string $user_name, array $user_arr, array $shares) : string {
     if (\auth\LDAP::is_supported() && $user_arr['name'] != "root" && $ldap_client !== NULL) {
         $ldap_data = $ldap_client->get_data_for_user($user_arr['name']);
         if($ldap_data["count"] === 1){
-            $full_name = $ldap_data[0]["displayname"][0];
-            $department .= $ldap_data[0]["department"][0];
+            $full_name = htmlspecialchars($ldap_data[0]["displayname"][0] ?? '', ENT_QUOTES, 'UTF-8');
+            $department .= htmlspecialchars($ldap_data[0]["department"][0] ?? '', ENT_QUOTES, 'UTF-8');
             if(isset($ldap_data[0]["departmentnumber"]) && isset($ldap_data[0]["departmentnumber"][0])){
-                $department .= ' (' . $ldap_data[0]["departmentnumber"][0] . ')';
+                $department .= ' (' . htmlspecialchars($ldap_data[0]["departmentnumber"][0], ENT_QUOTES, 'UTF-8') . ')';
             }
-            $mail = '<a href="mailto:' . $ldap_data[0]["mail"][0] . '">' . $ldap_data[0]["mail"][0] . '</a>';
-            $telephone = $ldap_data[0]["telephonenumber"][0] ?? '';
+            $raw_mail = $ldap_data[0]["mail"][0] ?? '';
+            if(filter_var($raw_mail, FILTER_VALIDATE_EMAIL)){
+                $mail = '<a href="mailto:' . htmlspecialchars($raw_mail, ENT_QUOTES, 'UTF-8') . '">' . htmlspecialchars($raw_mail, ENT_QUOTES, 'UTF-8') . '</a>';
+            } else {
+                $mail = htmlspecialchars($raw_mail, ENT_QUOTES, 'UTF-8');
+            }
+            $telephone = htmlspecialchars($ldap_data[0]["telephonenumber"][0] ?? '', ENT_QUOTES, 'UTF-8');
         }
     }
 
     $fairshare_table = '';
     foreach($shares as $share){
+        $parent_e = htmlspecialchars($share['parent'], ENT_QUOTES, 'UTF-8');
         $fairshare_table .=<<<EOF
 <tr>
     <td colspan="2">
-        <b class="intent-left-level1">Account <span class="monospaced">{$share['parent']}</span></b>
+        <b class="intent-left-level1">Account <span class="monospaced">{$parent_e}</span></b>
     </td>
 </tr>
 <tr>
@@ -263,8 +271,8 @@ EOF;
 
     $templateBuilder->setParam("STATUS", $status);
     $templateBuilder->setParam("ACCOUNTS", $accounts);
-    $templateBuilder->setParam("DEFAULT_ACCOUNT", $user_arr['default']['account']);
-    $templateBuilder->setParam("DEFAULT_QOS", $user_arr['default']['qos'] ?? 'N/A');
+    $templateBuilder->setParam("DEFAULT_ACCOUNT", htmlspecialchars($user_arr['default']['account'], ENT_QUOTES, 'UTF-8'));
+    $templateBuilder->setParam("DEFAULT_QOS", htmlspecialchars($user_arr['default']['qos'] ?? 'N/A', ENT_QUOTES, 'UTF-8'));
     $templateBuilder->setParam("PRIVILEGES", $admin_privs);
 
     $templateBuilder->setParam("FAIRSHARE", $fairshare_table);

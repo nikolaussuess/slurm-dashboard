@@ -38,7 +38,12 @@ namespace auth {
                 throw new AuthenticationError("Could not connect to local authentication server.");
             }
 
-            $ok = @ssh2_auth_password($ssh, $username, $password);
+            // To catch a 500 error because of a wrong password
+            try {
+                $ok = @ssh2_auth_password($ssh, $username, $password);
+            } catch (\Exception $e) {
+                $ok = false;
+            }
 
             if(function_exists("ssh2_disconnect")){
                 @ssh2_disconnect($ssh);

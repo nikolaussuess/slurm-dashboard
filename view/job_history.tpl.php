@@ -36,8 +36,8 @@ function get_slurmdb_filter_form_evaluation() : array {
                 $start_time = $dateTimeObject->getTimestamp();
                 $filter['start_time'] = $start_time;
             } catch (Exception $e) {
-                addError("Start time value (" . $filter['start_time_value'] . ") invalid: " .
-                    $e->getMessage() . "; Ignoring value");
+                addError("Start time value (" . htmlspecialchars($filter['start_time_value'], ENT_QUOTES, 'UTF-8') . ") invalid: " .
+                    htmlspecialchars($e->getMessage(), ENT_QUOTES, 'UTF-8') . "; Ignoring value");
             }
         }
 
@@ -49,8 +49,8 @@ function get_slurmdb_filter_form_evaluation() : array {
                 $end_time = $dateTimeObject->getTimestamp();
                 $filter['end_time'] = $end_time;
             } catch (Exception $e) {
-                addError("End time value (" . $filter['end_time_value'] . ") invalid: " . $e->getMessage() .
-                    "; Ignoring value");
+                addError("End time value (" . htmlspecialchars($filter['end_time_value'], ENT_QUOTES, 'UTF-8') . ") invalid: " .
+                    htmlspecialchars($e->getMessage(), ENT_QUOTES, 'UTF-8') . "; Ignoring value");
             }
         }
 
@@ -80,7 +80,14 @@ function get_slurmdb_filter_form_evaluation() : array {
         }
 
         $state = $_POST['form_state'] ?? '';
-        if($state != ''){
+        $valid_states = [
+            'BOOT_FAIL', 'CANCELLED', 'DEADLINE', 'FAILED', 'NODE_FAIL',
+            'OUT_OF_MEMORY', 'STOPPED', 'TIMEOUT', 'COMPLETED', 'COMPLETING',
+            'CONFIGURING', 'RUNNING', 'PENDING', 'PREEMPTED', 'SUSPENDED',
+            'REQUEUED', 'RESV_DEL_HOLD', 'REQUEUE_FED', 'REQUEUE_HOLD',
+            'RESIZING', 'REVOKED', 'SPECIAL_EXIT', 'STAGE_OUT',
+        ];
+        if(in_array($state, $valid_states, true)){
             $filter['state'] = $state;
         }
     }
@@ -96,12 +103,13 @@ function get_slurmdb_filter_form(array $filter, array $accounts, array $users, a
     $account_list = '';
     $selected = FALSE;
     foreach ($accounts as $account){
+        $account_e = htmlspecialchars($account, ENT_QUOTES, 'UTF-8');
         if(isset($filter['account']) && $filter['account'] == $account) {
-            $account_list .= '<option value="' . $account . '" selected>' . $account . '</option>';
+            $account_list .= '<option value="' . $account_e . '" selected>' . $account_e . '</option>';
             $selected = TRUE;
         }
         else {
-            $account_list .= '<option value="' . $account . '">'. $account . '</option>';
+            $account_list .= '<option value="' . $account_e . '">'. $account_e . '</option>';
         }
     }
     if(! $selected)
@@ -113,12 +121,13 @@ function get_slurmdb_filter_form(array $filter, array $accounts, array $users, a
     $users_list = '';
     $selected = FALSE;
     foreach ($users as $user){
+        $user_e = htmlspecialchars($user, ENT_QUOTES, 'UTF-8');
         if(isset($filter['users']) && $filter['users'] == $user) {
-            $users_list .= '<option value="' . $user . '" selected>'. $user . '</option>';
+            $users_list .= '<option value="' . $user_e . '" selected>'. $user_e . '</option>';
             $selected = TRUE;
         }
         else {
-            $users_list .= '<option value="' . $user . '">'. $user . '</option>';
+            $users_list .= '<option value="' . $user_e . '">'. $user_e . '</option>';
         }
     }
     if(! $selected)
@@ -130,12 +139,13 @@ function get_slurmdb_filter_form(array $filter, array $accounts, array $users, a
     $node_list = '';
     $selected = FALSE;
     foreach ($nodes as $node){
+        $node_e = htmlspecialchars($node, ENT_QUOTES, 'UTF-8');
         if(isset($filter['node']) && $filter['node'] == $node) {
-            $node_list .= '<option value="' . $node . '" selected>' . $node . '</option>';
+            $node_list .= '<option value="' . $node_e . '" selected>' . $node_e . '</option>';
             $selected = TRUE;
         }
         else {
-            $node_list .= '<option value="' . $node . '">'. $node . '</option>';
+            $node_list .= '<option value="' . $node_e . '">'. $node_e . '</option>';
         }
     }
     if(! $selected)
@@ -146,13 +156,13 @@ function get_slurmdb_filter_form(array $filter, array $accounts, array $users, a
     $templateBuilder = new TemplateLoader("job_filter_form.html");
     $templateBuilder->setParam("CLUSTER", config("CLUSTER_NAME"));
     $templateBuilder->setParam("ACCOUNT_SELECTS", $account_list);
-    $templateBuilder->setParam("JOB_NAME", $filter['job_name'] ?? '');
-    $templateBuilder->setParam("CONSTRAINTS", $filter['constraints'] ?? '');
+    $templateBuilder->setParam("JOB_NAME", htmlspecialchars($filter['job_name'] ?? '', ENT_QUOTES, 'UTF-8'));
+    $templateBuilder->setParam("CONSTRAINTS", htmlspecialchars($filter['constraints'] ?? '', ENT_QUOTES, 'UTF-8'));
     $templateBuilder->setParam("USER_SELECTS", $users_list);
     $templateBuilder->setParam("NODE_SELECTS", $node_list);
     $templateBuilder->setParam("ACTION", 'action=job_history&do=search');
-    $templateBuilder->setParam("TIME_MIN_VALUE", $filter['start_time_value'] ?? '');
-    $templateBuilder->setParam("TIME_MAX_VALUE", $filter['end_time_value'] ?? '');
+    $templateBuilder->setParam("TIME_MIN_VALUE", htmlspecialchars($filter['start_time_value'] ?? '', ENT_QUOTES, 'UTF-8'));
+    $templateBuilder->setParam("TIME_MAX_VALUE", htmlspecialchars($filter['end_time_value'] ?? '', ENT_QUOTES, 'UTF-8'));
     return $templateBuilder->build();
 }
 

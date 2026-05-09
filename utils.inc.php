@@ -58,7 +58,7 @@ function get_job_state_view(array $job, string $param_name = 'job_state'): strin
             $state_color = "#28a745"; # green
         }
 
-        $job_state_text .= '<span class="badge" style="background-color: ' . $state_color . '">' . $job_state . '</span> ';
+        $job_state_text .= '<span class="badge" style="background-color: ' . $state_color . '">' . htmlspecialchars($job_state, ENT_QUOTES, 'UTF-8') . '</span> ';
     }
     return $job_state_text;
 }
@@ -66,7 +66,7 @@ function get_job_state_view(array $job, string $param_name = 'job_state'): strin
 function show_errors(array $response) : void {
     if(isset($response['errors']) && !empty($response['errors'])){
         foreach ($response['errors'] as $error){
-            addError('<b>' . $error['error'] . '</b> (source: ' . $error['source'] . ')<br>' . $error['description']);
+            addError('<b>' . htmlspecialchars($error['error'], ENT_QUOTES, 'UTF-8') . '</b> (source: ' . htmlspecialchars($error['source'], ENT_QUOTES, 'UTF-8') . ')<br>' . htmlspecialchars($error['description'], ENT_QUOTES, 'UTF-8'));
         }
     }
 }
@@ -82,7 +82,7 @@ function slurmTimeLimitFromString(string $time): array {
         return array("set"=> 0, "infinite"=> 1);
     }
 
-    // Regex to match D-HH:MM:SS or HH:MM:SS
+    // Regex to match D-HH:MM:SS or HH:MM
     $pattern = '/^(?:(\d+)-)?((0)?[0-9]|1[0-9]|2[0-3]):([0-5][0-9])$/';
 
     if (!preg_match($pattern, $time, $matches)) {
@@ -92,12 +92,19 @@ function slurmTimeLimitFromString(string $time): array {
     // Extract captured groups
     $days    = isset($matches[1]) ? (int)$matches[1] : 0;
     $hours   = (int)$matches[2];
-    $minutes = (int)$matches[3];
+    $minutes = (int)$matches[4];
 
-    // Convert everything to seconds
+    // Convert everything to minutes
     return array("set"=> 1, "infinite"=> 0, "number"=>$minutes + 60 * $hours + 1440 * $days);
 }
 
 function format_nullable_int(?int $value, string $suffix = ''): string {
     return $value === NULL ? '' : (number_format($value, 0, ',', '.') . $suffix);
+}
+
+function is_valid_username(string $username): bool {
+    // Pattern: ^[a-z_]([a-z0-9_-]{0,31}|[a-z0-9_-]{0,30}\$)$
+    // Copy from \auth\auth.inc.php
+    $pattern = '/^[a-z_]([a-z0-9_-]{0,31}|[a-z0-9_-]{0,30}\\$)$/';
+    return preg_match($pattern, $username) === 1;
 }

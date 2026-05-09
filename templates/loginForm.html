@@ -3,9 +3,9 @@
     For more information click <a href="?action=about">here</a>.
 </div>
 
-<form method="post" action="?action={{action}}" class="container mt-4">
+<form method="post" action="?action={{ACTION}}" class="container mt-4">
     <fieldset class="border p-2">
-        <legend class="w-auto">{{buttontext}}:</legend>
+        <legend class="w-auto">{{BUTTONTEXT}}:</legend>
         <div class="form-outline mb-4">
             <label for="username" class="form-label">Username:</label>
             <input      type="text"
@@ -33,12 +33,13 @@
                         id="method"
                         class="form-control"
                         required>
-                {{methods}}
+                {{METHODS}}
             </select>
         </div>
 
+        <input type="hidden" name="csrf_token" value="{{CSRF_TOKEN}}">
         <div class="d-flex justify-content-center mt-4">
-            <button type="submit" class="btn btn-primary btn-block">{{buttontext}}</button>
+            <button type="submit" class="btn btn-primary btn-block">{{BUTTONTEXT}}</button>
         </div>
     </fieldset>
 </form>

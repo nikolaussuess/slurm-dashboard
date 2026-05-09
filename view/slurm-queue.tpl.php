@@ -2,7 +2,7 @@
 
 namespace view\actions;
 
-function get_slurm_queue($jobs, $exclude_p_low) : string {
+function get_slurm_queue($jobs, $exclude_p_low, string $nonce = '') : string {
     $contents = "<h2>Jobs</h2>";
 
     // Allow to exclude jobs of partition p_low
@@ -53,12 +53,10 @@ EOF;
 
     $contents .= '<div>Found <span style="font-weight: bold">' . count($jobs) . ' jobs</span>.</div>';
 
-    if(isset($_GET['preferred_view'])){
+    if(isset($_GET['preferred_view']) && ($_GET['preferred_view'] === "compact" || $_GET['preferred_view'] === "table")){
         $preferred_view = $_GET['preferred_view'];
-        if($preferred_view === "compact" || $preferred_view === "table")
-            $_SESSION['preferred_view'] = $preferred_view;
-    }
-    else {
+        $_SESSION['preferred_view'] = $preferred_view;
+    } else {
         $preferred_view = $_SESSION['preferred_view'] ?? "compact";
     }
 
@@ -85,7 +83,7 @@ EOF;
 
 
 
-<script>
+<script nonce="$nonce">
     const toggle = document.getElementById("viewToggle");
     const orderBySelect = document.getElementById("orderBySelect");
     const togglePLow = document.getElementById("show_p_low");

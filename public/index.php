@@ -3,11 +3,13 @@
 #ini_set('display_errors', '1');
 session_start();
 date_default_timezone_set('Europe/Vienna');
+// Nonce for CSP to allow secure inline JS.
+$csp_nonce = base64_encode(random_bytes(16));
 header('Content-Type: text/html; charset=utf-8');
 header('X-Frame-Options: SAMEORIGIN');
 header('X-Content-Type-Options: nosniff');
 header('X-XSS-Protection: 1; mode=block');
-header("Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'; frame-ancestors 'self';");
+header("Content-Security-Policy: default-src 'self'; script-src 'self' 'nonce-$csp_nonce'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'; frame-ancestors 'self';");
 if (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') {
     header('Strict-Transport-Security: max-age=31536000; includeSubDomains; preload');
 }
@@ -172,7 +174,7 @@ if( isset($_SESSION['USER']) ){
 
             $jobs = $dao->get_jobs($filter);
 
-            $contents .= \view\actions\get_slurm_queue($jobs, $exclude_p_low);
+            $contents .= \view\actions\get_slurm_queue($jobs, $exclude_p_low, $csp_nonce);
 
             break;
 
@@ -309,7 +311,7 @@ if( isset($_SESSION['USER']) ){
                 }
                 apcu_delete("slurm/jobs"); // Delete cached entry because we KNOW that it has changed.
                 apcu_delete("slurm/job/".$job_id); // Delete cached entry because we KNOW that it has changed.
-                $contents .= \view\actions\get_slurm_queue($dao->get_jobs(), 0);
+                $contents .= \view\actions\get_slurm_queue($dao->get_jobs(), 0, $csp_nonce);
             }
             break;
 
@@ -421,7 +423,7 @@ if( isset($_SESSION['USER']) ){
                 }
                 apcu_delete("slurm/jobs"); // Delete cached entry because we KNOW that it has changed.
                 apcu_delete("slurm/job/".$job_id); // Delete cached entry because we KNOW that it has changed.
-                $contents .= \view\actions\get_slurm_queue($dao->get_jobs(), 0);
+                $contents .= \view\actions\get_slurm_queue($dao->get_jobs(), 0, $csp_nonce);
             }
             break;
 
@@ -511,7 +513,7 @@ if( isset($_SESSION['USER']) ){
     <script src="/lib/jquery/jquery-3.7.1.min.js" integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
     <script src="/lib/popper.js/popper.min.js" integrity="sha384-I7E8VVD/ismYTF4hNIPjVp/Zjvgyol6VFvRkX/vR+Vc4jQkC+hVqc2pM8ODewa9r" crossorigin="anonymous"></script>
     <script src="/lib/bootstrap/js/bootstrap.min.js" integrity="sha384-0pUGZvbkm6XF6gxjEnlmuGrJXVbNuzT9qBBavbLwCsOGabYfZo0T0to5eqruptLy" crossorigin="anonymous"></script>
-    <script>
+    <script nonce="<?php echo $csp_nonce; ?>">
         document.addEventListener('DOMContentLoaded', () => {
             const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
             const tooltipList = [...tooltipTriggerList].map(el =>

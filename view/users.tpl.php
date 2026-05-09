@@ -26,7 +26,7 @@ EOF;
         try {
             $ldap_client = new \auth\LDAP();
         } catch (Exception $e){
-            addError($e->getMessage());
+            addError(htmlspecialchars($e->getMessage(), ENT_QUOTES, 'UTF-8'));
         }
     }
 
@@ -36,20 +36,22 @@ EOF;
         if( isset($user_arr['flags']) && is_array($user_arr['flags']))
             $deleted = in_array("DELETED", $user_arr['flags']);
 
+        $name_e = htmlspecialchars($user_arr['name'], ENT_QUOTES, 'UTF-8');
         if( $deleted ){
             $contents .= '<tr class="deleted-user" title="User was already deleted.">';
-            $contents .=    '<td><a href="?action=users&user_name='.$user_arr['name'].'">' . $user_arr['name'] . '</a> (deleted)</td>';
+            $contents .=    '<td><a href="?action=users&user_name=' . $name_e . '">' . $name_e . '</a> (deleted)</td>';
         }
         else {
             $contents .= "<tr>";
-            $contents .=    '<td><a href="?action=users&user_name='.$user_arr['name'].'">' . $user_arr['name'] . '</a></td>';
+            $contents .=    '<td><a href="?action=users&user_name=' . $name_e . '">' . $name_e . '</a></td>';
         }
         $contents .=    "<td><ul>";
         foreach($user_arr['associations'] as $assoc){
+            $account_e = htmlspecialchars($assoc['account'], ENT_QUOTES, 'UTF-8');
             if($assoc['account'] == $user_arr['default']['account'])
-                $contents .= '<li><b title="Default account">' . $assoc['account'] . '</b> (default)</li>';
+                $contents .= '<li><b title="Default account">' . $account_e . '</b> (default)</li>';
             else
-                $contents .= '<li>' . $assoc['account'] . '</li>';
+                $contents .= '<li>' . $account_e . '</li>';
         }
         $contents .=           "</ul></td>";
         if( implode(", ", $user_arr['administrator_level']) == 'None' && in_array($user_arr['name'], config('PRIV_USERS')))
@@ -142,7 +144,7 @@ function get_user(string $user_name, array $user_arr, array $shares) : string {
         try {
             $ldap_client = new \auth\LDAP();
         } catch (Exception $e){
-            addError($e->getMessage());
+            addError(htmlspecialchars($e->getMessage(), ENT_QUOTES, 'UTF-8'));
         }
     }
 
@@ -269,8 +271,8 @@ EOF;
 
     $templateBuilder->setParam("STATUS", $status);
     $templateBuilder->setParam("ACCOUNTS", $accounts);
-    $templateBuilder->setParam("DEFAULT_ACCOUNT", $user_arr['default']['account']);
-    $templateBuilder->setParam("DEFAULT_QOS", $user_arr['default']['qos'] ?? 'N/A');
+    $templateBuilder->setParam("DEFAULT_ACCOUNT", htmlspecialchars($user_arr['default']['account'], ENT_QUOTES, 'UTF-8'));
+    $templateBuilder->setParam("DEFAULT_QOS", htmlspecialchars($user_arr['default']['qos'] ?? 'N/A', ENT_QUOTES, 'UTF-8'));
     $templateBuilder->setParam("PRIVILEGES", $admin_privs);
 
     $templateBuilder->setParam("FAIRSHARE", $fairshare_table);

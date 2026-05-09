@@ -55,7 +55,7 @@ if( ! $dao->is_available() ){
 if(!isset($_SESSION['USER'])) {
 
     if(isset($_GET['action']) && $_GET['action'] == "login"){
-        if( !isset($_POST['username']) || !isset($_POST['password'])){
+        if( !isset($_POST['username']) || !isset($_POST['password']) || !isset($_POST['method']) ){
             addError("Login failed.");
         }
         elseif (!isset($_POST['csrf_token']) || !\auth\validate_csrf_token($_POST['csrf_token'])) {

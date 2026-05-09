@@ -5,13 +5,13 @@
  */
 class TemplateLoader {
     private string $contents;
+    private const TEMPLATE_DIR = __DIR__ . '/templates/';
 
     /**
      * @param $filename string Filename of template html file
-     * @param $dirname string Directory where the file is located. Defaults to /templates
      */
-    function __construct(string $filename, string $dirname = __DIR__ . '/templates/'){
-        $this->contents = file_get_contents($dirname . $filename);
+    function __construct(string $filename){
+        $this->contents = file_get_contents(self::TEMPLATE_DIR . basename($filename));
     }
 
     /**
@@ -27,7 +27,7 @@ class TemplateLoader {
             $value = '';
         }
 
-        $this->contents = preg_replace("/{{".$name."}}/i", $value, $this->contents);
+        $this->contents = str_replace('{{' . strtoupper($name) . '}}', (string)$value, $this->contents);
         return $this;
     }
 

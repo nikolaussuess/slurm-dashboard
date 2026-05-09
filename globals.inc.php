@@ -210,5 +210,9 @@ function internalServerError(Throwable $exception) : void {
 
 set_exception_handler('internalServerError');
 set_error_handler(function($errno, $errstr, $errfile, $errline) {
+    // error_reporting() === 0 means the error was suppressed via @, respect that
+    if (error_reporting() === 0) {
+        return false;
+    }
     throw new ErrorException($errstr, 0, $errno, $errfile, $errline);
 });

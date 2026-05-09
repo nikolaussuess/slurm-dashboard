@@ -4,6 +4,13 @@
 session_start();
 date_default_timezone_set('Europe/Vienna');
 header('Content-Type: text/html; charset=utf-8');
+header('X-Frame-Options: SAMEORIGIN');
+header('X-Content-Type-Options: nosniff');
+header('X-XSS-Protection: 1; mode=block');
+header("Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'; frame-ancestors 'self';");
+if (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') {
+    header('Strict-Transport-Security: max-age=31536000; includeSubDomains; preload');
+}
 
 require_once __DIR__ . '/../TemplateLoader.inc.php';
 require_once __DIR__ . '/../globals.inc.php';
@@ -26,8 +33,12 @@ $title = "Clusterinfo " . config('CLUSTER_NAME');
 $contents = "";
 
 if( isset($_GET['action']) && $_GET['action'] == "logout"){
-    session_destroy();
-    unset($_SESSION['USER']);
+    // Clear all session variables (USER, csrf_token, etc.)
+    session_unset();
+    // Regenerate session ID and delete the old session data server-side.
+    // This keeps the session active but empty, so a new CSRF token can be
+    // generated immediately for the login form without a second session_start().
+    session_regenerate_id(true);
 }
 
 // Check if the socket exists and add a warning otherwise
@@ -45,16 +56,26 @@ if(!isset($_SESSION['USER'])) {
         if( !isset($_POST['username']) || !isset($_POST['password'])){
             addError("Login failed.");
         }
+        elseif (!isset($_POST['csrf_token']) || !\auth\validate_csrf_token($_POST['csrf_token'])) {
+            http_response_code(403);
+            addError("Invalid request (CSRF token mismatch).");
+        }
         else {
             $username = $_POST['username'];
             $password = $_POST['password'];
             $method = $_POST['method'];
             if(auth($username, $password, $method)){
+                session_regenerate_id(true);
                 $_SESSION['USER'] = $username;
                 addSuccess("Login successful!");
+                log_msg("Successful login for '$username' from " . ($_SERVER['REMOTE_ADDR'] ?? 'unknown'),
+                    LOG_INFO, LOG_MODE_PHP|LOG_MODE_SYSLOG);
             }
             else {
                 addError("Login failed.");
+                $safe_username = preg_replace('/[^\x20-\x7E]/', '?', $username);
+                log_msg("Failed login attempt for '$safe_username' from " . ($_SERVER['REMOTE_ADDR'] ?? 'unknown'),
+                    LOG_WARNING, LOG_MODE_PHP|LOG_MODE_SYSLOG);
             }
         }
     }
@@ -93,34 +114,35 @@ if( isset($_SESSION['USER']) ){
             break;
 
         case "job":
-            if( ! isset($_GET['job_id'])){
+            if( ! isset($_GET['job_id']) || !ctype_digit($_GET['job_id'])){
                 http_response_code(404);
                 addError("No job ID given.");
                 $title = '404 Not Found';
                 $contents .= "404 Not Found.";
                 break;
             }
+            $job_id_view = (int)$_GET['job_id'];
 
             # SLURM QUEUE information
-            $contents .= "<h2>Job " . $_GET['job_id'] . "</h2>";
-            $title = 'Job ' . $_GET['job_id'];
-            $query = $dao->get_job($_GET['job_id']);
+            $contents .= "<h2>Job " . $job_id_view . "</h2>";
+            $title = 'Job ' . $job_id_view;
+            $query = $dao->get_job($job_id_view);
             if( $query == NULL ){
-                $contents .= "<p>Job " . $_GET['job_id'] . " not in active queue anymore.</p>";
+                $contents .= "<p>Job " . $job_id_view . " not in active queue anymore.</p>";
                 // Here, it is not a 404 if the job is not found, because a job
                 // is removed vom the queue when it is finished but persists in slurmdb.
                 $in_slurm_queue = FALSE;
             }
             else {
                 $dependency_resolver = new \client\utils\DependencyResolver($dao);
-                $contents .= \view\actions\get_slurm_jobinfo($query, $dependency_resolver->renderDependencyListHTML($_GET['job_id']) ?? '');
+                $contents .= \view\actions\get_slurm_jobinfo($query, $dependency_resolver->renderDependencyListHTML($job_id_view) ?? '');
                 $in_slurm_queue = TRUE;
             }
 
             # SLURMDB information
-            $query = $dao->get_job_from_slurmdb($_GET['job_id']);
+            $query = $dao->get_job_from_slurmdb($job_id_view);
             if($query == NULL){
-                $contents .= "<p>Job " . $_GET['job_id'] . " not found in <span class='monospaced'>slurmdb</span>.</p>";
+                $contents .= "<p>Job " . $job_id_view . " not found in <span class='monospaced'>slurmdb</span>.</p>";
                 // Here, it is a 404 if the job cannot be found.
                 // However, there might have been a delay while writing into slurmdb. So we only consider it to be a
                 // 404 if it was neither in slurmdb nor in slurm queue.
@@ -196,10 +218,15 @@ if( isset($_SESSION['USER']) ){
             }
             else {
                 $user_name = $_GET['user_name'];
+                if(!\utils\is_valid_username($user_name)){
+                    http_response_code(400);
+                    addError("Invalid user name.");
+                    break;
+                }
                 // Check if user is administrator -> show
                 // If user requests his own page  ->
                 // --> otherwise show 403.
-                if( ! \auth\current_user_is_privileged() && $user_name != $_SESSION['USER']){
+                if( ! \auth\current_user_is_privileged() && $user_name !== $_SESSION['USER']){
                     http_response_code(403);
                     $contents .= "403 Forbidden.<br>";
                     $contents .= "Only admins are allowed to list all users or other user's profiles.";
@@ -211,7 +238,7 @@ if( isset($_SESSION['USER']) ){
                 $user_slurm = $dao->get_user($user_name, TRUE);
                 if(empty($user_slurm['users'])){
                     http_response_code(404); // Not found
-                    addError("User " . $_GET['user_name'] . " does not exist.");
+                    addError("User " . htmlspecialchars($_GET['user_name'], ENT_QUOTES, 'UTF-8') . " does not exist.");
                     break;
                 }
                 $user_slurm = $user_slurm['users'][0];
@@ -234,40 +261,48 @@ if( isset($_SESSION['USER']) ){
             }
 
             // Check if job_id parameter exists.
-            if(! isset($_GET['job_id']) || intval($_GET['job_id']) != $_GET['job_id']){
+            if(! isset($_GET['job_id']) || !ctype_digit($_GET['job_id'])){
                 http_response_code(400); // Bad request
                 addError("No job id provided or job id is not a valid number.");
                 break;
             }
 
-            $job_id = $_GET['job_id'];
+            $job_id = (int)$_GET['job_id'];
 
             // Check for sufficient privileges
             $job_data = $dao->get_job($job_id);
 
             if($job_data === NULL){
-                addError("Job " . $_GET['job_id'] . " not in active queue any more.");
+                addError("Job " . $job_id . " not in active queue any more.");
                 break;
             }
 
-            if( ! \auth\current_user_is_admin() && $job_data['user_name'] != $_SESSION['USER'] ){
+            if( ! \auth\current_user_is_admin() && $job_data['user_name'] !== $_SESSION['USER'] ){
                 http_response_code(403); // Forbidden
                 addError(
-                    "The job belongs to user " . $job_data['user_name'] . " but current user is "
-                    . $_SESSION['USER'] . ". Since you are not an administrator, you can only delete your own jobs."
+                    "The job belongs to user " . htmlspecialchars($job_data['user_name'], ENT_QUOTES, 'UTF-8') . " but current user is "
+                    . htmlspecialchars($_SESSION['USER'], ENT_QUOTES, 'UTF-8') . ". Since you are not an administrator, you can only delete your own jobs."
                 );
                 break;
             }
 
             if(! isset($_GET['do']) || $_GET['do'] !== "cancel") {
                 $templateBuilder = new TemplateLoader("modal_job_cancelling.html");
-                $templateBuilder->setParam("JOBID", $job_id);
+                $templateBuilder->setParam("JOBID", htmlspecialchars($job_id, ENT_QUOTES, 'UTF-8'));
+                $templateBuilder->setParam("CSRF_TOKEN", \auth\get_csrf_token());
                 $contents .= $templateBuilder->build();
                 break;
             }
             else {
+                if (!isset($_POST['csrf_token']) || !\auth\validate_csrf_token($_POST['csrf_token'])) {
+                    http_response_code(403);
+                    addError("Invalid request (CSRF token mismatch).");
+                    break;
+                }
                 if( $dao->cancel_job($job_id) ) {
                     addSuccess("Job " . $job_id . " cancelled.");
+                    log_msg("User '{$_SESSION['USER']}' cancelled job $job_id",
+                        LOG_INFO, LOG_MODE_PHP|LOG_MODE_SYSLOG);
                 }
                 else {
                     addError("Something went wrong when cancelling job " . $job_id);
@@ -289,13 +324,13 @@ if( isset($_SESSION['USER']) ){
             }
 
             // Check if job_id parameter exists.
-            if(! isset($_GET['job_id']) || intval($_GET['job_id']) != $_GET['job_id']){
+            if(! isset($_GET['job_id']) || !ctype_digit($_GET['job_id'])){
                 http_response_code(400); // Bad request
                 addError("No job id provided or job id is not a valid number.");
                 break;
             }
 
-            $job_id = $_GET['job_id'];
+            $job_id = (int)$_GET['job_id'];
 
             // Check for sufficient privileges
             $job_data = $dao->get_job($job_id);
@@ -306,28 +341,29 @@ if( isset($_SESSION['USER']) ){
                 // a larger ID, that ID will likely exist in the future. Since GONE is a permanent error, and we
                 // cannot (easily) check whether the ID ever existed (we could, but that would require a query to
                 // slurmdb), we instead just send 404 Not found which is safe.
-                addError("Job " . $_GET['job_id'] . " not in active queue any more.");
+                addError("Job " . $job_id . " not in active queue any more.");
                 break;
             }
 
-            if( ! \auth\current_user_is_admin() && $job_data['user_name'] != $_SESSION['USER'] ){
+            if( ! \auth\current_user_is_admin() && $job_data['user_name'] !== $_SESSION['USER'] ){
                 http_response_code(403); // Forbidden
                 addError(
-                    "The job belongs to user " . $job_data['user_name'] . " but current user is "
-                    . $_SESSION['USER'] . ". Since you are not an administrator, you can only modify your own jobs."
+                    "The job belongs to user " . htmlspecialchars($job_data['user_name'], ENT_QUOTES, 'UTF-8') . " but current user is "
+                    . htmlspecialchars($_SESSION['USER'], ENT_QUOTES, 'UTF-8') . ". Since you are not an administrator, you can only modify your own jobs."
                 );
                 break;
             }
 
             if(! isset($_GET['do']) || $_GET['do'] != "edit") {
                 $templateBuilder = new TemplateLoader("edit_job_form.html");
-                $templateBuilder->setParam("JOBID", $job_id);
-                $templateBuilder->setParam("JOB_NAME", $job_data['job_name']);
-                $templateBuilder->setParam("USER_NAME", $job_data['user_name']);
+                $templateBuilder->setParam("JOBID", htmlspecialchars($job_id, ENT_QUOTES, 'UTF-8'));
+                $templateBuilder->setParam("CSRF_TOKEN", \auth\get_csrf_token());
+                $templateBuilder->setParam("JOB_NAME", htmlspecialchars($job_data['job_name'], ENT_QUOTES, 'UTF-8'));
+                $templateBuilder->setParam("USER_NAME", htmlspecialchars($job_data['user_name'], ENT_QUOTES, 'UTF-8'));
                 $templateBuilder->setParam("USER_ID", $job_data['user_id']);
-                $templateBuilder->setParam("TIME_LIMIT", $job_data['time_limit']);
-                $templateBuilder->setParam("NICE_VALUE", $job_data['nice']);
-                $templateBuilder->setParam("COMMENT", $job_data['comment']);
+                $templateBuilder->setParam("TIME_LIMIT", preg_replace('/:\d{2}$/', '', $job_data['time_limit']));
+                $templateBuilder->setParam("NICE_VALUE", isset($job_data['nice']) ? (int)$job_data['nice'] : '');
+                $templateBuilder->setParam("COMMENT", htmlspecialchars($job_data['comment'] ?? '', ENT_QUOTES, 'UTF-8'));
                 // Admin-only settings - currently not supported
                 $templateBuilder->setParam("PRIORITY", $job_data['priority'] ?? '');
                 $templateBuilder->setParam("QOS", $job_data['qos'] ?? '');
@@ -336,6 +372,11 @@ if( isset($_SESSION['USER']) ){
                 break;
             }
             else {
+                if (!isset($_POST['csrf_token']) || !\auth\validate_csrf_token($_POST['csrf_token'])) {
+                    http_response_code(403);
+                    addError("Invalid request (CSRF token mismatch).");
+                    break;
+                }
 
                 $new_job_data = array(
                     'job_id' => $job_id,
@@ -346,19 +387,17 @@ if( isset($_SESSION['USER']) ){
                 // - infinite
                 // - a value of the form D-HH:MM
                 if(isset($_POST['time_limit']) && !empty($_POST['time_limit'])){
-                    $new_job_data['time_limit'] = $_POST['time_limit'];
-                }
-                if(isset($_POST['time_limit']) && $_POST['time_limit'] == 'infinite'){
-                    $new_job_data['time_limit'] = array('infinite'=>1);
-                }
-                elseif(isset($_POST['time_limit']) && !empty($_POST['time_limit'])){
-                    try {
-                        // Convert D-HH:MM to minutes (NOT seconds!)
-                        $new_job_data['time_limit'] = \utils\slurmTimeLimitFromString($_POST['time_limit']);
-                    } catch (InvalidArgumentException $e){
-                        throw new \exceptions\ValidationException(
-                            $e->getMessage()
-                        );
+                    if($_POST['time_limit'] == 'infinite'){
+                        $new_job_data['time_limit'] = array('infinite'=>1);
+                    } else {
+                        try {
+                            // Convert D-HH:MM to minutes (NOT seconds!)
+                            $new_job_data['time_limit'] = \utils\slurmTimeLimitFromString($_POST['time_limit']);
+                        } catch (InvalidArgumentException $e){
+                            throw new \exceptions\ValidationException(
+                                $e->getMessage()
+                            );
+                        }
                     }
                 }
 
@@ -374,6 +413,8 @@ if( isset($_SESSION['USER']) ){
                 // Perform the update and then show the job queue
                 if( $dao->update_job($new_job_data) ) {
                     addSuccess("Job " . $job_id . " updated.");
+                    log_msg("User '{$_SESSION['USER']}' updated job $job_id",
+                        LOG_INFO, LOG_MODE_PHP|LOG_MODE_SYSLOG);
                 }
                 else {
                     addError("Something went wrong when updating job " . $job_id);
@@ -413,20 +454,36 @@ if( isset($_SESSION['USER']) ){
             $nodename = $_GET['nodename'];
             $new_state = $_GET['state'];
 
+            $valid_states = ['resume', 'drain'];
+            if (!in_array($new_state, $valid_states, true)) {
+                http_response_code(400);
+                addError("Invalid node state.");
+                break;
+            }
+
             if( ! isset($_GET['do']) || $_GET['do'] !== 'perform' ){
                 $templateBuilder = new TemplateLoader("modal_node_new_state.html");
-                $templateBuilder->setParam("NODE_NAME", $nodename);
-                $templateBuilder->setParam("STATE", $new_state);
+                $templateBuilder->setParam("NODE_NAME", htmlspecialchars($nodename, ENT_QUOTES, 'UTF-8'));
+                $templateBuilder->setParam("STATE", htmlspecialchars($new_state, ENT_QUOTES, 'UTF-8'));
+                $templateBuilder->setParam("CSRF_TOKEN", \auth\get_csrf_token());
                 $contents .= $templateBuilder->build();
+                break;
+            }
+
+            if (!isset($_POST['csrf_token']) || !\auth\validate_csrf_token($_POST['csrf_token'])) {
+                http_response_code(403);
+                addError("Invalid request (CSRF token mismatch).");
                 break;
             }
 
             // Perform the update and then show cluster utilization
             if( $dao->set_node_state($nodename, $new_state) ) {
-                addSuccess("Node $nodename set to new state $new_state.");
+                addSuccess("Node " . htmlspecialchars($nodename, ENT_QUOTES, 'UTF-8') . " set to new state " . htmlspecialchars($new_state, ENT_QUOTES, 'UTF-8') . ".");
+                log_msg("Admin '{$_SESSION['USER']}' set node '$nodename' to state '$new_state'",
+                    LOG_INFO, LOG_MODE_PHP|LOG_MODE_SYSLOG);
             }
             else {
-                addError("Something went wrong when updating node " . $nodename);
+                addError("Something went wrong when updating node " . htmlspecialchars($nodename, ENT_QUOTES, 'UTF-8'));
             }
             apcu_delete("slurm/node/".$nodename); // Delete cached entry because we KNOW that it has changed.
 
@@ -506,7 +563,7 @@ if( isset($_SESSION['USER']) ){
 ?>
                 </ul>
                 <div class="text-end">
-                    <div class="small float-lg-start" style="margin-right: 5px">Logged in as<br> <a href="?action=users&user_name=<?php print $_SESSION['USER']; ?>"><i><?php print $_SESSION['USER']; ?></a></i></div>
+                    <div class="small float-lg-start" style="margin-right: 5px">Logged in as<br> <a href="?action=users&user_name=<?php print htmlspecialchars($_SESSION['USER'], ENT_QUOTES, 'UTF-8'); ?>"><i><?php print htmlspecialchars($_SESSION['USER'], ENT_QUOTES, 'UTF-8'); ?></a></i></div>
                     <a href="?action=logout"><button type="button" class="btn btn-warning">Logout</button></a>
                 </div>
             </div>

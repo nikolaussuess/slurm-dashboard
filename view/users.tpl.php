@@ -59,7 +59,7 @@ EOF;
         elseif( implode(", ", $user_arr['administrator_level']) == 'None')
             $contents .=    '<td title="Normal user">-</td>';
         else
-            $contents .=    "<td>" . implode(", ", $user_arr['administrator_level']) . "</td>";
+            $contents .=    "<td>" . htmlspecialchars(implode(", ", $user_arr['administrator_level']), ENT_QUOTES, 'UTF-8') . "</td>";
 
         // LDAP
         if( ! \auth\LDAP::is_supported() || $user_arr['name'] == "root" || $ldap_client === NULL ){
@@ -72,10 +72,10 @@ EOF;
             }
             else {
                 for($i = 0; $i < $ldap_data["count"]; $i++){
-                    $contents .=    "<td>" . $ldap_data[$i]["displayname"][0] . "</td>";
-                    $contents .=    "<td>" . $ldap_data[$i]["department"][0];
+                    $contents .=    "<td>" . htmlspecialchars($ldap_data[$i]["displayname"][0] ?? '', ENT_QUOTES, 'UTF-8') . "</td>";
+                    $contents .=    "<td>" . htmlspecialchars($ldap_data[$i]["department"][0] ?? '', ENT_QUOTES, 'UTF-8');
                     if(isset($ldap_data[$i]["departmentnumber"]) && isset($ldap_data[$i]["departmentnumber"][0])){
-                        $contents .= " (" . $ldap_data[$i]["departmentnumber"][0] . ")";
+                        $contents .= " (" . htmlspecialchars($ldap_data[$i]["departmentnumber"][0], ENT_QUOTES, 'UTF-8') . ")";
                     }
                     $contents .= "</td>";
 
@@ -117,13 +117,13 @@ function get_user(string $user_name, array $user_arr, array $shares) : string {
     foreach($user_arr['associations'] as $assoc){
         if($assoc['account'] == $user_arr['default']['account'])
             $accounts .= '<li><b title="Default account">'
-                         . $assoc['account']
-                         . '</b> (default), cluster ' . $assoc['cluster']
-                         . ' (ID ' . $assoc['id'] . ')</li>';
+                         . htmlspecialchars($assoc['account'], ENT_QUOTES, 'UTF-8')
+                         . '</b> (default), cluster ' . htmlspecialchars($assoc['cluster'], ENT_QUOTES, 'UTF-8')
+                         . ' (ID ' . (int)$assoc['id'] . ')</li>';
         else
-            $accounts .= '<li>' . $assoc['account']
-                          . ', cluster ' . $assoc['cluster']
-                          . ' (ID ' . $assoc['id'] . ')</li>';
+            $accounts .= '<li>' . htmlspecialchars($assoc['account'], ENT_QUOTES, 'UTF-8')
+                          . ', cluster ' . htmlspecialchars($assoc['cluster'], ENT_QUOTES, 'UTF-8')
+                          . ' (ID ' . (int)$assoc['id'] . ')</li>';
     }
 
     // Admin privileges
@@ -134,7 +134,7 @@ function get_user(string $user_name, array $user_arr, array $shares) : string {
     elseif( implode(", ", $user_arr['administrator_level']) == 'None')
         $admin_privs =    '<span title="Normal user">-</span>';
     else
-        $admin_privs =    implode(", ", $user_arr['administrator_level']);
+        $admin_privs =    htmlspecialchars(implode(", ", $user_arr['administrator_level']), ENT_QUOTES, 'UTF-8');
 
     // retrieve LDAP data
     $ldap_client = NULL;
@@ -154,22 +154,28 @@ function get_user(string $user_name, array $user_arr, array $shares) : string {
     if (\auth\LDAP::is_supported() && $user_arr['name'] != "root" && $ldap_client !== NULL) {
         $ldap_data = $ldap_client->get_data_for_user($user_arr['name']);
         if($ldap_data["count"] === 1){
-            $full_name = $ldap_data[0]["displayname"][0];
-            $department .= $ldap_data[0]["department"][0];
+            $full_name = htmlspecialchars($ldap_data[0]["displayname"][0] ?? '', ENT_QUOTES, 'UTF-8');
+            $department .= htmlspecialchars($ldap_data[0]["department"][0] ?? '', ENT_QUOTES, 'UTF-8');
             if(isset($ldap_data[0]["departmentnumber"]) && isset($ldap_data[0]["departmentnumber"][0])){
-                $department .= ' (' . $ldap_data[0]["departmentnumber"][0] . ')';
+                $department .= ' (' . htmlspecialchars($ldap_data[0]["departmentnumber"][0], ENT_QUOTES, 'UTF-8') . ')';
             }
-            $mail = '<a href="mailto:' . $ldap_data[0]["mail"][0] . '">' . $ldap_data[0]["mail"][0] . '</a>';
-            $telephone = $ldap_data[0]["telephonenumber"][0] ?? '';
+            $raw_mail = $ldap_data[0]["mail"][0] ?? '';
+            if(filter_var($raw_mail, FILTER_VALIDATE_EMAIL)){
+                $mail = '<a href="mailto:' . htmlspecialchars($raw_mail, ENT_QUOTES, 'UTF-8') . '">' . htmlspecialchars($raw_mail, ENT_QUOTES, 'UTF-8') . '</a>';
+            } else {
+                $mail = htmlspecialchars($raw_mail, ENT_QUOTES, 'UTF-8');
+            }
+            $telephone = htmlspecialchars($ldap_data[0]["telephonenumber"][0] ?? '', ENT_QUOTES, 'UTF-8');
         }
     }
 
     $fairshare_table = '';
     foreach($shares as $share){
+        $parent_e = htmlspecialchars($share['parent'], ENT_QUOTES, 'UTF-8');
         $fairshare_table .=<<<EOF
 <tr>
     <td colspan="2">
-        <b class="intent-left-level1">Account <span class="monospaced">{$share['parent']}</span></b>
+        <b class="intent-left-level1">Account <span class="monospaced">{$parent_e}</span></b>
     </td>
 </tr>
 <tr>

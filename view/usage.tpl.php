@@ -9,7 +9,7 @@ function get_usage(array $data) : string {
     $templateBuilder = new TemplateLoader("nodeinfo.html");
     $templateBuilder->setParam("NODENAME", htmlspecialchars($data['node_name'], ENT_QUOTES, 'UTF-8'));
 
-    $templateBuilder->setParam("CPU_PERCENTAGE", number_format($data["alloc_cpus"]/$data["cpus"]*100, 2));
+    $templateBuilder->setParam("CPU_PERCENTAGE", number_format($data["cpus"] > 0 ? $data["alloc_cpus"]/$data["cpus"]*100 : 0, 2));
     $templateBuilder->setParam("CPU_USED", $data["alloc_cpus"]);
     $templateBuilder->setParam("CPU_TOTAL", $data["cpus"]);
 
@@ -17,10 +17,10 @@ function get_usage(array $data) : string {
     // mem_free, however, is the sum of free memory.
     // Thus, mem_total-mem_free can be negative if and only if in slurm.conf the node does not have the
     // full RAM memory for RealMemory=. In order to avoid confusions, we set the minimum to 0.
-    $templateBuilder->setParam("MEM_PERCENTAGE", number_format(max(0, ($data["mem_total"]-$data["mem_free"])/$data["mem_total"]*100), 2));
+    $templateBuilder->setParam("MEM_PERCENTAGE", number_format($data["mem_total"] > 0 ? max(0, ($data["mem_total"]-$data["mem_free"])/$data["mem_total"]*100) : 0, 2));
     $templateBuilder->setParam("MEM_USED", max(0,$data["mem_total"] - $data["mem_free"]));
     $templateBuilder->setParam("MEM_TOTAL", $data["mem_total"]);
-    $templateBuilder->setParam("ALLOC_MEM_PERCENTAGE", number_format($data["mem_alloc"]/$data["mem_total"]*100, 2));
+    $templateBuilder->setParam("ALLOC_MEM_PERCENTAGE", number_format($data["mem_total"] > 0 ? $data["mem_alloc"]/$data["mem_total"]*100 : 0, 2));
     $templateBuilder->setParam("ALLOC_MEM", $data["mem_alloc"]);
 
     $gres = $data["gres"];
@@ -36,7 +36,7 @@ function get_usage(array $data) : string {
         $gpus_used = preg_replace('/.*:(\d+)(?:\(.*\))?$/', '$1', $gres_used);
         // For debugging
         //echo "GPUs='$gpus', gpus_used='$gpus_used', gres='$gres', gres_used='$gres_used'";
-        $gpus_percentage = (int)$gpus_used / (int)$gpus * 100;
+        $gpus_percentage = (int)$gpus > 0 ? (int)$gpus_used / (int)$gpus * 100 : 0;
     }
     $templateBuilder->setParam("GPU_PERCENTAGE", number_format($gpus_percentage, 2));
     $templateBuilder->setParam("GPU_USED", $gpus_used);
@@ -87,7 +87,8 @@ function get_usage(array $data) : string {
     $templateBuilder->setParam("TRES_USED", htmlspecialchars($data["tres_used"] ?? '', ENT_QUOTES, 'UTF-8'));
     $templateBuilder->setParam("BOOT_TIME", $data["boot_time"] ?? '');
     $templateBuilder->setParam("LAST_BUSY", $data["last_busy"] ?? '');
-    $templateBuilder->setParam("PARTITIONS", count($data["partitions"]) > 0 ? '<li><span class="monospaced">' . implode('</li><li><span class="monospaced">', $data["partitions"]) . '</span></li>' : '');
+    $escaped_partitions = array_map(fn($p) => htmlspecialchars($p, ENT_QUOTES, 'UTF-8'), $data["partitions"]);
+    $templateBuilder->setParam("PARTITIONS", count($escaped_partitions) > 0 ? '<li><span class="monospaced">' . implode('</span></li><li><span class="monospaced">', $escaped_partitions) . '</span></li>' : '');
     $templateBuilder->setParam("RESERVATION", htmlspecialchars($data["reservation"] ?? '', ENT_QUOTES, 'UTF-8'));
     $templateBuilder->setParam("SLURM_VERSION", $data["slurm_version"] ?? '');
 

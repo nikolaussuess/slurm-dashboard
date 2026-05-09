@@ -37,7 +37,7 @@ if (!isset($exception) || !($exception instanceof Throwable)) {
                 </ul>
                 <div class="text-end">
 <?php if(isset($_SESSION['USER'])): ?>
-                    <div class="small float-lg-start" style="margin-right: 5px">Angemeldet als<br> <i><?php print $_SESSION['USER']; ?></i></div>
+                    <div class="small float-lg-start" style="margin-right: 5px">Angemeldet als<br> <i><?php print htmlspecialchars($_SESSION['USER'], ENT_QUOTES, 'UTF-8'); ?></i></div>
                     <a href="?action=logout"><button type="button" class="btn btn-warning">Logout</button></a>
 <?php else: ?>
                     <div class="small float-lg-start" style="margin-right: 5px">Nicht angemeldet</div>
@@ -58,7 +58,7 @@ if (!isset($exception) || !($exception instanceof Throwable)) {
 <?php else: ?>
     <p>An unknown internal server occurred.</p>
 <?php endif; ?>
-    <p>The dashboard is currently not available. If the error persists, please write an email to <?php print config('ADMIN_EMAIL'); ?>.</p>
+    <p>The dashboard is currently not available. If the error persists, please write an email to <?php print htmlspecialchars(config('ADMIN_EMAIL'), ENT_QUOTES, 'UTF-8'); ?>.</p>
 
     <p></p>
 </div>

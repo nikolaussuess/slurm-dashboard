@@ -86,7 +86,8 @@
             <div class="form-text">Cluster partition. Admin-only changes.</div>
         </div>
     -->
-        <!-- Submit / Cancel -->
+            <input type="hidden" name="csrf_token" value="{{CSRF_TOKEN}}">
+    <!-- Submit / Cancel -->
     <div class="mt-3">
         <button type="submit" class="btn btn-primary">Apply Changes</button>
         <a href="?action=jobs" class="btn btn-secondary">Cancel</a>

@@ -9,7 +9,10 @@
                 <p>Job ID {{JOBID}}</p>
             </div>
             <div class="modal-footer">
-                <a href="?action=cancel-job&job_id={{JOBID}}&do=cancel" type="button" class="btn btn-primary btn-danger">Cancel job</a>
+                <form method="post" action="?action=cancel-job&job_id={{JOBID}}&do=cancel" style="display:inline">
+                    <input type="hidden" name="csrf_token" value="{{CSRF_TOKEN}}">
+                    <button type="submit" class="btn btn-primary btn-danger">Cancel job</button>
+                </form>
                 <a href="?action=jobs" type="button" class="btn btn-secondary" data-dismiss="modal">Close</a>
             </div>
         </div>

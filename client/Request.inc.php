@@ -15,18 +15,18 @@ interface Request {
      * @param string $endpoint Endpoint to call
      * @param string $namespace slurm or slurmdb
      * @param string $api_version API version, e.g. v0.0.40
-     * @param int $ttl how long to cache the request
+     * @param int|bool $ttl how long to cache the request, FALSE to disable caching
      * @throws RequestFailedException In case of errors
      * @return array associative array
      */
-    function request_json(string $endpoint, string $namespace, string $api_version, int $ttl = 5) : array;
+    function request_json(string $endpoint, string $namespace, string $api_version, int|bool $ttl = 5) : array;
 
     /**
      * @param string $full_endpoint Endpoint to call (incl. namespace and api version)
-     * @param int $ttl how long to cache the request
+     * @param int|bool $ttl how long to cache the request, FALSE to disable caching
      * @return array associative array
      */
-    function request_json2(string $full_endpoint, int $ttl = 5) : array;
+    function request_json2(string $full_endpoint, int|bool $ttl = 5) : array;
 
     /**
      * @param string $endpoint Endpoint to call
@@ -81,9 +81,9 @@ class UnixRequest implements Request {
         }
     }
 
-    function request_json(string $endpoint, string $namespace, string $api_version, int $ttl = 5) : array {
+    function request_json(string $endpoint, string $namespace, string $api_version, int|bool $ttl = 5) : array {
 
-        if( @apcu_exists($namespace . '/' . $endpoint)){
+        if( $ttl !== FALSE && @apcu_exists($namespace . '/' . $endpoint)){
             return apcu_fetch($namespace . '/' . $endpoint);
         }
 
@@ -129,13 +129,13 @@ class UnixRequest implements Request {
             );
         }
 
-        @apcu_store($namespace . '/' . $endpoint , $data, $ttl);
+        if( $ttl !== FALSE ) @apcu_store($namespace . '/' . $endpoint , $data, $ttl);
         return $data;
     }
 
-    function request_json2(string $full_endpoint, int $ttl = 5) : array {
+    function request_json2(string $full_endpoint, int|bool $ttl = 5) : array {
 
-        if( @apcu_exists($full_endpoint)){
+        if( $ttl !== FALSE && @apcu_exists($full_endpoint)){
             return apcu_fetch($full_endpoint);
         }
 
@@ -180,7 +180,7 @@ class UnixRequest implements Request {
             );
         }
 
-        @apcu_store($full_endpoint , $data, $ttl);
+        if( $ttl !== FALSE ) @apcu_store($full_endpoint , $data, $ttl);
         return $data;
     }
 

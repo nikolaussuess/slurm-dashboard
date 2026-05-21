@@ -75,7 +75,7 @@ abstract class AbstractClient implements Client {
     }
 
     function get_jobs_from_slurmdb(?array $filter = NULL) : array {
-        $query_string = '?';
+        $query_string = '?skip_steps=true';
         if($filter != NULL){
             if(isset($filter['start_time'])){
                 $query_string .= '&start_time=uts' . (int)$filter['start_time'];
@@ -118,7 +118,8 @@ abstract class AbstractClient implements Client {
         }
 
         # curl --unix-socket /run/slurmrestd/slurmrestd.socket http://slurm/slurmdb/v0.0.40/jobs
-        $json = RequestFactory::newRequest()->request_json("jobs" . $query_string, 'slurmdb', static::api_version);
+        // FALSE: slurmdb/jobs responses can be very large, causing apcu_store() to trigger an OOM fatal error.
+        $json = RequestFactory::newRequest()->request_json("jobs" . $query_string, 'slurmdb', static::api_version, FALSE);
 
         /*
          * Issue 12 specific code

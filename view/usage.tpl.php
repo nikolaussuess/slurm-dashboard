@@ -134,7 +134,7 @@ function _render_user_breakdown(array $user_breakdown, int $cpu_total, int $mem_
         if (!$res_def['show'])
             continue;
         $total = $res_def['total'];
-        $html .= '<tr><td style="font-size:0.85em;white-space:nowrap">' . $res_def['label'] . '</td><td>';
+        $html .= '<tr><td>' . $res_def['label'] . '</td><td>';
         $html .= '<div class="progress" style="height:20px">';
 
         // Regular (colored) segments — one per individual job, with a white divider between jobs
@@ -194,7 +194,7 @@ function _render_user_breakdown(array $user_breakdown, int $cpu_total, int $mem_
                          . (empty($details) ? '' : ': ' . htmlspecialchars(implode(', ', $details), ENT_QUOTES, 'UTF-8'))
                          . '</span>';
     }
-    $html .= '<tr><td style="font-size:0.85em;white-space:nowrap">Normal jobs:</td>'
+    $html .= '<tr><td>Normal jobs:</td>'
            . '<td><div style="display:flex;flex-wrap:wrap;gap:4px">' . $regular_badges . '</div></td></tr>';
 
     // p_low-jobs legend row (only when p_low jobs exist)
@@ -216,7 +216,7 @@ function _render_user_breakdown(array $user_breakdown, int $cpu_total, int $mem_
                           . (empty($details) ? '' : ': ' . htmlspecialchars(implode(', ', $details), ENT_QUOTES, 'UTF-8'))
                           . '</span>';
         }
-        $html .= '<tr><td style="font-size:0.85em;white-space:nowrap">p_low jobs:</td>'
+        $html .= '<tr><td><span class="monospaced">p_low</span> jobs:</td>'
                . '<td><div style="display:flex;flex-wrap:wrap;gap:4px">' . $plow_badges . '</div></td></tr>';
     }
 

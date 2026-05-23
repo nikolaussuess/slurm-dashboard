@@ -107,7 +107,6 @@
                 {{GPU_USED}} of {{GPU_TOTAL}} GPUs in use ({{GPU_PERCENTAGE}} %)
             </td>
         </tr>
-        {{USER_RESOURCE_BREAKDOWN}}
     </table>
 </div>
 
@@ -119,7 +118,11 @@
     <div class="card card-body">
         <div class="table-responsive">
             <table class="nodeinfo table">
+                {{USER_RESOURCE_BREAKDOWN}}
 
+                <tr>
+                    <td colspan="2"><strong>Information about the node</strong></td>
+                </tr>
                 <tr>
                     <td>Architecture:</td>
                     <td>{{ARCHITECTURE}}</td>

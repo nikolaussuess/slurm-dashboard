@@ -146,7 +146,8 @@ function _render_user_breakdown(array $user_breakdown, int $cpu_total, int $mem_
                 if ($val <= 0)
                     continue;
                 $pct     = min(100.0, round($val / $total * 100, 1));
-                $tooltip = $user_e . ': ' . $val . $res_def['suffix'] . ' (' . $pct . '%)';
+                $val_f = number_format($val, 0, '.', ',');
+                $tooltip = $user_e . ': ' . $val_f . $res_def['suffix'] . ' (' . $pct . '%)';
                 $html .= '<div class="progress-bar" role="progressbar"'
                        . ' style="width:' . $pct . '%;background-color:' . $color['hex'] . ';color:' . $color['text'] . ';border-right:2px solid rgba(255,255,255,0.55)"'
                        . ' data-bs-toggle="tooltip" data-bs-trigger="hover focus"'
@@ -163,7 +164,8 @@ function _render_user_breakdown(array $user_breakdown, int $cpu_total, int $mem_
                 if ($val <= 0)
                     continue;
                 $pct     = min(100.0, round($val / $total * 100, 1));
-                $tooltip = $user_e . ' (p_low): ' . $val . $res_def['suffix'] . ' (' . $pct . '%)';
+                $val_f = number_format($val, 0, '.', ',');
+                $tooltip = $user_e . ' (p_low): ' . $val_f . $res_def['suffix'] . ' (' . $pct . '%)';
                 $html .= '<div class="progress-bar progress-bar-striped bg-secondary" role="progressbar"'
                        . ' style="width:' . $pct . '%;border-right:2px solid rgba(255,255,255,0.55)"'
                        . ' data-bs-toggle="tooltip" data-bs-trigger="hover focus"'
@@ -184,11 +186,11 @@ function _render_user_breakdown(array $user_breakdown, int $cpu_total, int $mem_
         $user_e = htmlspecialchars($user, ENT_QUOTES, 'UTF-8');
         $details = [];
         if (($res['cpus'] ?? 0) > 0)
-            $details[] = $res['cpus'] . ' CPUs';
+            $details[] = number_format($res['cpus'], 0, '.', ',') . ' CPUs';
         if (($res['mem']  ?? 0) > 0 && $has_mem)
-            $details[] = $res['mem']  . ' MiB';
+            $details[] =  number_format($res['mem'], 0, '.', ',') . ' MiB';
         if (($res['gpus'] ?? 0) > 0 && $has_gpu)
-            $details[] = $res['gpus'] . ' GPUs';
+            $details[] = number_format($res['gpus'], 0, '.', ',') . ' GPUs';
         $regular_badges .= '<span class="badge" style="background-color:' . $color['hex'] . ';color:' . $color['text'] . '">'
                          . '<a href="?action=users&user_name=' . $user_e . '" style="color:' . $color['text'] . ';text-decoration:none">' . $user_e . '</a>'
                          . (empty($details) ? '' : ': ' . htmlspecialchars(implode(', ', $details), ENT_QUOTES, 'UTF-8'))
@@ -206,11 +208,11 @@ function _render_user_breakdown(array $user_breakdown, int $cpu_total, int $mem_
             $user_e  = htmlspecialchars($user, ENT_QUOTES, 'UTF-8');
             $details = [];
             if (($res['cpus_pl'] ?? 0) > 0)
-                $details[] = $res['cpus_pl'] . ' CPUs';
+                $details[] = number_format($res['cpus_pl'], 0, '.', ',') . ' CPUs';
             if (($res['mem_pl']  ?? 0) > 0 && $has_mem)
-                $details[] = $res['mem_pl']  . ' MiB';
+                $details[] =  number_format($res['mem_pl'], 0, '.', ',') . ' MiB';
             if (($res['gpus_pl'] ?? 0) > 0 && $has_gpu)
-                $details[] = $res['gpus_pl'] . ' GPUs';
+                $details[] = number_format($res['gpus_pl'], 0, '.', ',') . ' GPUs';
             $plow_badges .= '<span class="badge bg-secondary progress-bar-striped text-white" style="background-size:1rem 1rem">'
                           . '<a href="?action=users&user_name=' . $user_e . '" class="text-white" style="text-decoration:none">' . $user_e . '</a>'
                           . (empty($details) ? '' : ': ' . htmlspecialchars(implode(', ', $details), ENT_QUOTES, 'UTF-8'))
@@ -238,10 +240,10 @@ function get_usage(array $data, array $user_breakdown = []) : string {
     // Thus, mem_total-mem_free can be negative if and only if in slurm.conf the node does not have the
     // full RAM memory for RealMemory=. In order to avoid confusions, we set the minimum to 0.
     $templateBuilder->setParam("MEM_PERCENTAGE", number_format($data["mem_total"] > 0 ? max(0, ($data["mem_total"]-$data["mem_free"])/$data["mem_total"]*100) : 0, 2));
-    $templateBuilder->setParam("MEM_USED", max(0,$data["mem_total"] - $data["mem_free"]));
-    $templateBuilder->setParam("MEM_TOTAL", $data["mem_total"]);
+    $templateBuilder->setParam("MEM_USED", number_format(max(0,$data["mem_total"] - $data["mem_free"]), 0, '.', ','));
+    $templateBuilder->setParam("MEM_TOTAL", number_format($data["mem_total"], 0, '.', ','));
     $templateBuilder->setParam("ALLOC_MEM_PERCENTAGE", number_format($data["mem_total"] > 0 ? $data["mem_alloc"]/$data["mem_total"]*100 : 0, 2));
-    $templateBuilder->setParam("ALLOC_MEM", $data["mem_alloc"]);
+    $templateBuilder->setParam("ALLOC_MEM", number_format($data["mem_alloc"], 0, '.', ','));
 
     $gres = $data["gres"];
     $gres_used = $data["gres_used"];

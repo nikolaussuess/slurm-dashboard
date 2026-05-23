@@ -55,21 +55,48 @@ function _build_node_user_breakdown(array $running_jobs, string $node): array {
 }
 
 /**
+ * Converts HSL (h: 0–359, s/l: 0–1) to [R, G, B] each 0–255.
+ */
+function _hsl_to_rgb(int $h, float $s, float $l): array {
+    $c = (1 - abs(2 * $l - 1)) * $s;
+    $x = $c * (1 - abs(fmod($h / 60.0, 2) - 1));
+    $m = $l - $c / 2;
+    if( $h < 60 )
+        [$r, $g, $b] = [$c, $x, 0];
+    elseif( $h < 120 )
+        [$r, $g, $b] = [$x, $c, 0];
+    elseif( $h < 180 )
+        [$r, $g, $b] = [0,  $c, $x];
+    elseif( $h < 240 )
+        [$r, $g, $b] = [0,  $x, $c];
+    elseif( $h < 300 )
+        [$r, $g, $b] = [$x, 0,  $c];
+    else
+        [$r, $g, $b] = [$c, 0,  $x];
+    return [(int)round(($r+$m)*255), (int)round(($g+$m)*255), (int)round(($b+$m)*255)];
+}
+
+/**
+ * Returns a stable {hex background, CSS text color} for a username.
+ * Hue is derived from the md5 hash; saturation/lightness are fixed for vibrant,
+ * readable colors. Text color is chosen via WCAG relative-luminance threshold.
+ */
+function _user_color(string $user): array {
+    $hue = hexdec(substr(md5($user), 0, 4)) % 360;
+    [$r, $g, $b] = _hsl_to_rgb($hue, 0.65, 0.45);
+    $hex = sprintf('#%02x%02x%02x', $r, $g, $b);
+    $luminance = 0.2126 * ($r / 255) + 0.7152 * ($g / 255) + 0.0722 * ($b / 255);
+    return ['hex' => $hex, 'text' => ($luminance > 0.22 ? '#222' : '#fff')];
+}
+
+/**
  * Renders the per-user resource breakdown as table rows with stacked progress bars.
  * p_low partition jobs are shown as gray striped segments and listed separately.
- * @return string an empty string when no jobs are running on the node, the usage data as HTML otherwise
+ * Returns an empty string when no jobs are running on the node.
  */
 function _render_user_breakdown(array $user_breakdown, int $cpu_total, int $mem_total, int $gpu_total): string {
     if (empty($user_breakdown))
         return '';
-
-    // Bootstrap background/text color pairs (index-stable)
-    $bg_colors   = ['primary', 'success', 'danger', 'warning', 'info', 'secondary', 'dark'];
-    $text_colors = ['text-white', 'text-white', 'text-white', 'text-dark', 'text-dark', 'text-white', 'text-white'];
-
-    $color_idx = function(string $user) use ($bg_colors): int {
-        return abs(crc32($user)) % count($bg_colors);
-    };
 
     // Check totals across both regular and p_low resources
     $has_mem  = $mem_total > 0 && (
@@ -104,16 +131,16 @@ function _render_user_breakdown(array $user_breakdown, int $cpu_total, int $mem_
 
         // Regular (colored) segments — one per individual job, with a white divider between jobs
         foreach ($user_breakdown as $user => $res) {
-            $idx = $color_idx($user);
+            $color  = _user_color($user);
             $user_e = htmlspecialchars($user, ENT_QUOTES, 'UTF-8');
             foreach ($res['jobs'] as $job) {
                 $val = $job[$res_def['key']] ?? 0;
-                if ($val <= 0) continue;
-                $pct = min(100.0, round($val / $total * 100, 1));
+                if ($val <= 0)
+                    continue;
+                $pct     = min(100.0, round($val / $total * 100, 1));
                 $tooltip = $user_e . ': ' . $val . $res_def['suffix'] . ' (' . $pct . '%)';
-                $html .= '<div class="progress-bar bg-' . $bg_colors[$idx] . ' ' . $text_colors[$idx] . '"'
-                       . ' role="progressbar"'
-                       . ' style="width:' . $pct . '%;border-right:2px solid rgba(255,255,255,0.55)"'
+                $html .= '<div class="progress-bar" role="progressbar"'
+                       . ' style="width:' . $pct . '%;background-color:' . $color['hex'] . ';color:' . $color['text'] . ';border-right:2px solid rgba(255,255,255,0.55)"'
                        . ' data-bs-toggle="tooltip" data-bs-trigger="hover focus"'
                        . ' title="' . htmlspecialchars($tooltip, ENT_QUOTES, 'UTF-8') . '">'
                        . ($pct >= 12 ? $user_e : '') . '</div>';
@@ -125,11 +152,11 @@ function _render_user_breakdown(array $user_breakdown, int $cpu_total, int $mem_
             $user_e = htmlspecialchars($user, ENT_QUOTES, 'UTF-8');
             foreach ($res['jobs_pl'] as $job) {
                 $val = $job[$res_def['key']] ?? 0;
-                if ($val <= 0) continue;
-                $pct = min(100.0, round($val / $total * 100, 1));
+                if ($val <= 0)
+                    continue;
+                $pct     = min(100.0, round($val / $total * 100, 1));
                 $tooltip = $user_e . ' (p_low): ' . $val . $res_def['suffix'] . ' (' . $pct . '%)';
-                $html .= '<div class="progress-bar progress-bar-striped bg-secondary"'
-                       . ' role="progressbar"'
+                $html .= '<div class="progress-bar progress-bar-striped bg-secondary" role="progressbar"'
                        . ' style="width:' . $pct . '%;border-right:2px solid rgba(255,255,255,0.55)"'
                        . ' data-bs-toggle="tooltip" data-bs-trigger="hover focus"'
                        . ' title="' . htmlspecialchars($tooltip, ENT_QUOTES, 'UTF-8') . '">'
@@ -140,17 +167,13 @@ function _render_user_breakdown(array $user_breakdown, int $cpu_total, int $mem_
         $html .= '</div></td></tr>';
     }
 
-    // Legend row
-    $html .= '<tr><td style="font-size:0.85em;white-space:nowrap">Normal jobs:</td><td>';
-
-    // Regular badges
+    // Regular-jobs legend row
     $regular_badges = '';
     foreach ($user_breakdown as $user => $res) {
-        $has_regular = ($res['cpus'] ?? 0) > 0 || ($res['mem'] ?? 0) > 0 || ($res['gpus'] ?? 0) > 0;
-        if ( !$has_regular )
+        if (($res['cpus'] ?? 0) <= 0 && ($res['mem'] ?? 0) <= 0 && ($res['gpus'] ?? 0) <= 0)
             continue;
+        $color  = _user_color($user);
         $user_e = htmlspecialchars($user, ENT_QUOTES, 'UTF-8');
-        $idx = $color_idx($user);
         $details = [];
         if (($res['cpus'] ?? 0) > 0)
             $details[] = $res['cpus'] . ' CPUs';
@@ -158,21 +181,21 @@ function _render_user_breakdown(array $user_breakdown, int $cpu_total, int $mem_
             $details[] = $res['mem']  . ' MiB';
         if (($res['gpus'] ?? 0) > 0 && $has_gpu)
             $details[] = $res['gpus'] . ' GPUs';
-        $detail_str = implode(', ', $details);
-        $regular_badges .= '<span class="badge bg-' . $bg_colors[$idx] . ' ' . $text_colors[$idx] . '">'
-                         . '<a href="?action=users&user_name=' . $user_e . '" class="' . $text_colors[$idx] . '" style="text-decoration:none">' . $user_e . '</a>'
-                         . (empty($detail_str) ? '' : ': ' . htmlspecialchars($detail_str, ENT_QUOTES, 'UTF-8'))
+        $regular_badges .= '<span class="badge" style="background-color:' . $color['hex'] . ';color:' . $color['text'] . '">'
+                         . '<a href="?action=users&user_name=' . $user_e . '" style="color:' . $color['text'] . ';text-decoration:none">' . $user_e . '</a>'
+                         . (empty($details) ? '' : ': ' . htmlspecialchars(implode(', ', $details), ENT_QUOTES, 'UTF-8'))
                          . '</span>';
     }
+    $html .= '<tr><td style="font-size:0.85em;white-space:nowrap">Normal jobs:</td>'
+           . '<td><div style="display:flex;flex-wrap:wrap;gap:4px">' . $regular_badges . '</div></td></tr>';
 
-    // p_low badges (only if any p_low jobs exist)
-    $plow_badges = '';
+    // p_low-jobs legend row (only when p_low jobs exist)
     if ($has_plow) {
+        $plow_badges = '';
         foreach ($user_breakdown as $user => $res) {
-            $has_pl = ($res['cpus_pl'] ?? 0) > 0 || ($res['mem_pl'] ?? 0) > 0 || ($res['gpus_pl'] ?? 0) > 0;
-            if (!$has_pl)
+            if (($res['cpus_pl'] ?? 0) <= 0 && ($res['mem_pl'] ?? 0) <= 0 && ($res['gpus_pl'] ?? 0) <= 0)
                 continue;
-            $user_e = htmlspecialchars($user, ENT_QUOTES, 'UTF-8');
+            $user_e  = htmlspecialchars($user, ENT_QUOTES, 'UTF-8');
             $details = [];
             if (($res['cpus_pl'] ?? 0) > 0)
                 $details[] = $res['cpus_pl'] . ' CPUs';
@@ -180,19 +203,11 @@ function _render_user_breakdown(array $user_breakdown, int $cpu_total, int $mem_
                 $details[] = $res['mem_pl']  . ' MiB';
             if (($res['gpus_pl'] ?? 0) > 0 && $has_gpu)
                 $details[] = $res['gpus_pl'] . ' GPUs';
-            $detail_str = implode(', ', $details);
-            $plow_badges .= '<span class="badge bg-secondary progress-bar-striped text-white"'
-                          . ' style="background-size:1rem 1rem">'
+            $plow_badges .= '<span class="badge bg-secondary progress-bar-striped text-white" style="background-size:1rem 1rem">'
                           . '<a href="?action=users&user_name=' . $user_e . '" class="text-white" style="text-decoration:none">' . $user_e . '</a>'
-                          . (empty($detail_str) ? '' : ': ' . htmlspecialchars($detail_str, ENT_QUOTES, 'UTF-8'))
+                          . (empty($details) ? '' : ': ' . htmlspecialchars(implode(', ', $details), ENT_QUOTES, 'UTF-8'))
                           . '</span>';
         }
-    }
-
-    $html .= '<div style="display:flex;flex-wrap:wrap;gap:4px">' . $regular_badges . '</div>';
-    $html .= '</td></tr>';
-
-    if (!empty($plow_badges)) {
         $html .= '<tr><td style="font-size:0.85em;white-space:nowrap">p_low jobs:</td>'
                . '<td><div style="display:flex;flex-wrap:wrap;gap:4px">' . $plow_badges . '</div></td></tr>';
     }

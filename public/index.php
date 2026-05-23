@@ -110,9 +110,7 @@ if( isset($_SESSION['USER']) ){
         case "usage":
             $title = 'Cluster usage';
             $contents .= "<h2>Current cluster usage</h2>";
-            foreach ($dao->getNodeList() as $node) {
-                $contents .= \view\actions\get_usage($dao->get_node_info($node));
-            }
+            $contents .= \view\actions\get_all_nodes_usage($dao);
             break;
 
         case "job":
@@ -491,9 +489,7 @@ if( isset($_SESSION['USER']) ){
 
             $title = 'Cluster usage';
             $contents .= "<h2>Current cluster usage</h2>";
-            foreach ($dao->getNodeList() as $node) {
-                $contents .= \view\actions\get_usage($dao->get_node_info($node));
-            }
+            $contents .= \view\actions\get_all_nodes_usage($dao);
             break;
 
         default:

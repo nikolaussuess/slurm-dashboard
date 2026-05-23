@@ -3,7 +3,204 @@ namespace view\actions;
 
 use TemplateLoader;
 
-function get_usage(array $data) : string {
+/**
+ * Renders the full cluster-usage section including all nodes.
+ * Fetches running-job summaries once and distributes them per node.
+ * @param \client\Client $dao Client to query the data.
+ * @return string The usage data as HTML string.
+ */
+function get_all_nodes_usage(\client\Client $dao): string {
+    $contents = '';
+    $running_jobs = config('feature_resources_per_user') ? $dao->get_running_jobs_summary() : [];
+    foreach ($dao->getNodeList() as $node) {
+        $contents .= get_usage(
+            $dao->get_node_info($node),
+            $running_jobs ? _build_node_user_breakdown($running_jobs, $node) : []
+        );
+    }
+    return $contents;
+}
+
+/**
+ * Groups running-job summaries by user for a single node. p_low resources tracked separately via _pl suffix.
+ * @param array $running_jobs Array of running jobs, as returns by \\Client\\get_running_jobs_summary
+ * @param string $node Node name.
+ */
+function _build_node_user_breakdown(array $running_jobs, string $node): array {
+    $breakdown = [];
+    foreach ($running_jobs as $job) {
+        if (!\utils\node_is_in_nodelist($node, $job['nodes_str'])) continue;
+        $user = $job['user_name'];
+        if (!isset($breakdown[$user])) {
+            $breakdown[$user] = ['cpus' => 0, 'mem' => 0, 'gpus' => 0,
+                                 'cpus_pl' => 0, 'mem_pl' => 0, 'gpus_pl' => 0,
+                                 'jobs' => [], 'jobs_pl' => []];
+        }
+        $job_entry = ['cpus' => $job['cpus_per_node'], 'mem' => $job['mem_per_node'], 'gpus' => $job['gpus_per_node']];
+        $is_plow = ($job['partition'] ?? '') === 'p_low';
+        if ($is_plow) {
+            $breakdown[$user]['cpus_pl'] += $job['cpus_per_node'];
+            $breakdown[$user]['mem_pl']  += $job['mem_per_node'];
+            $breakdown[$user]['gpus_pl'] += $job['gpus_per_node'];
+            $breakdown[$user]['jobs_pl'][] = $job_entry;
+        } else {
+            $breakdown[$user]['cpus'] += $job['cpus_per_node'];
+            $breakdown[$user]['mem']  += $job['mem_per_node'];
+            $breakdown[$user]['gpus'] += $job['gpus_per_node'];
+            $breakdown[$user]['jobs'][] = $job_entry;
+        }
+    }
+    ksort($breakdown);
+    return $breakdown;
+}
+
+/**
+ * Renders the per-user resource breakdown as table rows with stacked progress bars.
+ * p_low partition jobs are shown as gray striped segments and listed separately.
+ * @return string an empty string when no jobs are running on the node, the usage data as HTML otherwise
+ */
+function _render_user_breakdown(array $user_breakdown, int $cpu_total, int $mem_total, int $gpu_total): string {
+    if (empty($user_breakdown))
+        return '';
+
+    // Bootstrap background/text color pairs (index-stable)
+    $bg_colors   = ['primary', 'success', 'danger', 'warning', 'info', 'secondary', 'dark'];
+    $text_colors = ['text-white', 'text-white', 'text-white', 'text-dark', 'text-dark', 'text-white', 'text-white'];
+
+    $color_idx = function(string $user) use ($bg_colors): int {
+        return abs(crc32($user)) % count($bg_colors);
+    };
+
+    // Check totals across both regular and p_low resources
+    $has_mem  = $mem_total > 0 && (
+        array_sum(array_column($user_breakdown, 'mem')) +
+        array_sum(array_column($user_breakdown, 'mem_pl')) > 0
+    );
+    $has_gpu  = $gpu_total > 0 && (
+        array_sum(array_column($user_breakdown, 'gpus')) +
+        array_sum(array_column($user_breakdown, 'gpus_pl')) > 0
+    );
+    $has_plow = (
+        array_sum(array_column($user_breakdown, 'cpus_pl')) +
+        array_sum(array_column($user_breakdown, 'mem_pl')) +
+        array_sum(array_column($user_breakdown, 'gpus_pl')) > 0
+    );
+
+    $html = '<tr><td colspan="2"><strong>Current resource usage per user</strong></td></tr>';
+
+    // One stacked-bar row per resource type
+    $resources = [
+        ['key' => 'cpus', 'key_pl' => 'cpus_pl', 'total' => $cpu_total, 'show' => $cpu_total > 0, 'label' => 'CPUs by user:',   'suffix' => ' CPUs'],
+        ['key' => 'mem',  'key_pl' => 'mem_pl',  'total' => $mem_total, 'show' => $has_mem,       'label' => 'Memory by user:', 'suffix' => ' MiB'],
+        ['key' => 'gpus', 'key_pl' => 'gpus_pl', 'total' => $gpu_total, 'show' => $has_gpu,       'label' => 'GPUs by user:',   'suffix' => ' GPUs'],
+    ];
+
+    foreach ($resources as $res_def) {
+        if (!$res_def['show'])
+            continue;
+        $total = $res_def['total'];
+        $html .= '<tr><td style="font-size:0.85em;white-space:nowrap">' . $res_def['label'] . '</td><td>';
+        $html .= '<div class="progress" style="height:20px">';
+
+        // Regular (colored) segments — one per individual job, with a white divider between jobs
+        foreach ($user_breakdown as $user => $res) {
+            $idx = $color_idx($user);
+            $user_e = htmlspecialchars($user, ENT_QUOTES, 'UTF-8');
+            foreach ($res['jobs'] as $job) {
+                $val = $job[$res_def['key']] ?? 0;
+                if ($val <= 0) continue;
+                $pct = min(100.0, round($val / $total * 100, 1));
+                $tooltip = $user_e . ': ' . $val . $res_def['suffix'] . ' (' . $pct . '%)';
+                $html .= '<div class="progress-bar bg-' . $bg_colors[$idx] . ' ' . $text_colors[$idx] . '"'
+                       . ' role="progressbar"'
+                       . ' style="width:' . $pct . '%;border-right:2px solid rgba(255,255,255,0.55)"'
+                       . ' data-bs-toggle="tooltip" data-bs-trigger="hover focus"'
+                       . ' title="' . htmlspecialchars($tooltip, ENT_QUOTES, 'UTF-8') . '">'
+                       . ($pct >= 12 ? $user_e : '') . '</div>';
+            }
+        }
+
+        // p_low (gray striped) segments — one per individual job
+        foreach ($user_breakdown as $user => $res) {
+            $user_e = htmlspecialchars($user, ENT_QUOTES, 'UTF-8');
+            foreach ($res['jobs_pl'] as $job) {
+                $val = $job[$res_def['key']] ?? 0;
+                if ($val <= 0) continue;
+                $pct = min(100.0, round($val / $total * 100, 1));
+                $tooltip = $user_e . ' (p_low): ' . $val . $res_def['suffix'] . ' (' . $pct . '%)';
+                $html .= '<div class="progress-bar progress-bar-striped bg-secondary"'
+                       . ' role="progressbar"'
+                       . ' style="width:' . $pct . '%;border-right:2px solid rgba(255,255,255,0.55)"'
+                       . ' data-bs-toggle="tooltip" data-bs-trigger="hover focus"'
+                       . ' title="' . htmlspecialchars($tooltip, ENT_QUOTES, 'UTF-8') . '">'
+                       . ($pct >= 12 ? $user_e : '') . '</div>';
+            }
+        }
+
+        $html .= '</div></td></tr>';
+    }
+
+    // Legend row
+    $html .= '<tr><td style="font-size:0.85em;white-space:nowrap">Normal jobs:</td><td>';
+
+    // Regular badges
+    $regular_badges = '';
+    foreach ($user_breakdown as $user => $res) {
+        $has_regular = ($res['cpus'] ?? 0) > 0 || ($res['mem'] ?? 0) > 0 || ($res['gpus'] ?? 0) > 0;
+        if ( !$has_regular )
+            continue;
+        $user_e = htmlspecialchars($user, ENT_QUOTES, 'UTF-8');
+        $idx = $color_idx($user);
+        $details = [];
+        if (($res['cpus'] ?? 0) > 0)
+            $details[] = $res['cpus'] . ' CPUs';
+        if (($res['mem']  ?? 0) > 0 && $has_mem)
+            $details[] = $res['mem']  . ' MiB';
+        if (($res['gpus'] ?? 0) > 0 && $has_gpu)
+            $details[] = $res['gpus'] . ' GPUs';
+        $detail_str = implode(', ', $details);
+        $regular_badges .= '<span class="badge bg-' . $bg_colors[$idx] . ' ' . $text_colors[$idx] . '">'
+                         . '<a href="?action=users&user_name=' . $user_e . '" class="' . $text_colors[$idx] . '" style="text-decoration:none">' . $user_e . '</a>'
+                         . (empty($detail_str) ? '' : ': ' . htmlspecialchars($detail_str, ENT_QUOTES, 'UTF-8'))
+                         . '</span>';
+    }
+
+    // p_low badges (only if any p_low jobs exist)
+    $plow_badges = '';
+    if ($has_plow) {
+        foreach ($user_breakdown as $user => $res) {
+            $has_pl = ($res['cpus_pl'] ?? 0) > 0 || ($res['mem_pl'] ?? 0) > 0 || ($res['gpus_pl'] ?? 0) > 0;
+            if (!$has_pl)
+                continue;
+            $user_e = htmlspecialchars($user, ENT_QUOTES, 'UTF-8');
+            $details = [];
+            if (($res['cpus_pl'] ?? 0) > 0)
+                $details[] = $res['cpus_pl'] . ' CPUs';
+            if (($res['mem_pl']  ?? 0) > 0 && $has_mem)
+                $details[] = $res['mem_pl']  . ' MiB';
+            if (($res['gpus_pl'] ?? 0) > 0 && $has_gpu)
+                $details[] = $res['gpus_pl'] . ' GPUs';
+            $detail_str = implode(', ', $details);
+            $plow_badges .= '<span class="badge bg-secondary progress-bar-striped text-white"'
+                          . ' style="background-size:1rem 1rem">'
+                          . '<a href="?action=users&user_name=' . $user_e . '" class="text-white" style="text-decoration:none">' . $user_e . '</a>'
+                          . (empty($detail_str) ? '' : ': ' . htmlspecialchars($detail_str, ENT_QUOTES, 'UTF-8'))
+                          . '</span>';
+        }
+    }
+
+    $html .= '<div style="display:flex;flex-wrap:wrap;gap:4px">' . $regular_badges . '</div>';
+    $html .= '</td></tr>';
+
+    if (!empty($plow_badges)) {
+        $html .= '<tr><td style="font-size:0.85em;white-space:nowrap">p_low jobs:</td>'
+               . '<td><div style="display:flex;flex-wrap:wrap;gap:4px">' . $plow_badges . '</div></td></tr>';
+    }
+
+    return $html;
+}
+
+function get_usage(array $data, array $user_breakdown = []) : string {
     $contents = '';
 
     $templateBuilder = new TemplateLoader("nodeinfo.html");
@@ -41,6 +238,13 @@ function get_usage(array $data) : string {
     $templateBuilder->setParam("GPU_PERCENTAGE", number_format($gpus_percentage, 2));
     $templateBuilder->setParam("GPU_USED", $gpus_used);
     $templateBuilder->setParam("GPU_TOTAL", $gpus);
+
+    $templateBuilder->setParam("USER_RESOURCE_BREAKDOWN", _render_user_breakdown(
+        $user_breakdown,
+        (int)$data['cpus'],
+        (int)$data['mem_total'],
+        (int)$gpus
+    ));
 
     $templateBuilder->setParam("STATE", implode(", ", $data["state"]));
     $state_color = "#f9c98f"; # orange

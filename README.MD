@@ -45,6 +45,7 @@ However, any slurm version `>= 23.11.x` should work. If you encounter any issues
 - PHP (currently only tested with PHP 8.2)<br>
   including
   - `php-apcu` for caching `slurmrestd` responses
+  - `php-curl` for communicating with `slurmrestd`
   - `php-ldap` for LDAP authentication (if you are using LDAP; optional)
   - `php-ssh2` for local authentication (if you are using local authentication; optional)
 - Apache2<br>

@@ -51,9 +51,21 @@ $config = [
 
     /**
      * Connection mode for connections to slurmrestd.
-     * Currently, the only supported value is 'unix'!
+     * Supported values: 'unix' (Unix socket), 'tcp' (TCP socket).
      */
     'CONNECTION_MODE' => cfg_env('CONNECTION_MODE', 'unix'),
+
+    /**
+     * Hostname or IP address for TCP connections to slurmrestd.
+     * Only required when CONNECTION_MODE=tcp.
+     */
+    'SLURM_TCP_HOST' => cfg_env('SLURM_TCP_HOST'),
+
+    /**
+     * Port for TCP connections to slurmrestd.
+     * Only required when CONNECTION_MODE=tcp. Defaults to 6820.
+     */
+    'SLURM_TCP_PORT' => cfg_env('SLURM_TCP_PORT', '6820'),
 
     /**
      * OpenAPI version to use for communication with slurmrestd.

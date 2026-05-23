@@ -28,8 +28,8 @@ However, any slurm version `>= 23.11.x` should work. If you encounter any issues
 - Show planned maintenances (`flags=maint`) that were created with e.g. `scontrol create reservation starttime=2024-11-02T13:30:00 duration=5 user=root flags=maint nodes=mynode`.
 - List transitive dependencies for a job.
 - Authentication (at `slurmrestd`) via JWT (optional).
-- Allow administrators to requeue / cancel / ... jobs (requires JWT).
-- Allow users to requeue and cancel their own jobs (requires JWT).
+- Allow administrators to cancel and modify jobs (requires JWT).
+- Allow users to cancel and modify their own jobs (requires JWT).
 - Allow users to edit their own jobs and allow admins to edit all jobs (requires JWT).
 - Allow administrators to `DRAIN` or undrain nodes (requires JWT).
 
@@ -178,6 +178,9 @@ However, any slurm version `>= 23.11.x` should work. If you encounter any issues
     
     # Privileged users (OPTIONAL)
     # SetEnv PRIV_USERS        "user1,user2"
+    
+    # Features
+    # SetEnv FEATURE_RESOURCES_PER_USER "disabled" # possible values: disabled,privileged,all
 </VirtualHost>
 ```
 5) Make sure that your apache2 config file is not readable by other users (especially if it contains passwords)!

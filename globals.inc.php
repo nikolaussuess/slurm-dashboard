@@ -130,9 +130,15 @@ $config = [
     /**
      * Show a per-user CPU/RAM/GPU breakdown with stacked progress bars on the cluster usage page.
      * Requires an additional API call to /slurm/jobs; disabled by default.
-     * Set env var FEATURE_RESOURCES_PER_USER=true to enable.
+     * Set env var FEATURE_RESOURCES_PER_USER=all or FEATURE_RESOURCES_PER_USER=privileged to enable.
      */
-    'feature_resources_per_user' => filter_var(cfg_env('FEATURE_RESOURCES_PER_USER', 'false'), FILTER_VALIDATE_BOOLEAN),
+    'feature_resources_per_user' => in_array(
+        cfg_env('FEATURE_RESOURCES_PER_USER', 'disabled'),
+        ['disabled', 'all', 'privileged'],
+        true
+    )
+        ? cfg_env('FEATURE_RESOURCES_PER_USER', 'disabled')
+        : 'disabled',
 ];
 
 function config($key = null) {

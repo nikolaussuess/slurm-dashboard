@@ -11,7 +11,15 @@ use TemplateLoader;
  */
 function get_all_nodes_usage(\client\Client $dao): string {
     $contents = '';
-    $running_jobs = config('feature_resources_per_user') ? $dao->get_running_jobs_summary() : [];
+
+    if(
+        config('feature_resources_per_user') === 'all' ||
+        config('feature_resources_per_user') === 'privileged' && \auth\current_user_is_privileged()
+    )
+        $running_jobs = $dao->get_running_jobs_summary();
+    else
+        $running_jobs = [];
+
     foreach ($dao->getNodeList() as $node) {
         $contents .= get_usage(
             $dao->get_node_info($node),

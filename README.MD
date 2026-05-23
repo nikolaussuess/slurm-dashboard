@@ -20,7 +20,7 @@ However, any slurm version `>= 23.11.x` should work. If you encounter any issues
 - Display cluster usage information (state, CPUs, memory, gpus per node).
 - Display the current job queue, including a job detail page.
 - Authentication via LDAP or local, and it additionally checks whether the user exists in the accounting database.
-- Communication with `slurmrestd` via unix socket.
+- Communication with `slurmrestd` via unix socket or TCP.
 - Caching of the `slurmrestd` responses (using APCu).
 - Display and filter job history (from `slurmdbd`).
 - Display list of users with their respective accounts (for administrators and privileged users only). Unprivileged users may only view their own user (incl. Fair-share value, accounts and so on).
@@ -39,7 +39,6 @@ However, any slurm version `>= 23.11.x` should work. If you encounter any issues
 ### Planned features
 #### Currently not under active development
 - Allow users to submit jobs via a web interface.
-- Support TCP sockets (in addition to unix sockets).
 
 ## Requirements
 - PHP (currently only tested with PHP 8.2)<br>
@@ -52,7 +51,7 @@ However, any slurm version `>= 23.11.x` should work. If you encounter any issues
   including
   - `libapache2-mpm-itk` in order to change to user to the same `slurmrestd` is running with.
   - `libapache2-mod-php`
-- `slurmrestd` using Unix sockets, running with the same user that the website is running with.
+- `slurmrestd` accessible via Unix socket (running with the same user as the website) or via TCP.
 
 ## Setup
 1) Install the requirements.
@@ -153,6 +152,10 @@ However, any slurm version `>= 23.11.x` should work. If you encounter any issues
     # OPTIONAL REST API PARAMETERS
     # Unix is already the default connection mode
     # SetEnv CONNECTION_MODE "unix"
+    # For TCP, set CONNECTION_MODE to "tcp" and specify host and port
+    # SetEnv CONNECTION_MODE  "tcp"
+    # SetEnv SLURM_TCP_HOST   "slurmrestd.example.com"
+    # SetEnv SLURM_TCP_PORT   "6820"
     # REST_API_VERSION must be set only if it cannot be auto detected
     # SetEnv REST_API_VERSION "v0.0.40"
     

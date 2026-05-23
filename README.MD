@@ -18,7 +18,7 @@ However, any slurm version `>= 23.11.x` should work. If you encounter any issues
 
 ## Current features
 - Display cluster usage information (state, CPUs, memory, gpus per node).
-- Display cluster usage information (state, CPUs, memory, gpus per node) per node and user. (This feature can be disabled or restricted to privileged users.)
+- Display cluster usage information (CPUs, memory, gpus per node) per node and user. (This feature can be disabled or restricted to privileged users.)
 - Display the current job queue, including a job detail page.
 - Authentication via LDAP or local, and it additionally checks whether the user exists in the accounting database.
 - Communication with `slurmrestd` via unix socket.

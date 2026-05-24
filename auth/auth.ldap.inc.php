@@ -73,7 +73,7 @@ namespace auth {
                 if ($entries['count'] > 0) {
                     // User found, try to bind with user's credentials
                     $user_dn = $entries[0]['dn'];
-                    if (ldap_bind($ldapConn, $user_dn, $password)) {
+                    if (@ldap_bind($ldapConn, $user_dn, $password)) {
                         addSuccess('Authentication successful!');
                         $login_ok = TRUE;
                     } else {

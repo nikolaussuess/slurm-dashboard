@@ -19,8 +19,7 @@
                     <span class="visually-hidden">Toggle Dropdown</span>
                 </button>
                 <ul class="dropdown-menu">
-                    <li><a class="dropdown-item" href="?action=node-set-state&nodename={{NODENAME}}&state=resume">Resume node</a></li>
-                    <li><a class="dropdown-item" href="?action=node-set-state&nodename={{NODENAME}}&state=drain">Drain node</a></li>
+                    {{NODE_STATE_ACTIONS}}
                 </ul>
             </td>
         </tr>
@@ -110,15 +109,24 @@
     </table>
 </div>
 
-<button class="btn btn-primary" type="button" data-bs-toggle="collapse" data-bs-target="#collapse{{NODENAME}}" aria-expanded="false" aria-controls="collapse{{NODENAME}}">
-    Show/Hide more
-</button>
+<div class="d-flex gap-2 align-items-center">
+    <button class="btn btn-primary" type="button" data-bs-toggle="collapse" data-bs-target="#collapse{{NODENAME}},#collapseToggle{{NODENAME}}" aria-expanded="false" aria-controls="collapse{{NODENAME}}">
+        Show/Hide more
+    </button>
+    <div class="collapse" id="collapseToggle{{NODENAME}}">
+        {{SHOW_USERS_TOGGLE}}
+    </div>
+</div>
 
 <div class="collapse" id="collapse{{NODENAME}}">
     <div class="card card-body">
         <div class="table-responsive">
             <table class="nodeinfo table">
+                {{USER_RESOURCE_BREAKDOWN}}
 
+                <tr>
+                    <td colspan="2"><strong>Information about the node</strong></td>
+                </tr>
                 <tr>
                     <td>Architecture:</td>
                     <td>{{ARCHITECTURE}}</td>

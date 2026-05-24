@@ -108,3 +108,50 @@ function is_valid_username(string $username): bool {
     $pattern = '/^[a-z_]([a-z0-9_-]{0,31}|[a-z0-9_-]{0,30}\\$)$/';
     return preg_match($pattern, $username) === 1;
 }
+
+/**
+ * Checks whether a node name is contained in a Slurm nodelist string.
+ * Handles comma-separated lists and bracket range notation (e.g. node[01-05,08]).
+ */
+function node_is_in_nodelist(string $node, string $nodelist): bool {
+    if ($nodelist === '' || $nodelist === '?') return false;
+    if ($node === $nodelist) return true;
+
+    foreach (_split_nodelist($nodelist) as $part) {
+        if (preg_match('/^(.+?)\[(.+)\]$/', $part, $m)) {
+            $prefix = $m[1];
+            if (!str_starts_with($node, $prefix)) continue;
+            $suffix = substr($node, strlen($prefix));
+            foreach (explode(',', $m[2]) as $range) {
+                if (str_contains($range, '-')) {
+                    [$lo, $hi] = explode('-', $range, 2);
+                    if ((int)$suffix >= (int)$lo && (int)$suffix <= (int)$hi) return true;
+                } elseif ($range === $suffix) {
+                    return true;
+                }
+            }
+        } elseif ($part === $node) {
+            return true;
+        }
+    }
+    return false;
+}
+
+/** Splits a Slurm nodelist on top-level commas (skipping commas inside brackets). */
+function _split_nodelist(string $nodelist): array {
+    $parts = [];
+    $depth = 0;
+    $current = '';
+    for ($i = 0, $len = strlen($nodelist); $i < $len; $i++) {
+        $c = $nodelist[$i];
+        if ($c === '[') $depth++;
+        elseif ($c === ']') $depth--;
+        elseif ($c === ',' && $depth === 0) {
+            if ($current !== '') { $parts[] = $current; $current = ''; }
+            continue;
+        }
+        $current .= $c;
+    }
+    if ($current !== '') $parts[] = $current;
+    return $parts;
+}

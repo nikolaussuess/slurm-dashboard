@@ -526,6 +526,63 @@ abstract class AbstractClient implements Client {
         }, ARRAY_FILTER_USE_BOTH);
     }
 
+    function get_running_jobs_summary(): array {
+        $json = RequestFactory::newRequest()->request_json("jobs", 'slurm', static::api_version);
+
+        $result = [];
+        foreach ($json['jobs'] as $json_job) {
+            if ( !in_array('RUNNING', $json_job['job_state']) )
+                continue;
+
+            $nodes_str = $this->get_nodes($json_job);
+            if ($nodes_str === '?')
+                continue;
+
+            $cpus_total = isset($json_job['cpus']['set']) && $json_job['cpus']['set']
+                ? (int)$json_job['cpus']['number'] : 0;
+            $node_count = isset($json_job['node_count']['set']) && $json_job['node_count']['set']
+                ? max(1, (int)$json_job['node_count']['number']) : 1;
+            $cpus_per_node = $node_count > 0 ? (int)round($cpus_total / $node_count) : $cpus_total;
+
+            if (isset($json_job['memory_per_node']['set']) && $json_job['memory_per_node']['set']) {
+                $mem_per_node = (int)$json_job['memory_per_node']['number'];
+            }
+            elseif (isset($json_job['memory_per_cpu']['set']) && $json_job['memory_per_cpu']['set']) {
+                $mem_per_node = (int)$json_job['memory_per_cpu']['number'] * max(1, $cpus_per_node);
+            }
+            else {
+                $mem_per_node = 0;
+            }
+
+            $gpus_per_node = 0;
+            // gres_detail is an array with one entry per allocated node; take the first.
+            // Handles both "gpu:2(IDX:0,1)" and "gpu:V100:2(IDX:0,1)" formats.
+            if (isset($json_job['gres_detail']) && is_array($json_job['gres_detail']) && !empty($json_job['gres_detail'])) {
+                $gres_str = $json_job['gres_detail'][0];
+                if (is_string($gres_str) && preg_match('/gpu.*?:(\d+)(?:\(|,|$)/i', $gres_str, $matches)) {
+                    $gpus_per_node = (int)$matches[1];
+                }
+            }
+            // Fallback: parse total from tres_alloc_str ("...gres/gpu=2...") and split evenly across nodes.
+            if ($gpus_per_node === 0 && isset($json_job['tres_alloc_str']) && is_string($json_job['tres_alloc_str'])) {
+                if (preg_match('/gres\/gpu=(\d+)/', $json_job['tres_alloc_str'], $matches)) {
+                    $gpus_total = (int)$matches[1];
+                    $gpus_per_node = $node_count > 0 ? (int)round($gpus_total / $node_count) : $gpus_total;
+                }
+            }
+
+            $result[] = [
+                'user_name'     => $json_job['user_name'],
+                'partition'     => $json_job['partition'] ?? '',
+                'nodes_str'     => $nodes_str,
+                'cpus_per_node' => $cpus_per_node,
+                'mem_per_node'  => $mem_per_node,
+                'gpus_per_node' => $gpus_per_node,
+            ];
+        }
+        return $result;
+    }
+
     protected function _slurm_queue_order_by(array $jobs, string $orderby) : array {
         if( !in_array($orderby, array('job_id', 'user_name', 'priority', 'time_start')))
             return $jobs;

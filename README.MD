@@ -18,6 +18,7 @@ However, any slurm version `>= 23.11.x` should work. If you encounter any issues
 
 ## Current features
 - Display cluster usage information (state, CPUs, memory, gpus per node).
+- Display cluster usage information (CPUs, memory, gpus per node) per node and user. (This feature is disabled per default and can be enabled for all users or for privileged users only.)
 - Display the current job queue, including a job detail page.
 - Authentication via LDAP or local, and it additionally checks whether the user exists in the accounting database.
 - Communication with `slurmrestd` via unix socket or TCP.
@@ -27,8 +28,8 @@ However, any slurm version `>= 23.11.x` should work. If you encounter any issues
 - Show planned maintenances (`flags=maint`) that were created with e.g. `scontrol create reservation starttime=2024-11-02T13:30:00 duration=5 user=root flags=maint nodes=mynode`.
 - List transitive dependencies for a job.
 - Authentication (at `slurmrestd`) via JWT (optional).
-- Allow administrators to requeue / cancel / ... jobs (requires JWT).
-- Allow users to requeue and cancel their own jobs (requires JWT).
+- Allow administrators to cancel any jobs (requires JWT).
+- Allow users to cancel their own jobs (requires JWT).
 - Allow users to edit their own jobs and allow admins to edit all jobs (requires JWT).
 - Allow administrators to `DRAIN` or undrain nodes (requires JWT).
 
@@ -181,6 +182,9 @@ However, any slurm version `>= 23.11.x` should work. If you encounter any issues
     
     # Privileged users (OPTIONAL)
     # SetEnv PRIV_USERS        "user1,user2"
+    
+    # Features
+    # SetEnv FEATURE_RESOURCES_PER_USER "disabled" # possible values: disabled,privileged,all
 </VirtualHost>
 ```
 5) Make sure that your apache2 config file is not readable by other users (especially if it contains passwords)!

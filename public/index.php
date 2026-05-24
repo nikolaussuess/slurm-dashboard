@@ -109,10 +109,11 @@ if( isset($_SESSION['USER']) ){
 
         case "usage":
             $title = 'Cluster usage';
-            $contents .= "<h2>Current cluster usage</h2>";
-            foreach ($dao->getNodeList() as $node) {
-                $contents .= \view\actions\get_usage($dao->get_node_info($node));
-            }
+            $contents .= \view\actions\get_all_nodes_usage(
+                    $dao,
+                    $csp_nonce,
+                    isset($_GET['show_users']) && $_GET['show_users'] === '1'
+            );
             break;
 
         case "job":
@@ -490,10 +491,11 @@ if( isset($_SESSION['USER']) ){
             apcu_delete("slurm/node/".$nodename); // Delete cached entry because we KNOW that it has changed.
 
             $title = 'Cluster usage';
-            $contents .= "<h2>Current cluster usage</h2>";
-            foreach ($dao->getNodeList() as $node) {
-                $contents .= \view\actions\get_usage($dao->get_node_info($node));
-            }
+            $contents .= \view\actions\get_all_nodes_usage(
+                    $dao,
+                    $csp_nonce,
+                    isset($_GET['show_users']) && $_GET['show_users'] === '1'
+            );
             break;
 
         default:

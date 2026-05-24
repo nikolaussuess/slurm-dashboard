@@ -220,6 +220,15 @@ interface Client{
     function update_job(array $job_data) : bool;
 
     function set_node_state(string $nodename, string $new_state) : bool;
+
+    /**
+     * Returns a summary of all currently running jobs.
+     * Used to build the per-node, per-user resource breakdown on the cluster usage page.
+     * @return array Array of running jobs, each with keys:
+     *   user_name (string), nodes_str (string), cpus_per_node (int),
+     *   mem_per_node (int, MiB), gpus_per_node (int)
+     */
+    function get_running_jobs_summary(): array;
 }
 
 class ClientFactory {

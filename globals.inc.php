@@ -121,7 +121,31 @@ $config = [
      */
     'SLURM_USER' => cfg_env('SLURM_USER', 'slurm'),
 
-    'PRIV_USERS' => explode(',', getenv('PRIV_USERS') ?: '')
+    'PRIV_USERS' => explode(',', getenv('PRIV_USERS') ?: ''),
+
+    // ------------------------------------------------------------------
+    // FEATURE FLAGS
+    // ------------------------------------------------------------------
+
+    /**
+     * Show p_low partition jobs as a separate striped segment in the cluster-wide overview bars.
+     * Requires an additional API call to /slurm/jobs; disabled by default.
+     * Set env var FEATURE_P_LOW_IN_CLUSTER_OVERVIEW=enabled to enable.
+     */
+    'feature_p_low_in_cluster_overview' => cfg_env('FEATURE_P_LOW_IN_CLUSTER_OVERVIEW', 'disabled') === 'enabled',
+
+    /**
+     * Show a per-user CPU/RAM/GPU breakdown with stacked progress bars on the cluster usage page.
+     * Requires an additional API call to /slurm/jobs; disabled by default.
+     * Set env var FEATURE_RESOURCES_PER_USER=all or FEATURE_RESOURCES_PER_USER=privileged to enable.
+     */
+    'feature_resources_per_user' => in_array(
+        cfg_env('FEATURE_RESOURCES_PER_USER', 'disabled'),
+        ['disabled', 'all', 'privileged'],
+        true
+    )
+        ? cfg_env('FEATURE_RESOURCES_PER_USER', 'disabled')
+        : 'disabled',
 ];
 
 function config($key = null) {

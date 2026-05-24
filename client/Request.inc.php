@@ -85,9 +85,11 @@ abstract class AbstractRequest implements Request {
         $ch = curl_init($url);
         $this->apply_transport($ch);
         curl_setopt_array($ch, [
-            CURLOPT_RETURNTRANSFER => TRUE,
-            CURLOPT_CUSTOMREQUEST  => $method,
-            CURLOPT_HTTPHEADER     => $headers,
+            CURLOPT_RETURNTRANSFER  => TRUE,
+            CURLOPT_CUSTOMREQUEST   => $method,
+            CURLOPT_HTTPHEADER      => $headers,
+            CURLOPT_CONNECTTIMEOUT  => 10,   // abort if connection cannot be established within 10s
+            CURLOPT_TIMEOUT         => 300,  // hard cap for slow responses (e.g. large job lists)
         ]);
         return $ch;
     }
@@ -249,11 +251,22 @@ class UnixRequest extends AbstractRequest {
 class TcpRequest extends AbstractRequest {
 
     protected function get_base_url(): string {
-        return 'http://' . config('SLURM_TCP_HOST') . ':' . config('SLURM_TCP_PORT');
+        $port = config('SLURM_TCP_PORT');
+        if (!ctype_digit($port) || (int)$port < 1 || (int)$port > 65535) {
+            throw new \exceptions\ConfigurationError(
+                "Invalid TCP port.",
+                "SLURM_TCP_PORT must be a number between 1 and 65535, got: " . $port,
+                "Wrong configuration: SLURM_TCP_PORT is invalid."
+            );
+        }
+        return 'https://' . config('SLURM_TCP_HOST') . ':' . $port;
     }
 
     protected function apply_transport(\CurlHandle $ch): void {
-        // No special transport configuration needed for TCP
+        $ca_cert = config('SLURM_TCP_CA_CERT');
+        if ($ca_cert !== TO_BE_REPLACED) {
+            curl_setopt($ch, CURLOPT_CAINFO, $ca_cert);
+        }
     }
 
     static function socket_exists(): bool {

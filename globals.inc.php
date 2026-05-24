@@ -68,6 +68,14 @@ $config = [
     'SLURM_TCP_PORT' => cfg_env('SLURM_TCP_PORT', '6820'),
 
     /**
+     * Path to a PEM CA certificate file for verifying the slurmrestd TLS certificate.
+     * Only required when CONNECTION_MODE=tcp and slurmrestd uses a self-signed certificate
+     * or a certificate signed by a private/internal CA.
+     * Leave TO_BE_REPLACED to use the system CA store.
+     */
+    'SLURM_TCP_CA_CERT' => cfg_env('SLURM_TCP_CA_CERT'),
+
+    /**
      * OpenAPI version to use for communication with slurmrestd.
      * Use 'auto' for auto-detection (if supported), or e.g. v0.0.40.
      * Default is 'auto'.

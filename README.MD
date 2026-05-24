@@ -38,9 +38,12 @@ However, any slurm version `>= 23.11.x` should work. If you encounter any issues
 ![Job history](./imgs/job_history.png?raw=true "Job history")
 
 ### Planned features
-#### Currently not under active development
-- Allow users to submit jobs via a web interface.
 - Support TCP sockets (in addition to unix sockets).
+  See branch [feature-tcp](https://github.com/nikolaussuess/slurm-dashboard/tree/feature-tcp).
+#### Currently not under active development
+- Allow admins to add users via the web interface.
+- Allow admins to add advanced reservations and maintenances via the web interface.
+- Allow users to submit jobs via a web interface.
 
 ## Requirements
 - PHP (currently only tested with PHP 8.2)<br>
@@ -48,6 +51,7 @@ However, any slurm version `>= 23.11.x` should work. If you encounter any issues
   - `php-apcu` for caching `slurmrestd` responses
   - `php-ldap` for LDAP authentication (if you are using LDAP; optional)
   - `php-ssh2` for local authentication (if you are using local authentication; optional)
+  - Please note, that future versions will also require `php-curl`!
 - Apache2<br>
   including
   - `libapache2-mpm-itk` in order to change to user to the same `slurmrestd` is running with.

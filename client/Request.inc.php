@@ -13,6 +13,7 @@ use exceptions\RequestFailedException;
 
 interface Request {
     /**
+     * Send a GET request to slurmrestd (and decode the response as JSON).
      * @param string $endpoint Endpoint to call
      * @param string $namespace slurm or slurmdb
      * @param string $api_version API version, e.g. v0.0.40
@@ -23,6 +24,8 @@ interface Request {
     function request_json(string $endpoint, string $namespace, string $api_version, int|bool $ttl = 5) : array;
 
     /**
+     * Send a GET request to slurmrestd (and decode the response as JSON).
+     * Here, $full_endpoint must contain the namespace.
      * @param string $full_endpoint Endpoint to call (incl. namespace and api version)
      * @param int|bool $ttl how long to cache the request, FALSE to disable caching
      * @return array associative array
@@ -30,6 +33,7 @@ interface Request {
     function request_json2(string $full_endpoint, int|bool $ttl = 5) : array;
 
     /**
+     * Send a GET request to slurmrestd and return the plain response.
      * @param string $endpoint Endpoint to call
      * @param string $namespace slurm or slurmdb
      * @param string $api_version API version, e.g. v0.0.40
@@ -70,6 +74,14 @@ abstract class AbstractRequest implements Request {
     abstract protected function get_base_url(): string;
     abstract protected function apply_transport(\CurlHandle $ch): void;
 
+    /**
+     * Adds JWT headers if we are using JWT for authentication.
+     * If $as_slurm_user == TRUE, then the request may be performed as SLURM_USER if $SESSION['USER'] is not set.
+     * This is required to request data before login.
+     * @note $as_slurm_user should not be TRUE except for GET requests.
+     * @param bool $as_slurm_user if true, allow use of SLURM_USER instead of the current user, otherwise require $_SESSION['USER'] to be set.
+     * @return array|string[] authentication headers as an array or an empty array (if we are not using JWT)
+     */
     private function build_auth_headers(bool $as_slurm_user = FALSE): array {
         if (!\client\utils\jwt\JwtAuthentication::is_supported())
             return [];
@@ -82,6 +94,13 @@ abstract class AbstractRequest implements Request {
         ];
     }
 
+    /**
+     * Set up connection and return curl handle
+     * @param string $url The full URL to connect to (incl. endpoint and parameters)
+     * @param string $method GET/POST/DELETE
+     * @param array $headers e.g. authentication headers as a PHP array/dictionary
+     * @return \CurlHandle curl handle
+     */
     private function new_handle(string $url, string $method, array $headers = []): \CurlHandle {
         $ch = curl_init($url);
         $this->apply_transport($ch);
@@ -97,7 +116,9 @@ abstract class AbstractRequest implements Request {
 
     /**
      * Executes the cURL handle and returns [http_code, content_type, body].
-     * @throws RequestFailedException on cURL-level error (e.g. connection refused, timeout)
+     * @param \CurlHandle $ch Curl handle
+     * @return array [http_code, content_type, body]
+     *@throws RequestFailedException on cURL-level error (e.g. connection refused, timeout)
      */
     private function execute(\CurlHandle $ch): array {
         $body = curl_exec($ch);
@@ -118,6 +139,10 @@ abstract class AbstractRequest implements Request {
     }
 
     /**
+     * Validate response (e.g. against UNAUTHORIZED or content type).
+     * @param int $http_code HTTP response code
+     * @param string $content_type Content type of response
+     * @param string|null $expected_ct Expected content type of response (or NULL to skip content type check)
      * @throws RequestFailedException on HTTP 401 or unexpected content-type
      */
     private function check_response(int $http_code, string $content_type, ?string $expected_ct = NULL): void {
@@ -147,6 +172,7 @@ abstract class AbstractRequest implements Request {
         return $data;
     }
 
+    /** @inheritDoc */
     function request_json(string $endpoint, string $namespace, string $api_version, int|bool $ttl = 5): array {
         $cache = \cache\CacheWrapper::getInstance();
         $cache_key = $namespace . '/' . $endpoint;
@@ -166,6 +192,7 @@ abstract class AbstractRequest implements Request {
         return $data;
     }
 
+    /** @inheritDoc */
     function request_json2(string $full_endpoint, int|bool $ttl = 5): array {
         $cache = \cache\CacheWrapper::getInstance();
         if ($cache->exists($full_endpoint))
@@ -184,6 +211,7 @@ abstract class AbstractRequest implements Request {
         return $data;
     }
 
+    /** @inheritDoc */
     function request_plain(string $endpoint, string $namespace, string $api_version, int $ttl = 5): string {
         $cache = \cache\CacheWrapper::getInstance();
         $cache_key = $namespace . '/' . $endpoint;
@@ -202,6 +230,7 @@ abstract class AbstractRequest implements Request {
         return $body;
     }
 
+    /** @inheritDoc */
     function request_delete(string $endpoint, string $namespace, string $api_version): array {
         $ch = $this->new_handle(
             $this->get_base_url() . "/{$namespace}/{$api_version}/{$endpoint}",
@@ -213,6 +242,7 @@ abstract class AbstractRequest implements Request {
         return $this->decode_json($body);
     }
 
+    /** @inheritDoc */
     function request_post_json(string $endpoint, string $namespace, string $api_version, array $data): array {
         $jsonData = json_encode($data);
         if ($jsonData === FALSE) {

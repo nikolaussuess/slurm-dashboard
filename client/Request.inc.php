@@ -70,15 +70,15 @@ abstract class AbstractRequest implements Request {
     abstract protected function get_base_url(): string;
     abstract protected function apply_transport(\CurlHandle $ch): void;
 
-    private function build_auth_headers(bool $privileged = FALSE): array {
+    private function build_auth_headers(bool $as_slurm_user = FALSE): array {
         if (!\client\utils\jwt\JwtAuthentication::is_supported())
             return [];
 
-        $user = $privileged ? $_SESSION['USER'] : ($_SESSION['USER'] ?? config('SLURM_USER'));
-        $slurm_user = str_replace(["\r", "\n"], '', $user);
+        $user = $as_slurm_user ? ($_SESSION['USER'] ?? config('SLURM_USER')) : $_SESSION['USER'];
+        $user = str_replace(["\r", "\n"], '', $user);
         return [
-            "X-SLURM-USER-NAME: " . $slurm_user,
-            "X-SLURM-USER-TOKEN: " . \client\utils\jwt\JwtAuthentication::gen_jwt($slurm_user),
+            "X-SLURM-USER-NAME: " . $user,
+            "X-SLURM-USER-TOKEN: " . \client\utils\jwt\JwtAuthentication::gen_jwt($user),
         ];
     }
 
@@ -156,7 +156,7 @@ abstract class AbstractRequest implements Request {
         $ch = $this->new_handle(
             $this->get_base_url() . "/{$namespace}/{$api_version}/{$endpoint}",
             'GET',
-            $this->build_auth_headers()
+            $this->build_auth_headers(TRUE)
         );
         [$http_code, $content_type, $body] = $this->execute($ch);
         $this->check_response($http_code, $content_type, 'application/json');
@@ -174,7 +174,7 @@ abstract class AbstractRequest implements Request {
         $ch = $this->new_handle(
             $this->get_base_url() . "/{$full_endpoint}",
             'GET',
-            $this->build_auth_headers()
+            $this->build_auth_headers(TRUE)
         );
         [$http_code, $content_type, $body] = $this->execute($ch);
         $this->check_response($http_code, $content_type, 'application/json');
@@ -193,7 +193,7 @@ abstract class AbstractRequest implements Request {
         $ch = $this->new_handle(
             $this->get_base_url() . "/{$namespace}/{$api_version}/{$endpoint}",
             'GET',
-            $this->build_auth_headers()
+            $this->build_auth_headers(TRUE)
         );
         [$http_code, $content_type, $body] = $this->execute($ch);
         $this->check_response($http_code, $content_type);
@@ -206,7 +206,7 @@ abstract class AbstractRequest implements Request {
         $ch = $this->new_handle(
             $this->get_base_url() . "/{$namespace}/{$api_version}/{$endpoint}",
             'DELETE',
-            $this->build_auth_headers(TRUE)
+            $this->build_auth_headers()
         );
         [$http_code, $content_type, $body] = $this->execute($ch);
         $this->check_response($http_code, $content_type);
@@ -224,7 +224,7 @@ abstract class AbstractRequest implements Request {
             );
         }
 
-        $headers = array_merge(['Content-Type: application/json'], $this->build_auth_headers(TRUE));
+        $headers = array_merge(['Content-Type: application/json'], $this->build_auth_headers());
         $ch = $this->new_handle(
             $this->get_base_url() . "/{$namespace}/{$api_version}/{$endpoint}",
             'POST',

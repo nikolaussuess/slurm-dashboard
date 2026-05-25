@@ -39,6 +39,8 @@ However, any slurm version `>= 23.11.x` should work. If you encounter any issues
 
 ### Planned features
 #### Currently not under active development
+- Allow admins to add users via the web interface.
+- Allow admins to add advanced reservations and maintenances via the web interface.
 - Allow users to submit jobs via a web interface.
 
 ## Requirements

@@ -480,9 +480,9 @@ function _render_user_breakdown(array $user_breakdown, int $cpu_total, int $mem_
         if (!$res_def['show'])
             continue;
         $total = $res_def['total'];
-        $label_btn = '<button type="button" class="btn p-0 text-start" data-bs-toggle="tooltip" data-bs-trigger="click focus" data-bs-placement="top"'
+        $label_btn = '<button type="button" class="btn p-0 text-start" style="display:flex;align-items:flex-start;gap:0.25em" data-bs-toggle="tooltip" data-bs-trigger="click focus" data-bs-placement="top"'
                    . ' title="' . htmlspecialchars($res_def['tooltip'], ENT_QUOTES, 'UTF-8') . '">'
-                   . '<i title="Click here for more information">&#9432;</i>&nbsp;' . $res_def['label']
+                   . '<i style="flex-shrink:0" title="Click here for more information">&#9432;</i>' . $res_def['label']
                    . '</button>';
         $html .= '<tr><td>' . $label_btn . '</td><td>';
         $html .= '<div class="progress" style="height:20px">';
@@ -533,9 +533,9 @@ function _render_user_breakdown(array $user_breakdown, int $cpu_total, int $mem_
 
     // Legend rows
     $html .= '<tr><td>'
-           . '<button type="button" class="btn p-0 text-start" data-bs-toggle="tooltip" data-bs-trigger="click focus" data-bs-placement="top"'
+           . '<button type="button" class="btn p-0 text-start" style="display:flex;align-items:flex-start;gap:0.25em" data-bs-toggle="tooltip" data-bs-trigger="click focus" data-bs-placement="top"'
            . ' title="Users with running jobs on this node and their total resource usage (sum of all their jobs).">'
-           . '<i title="Click here for more information">&#9432;</i>&nbsp;Normal jobs:'
+           . '<i style="flex-shrink:0" title="Click here for more information">&#9432;</i>Normal jobs:'
            . '</button>'
            . '</td>'
            . '<td><div style="display:flex;flex-wrap:wrap;gap:4px">'
@@ -543,9 +543,9 @@ function _render_user_breakdown(array $user_breakdown, int $cpu_total, int $mem_
            . '</div></td></tr>';
     if ($has_plow) {
         $html .= '<tr><td>'
-               . '<button type="button" class="btn p-0 text-start" data-bs-toggle="tooltip" data-bs-trigger="click focus" data-bs-placement="top"'
+               . '<button type="button" class="btn p-0 text-start" style="display:flex;align-items:flex-start;gap:0.25em" data-bs-toggle="tooltip" data-bs-trigger="click focus" data-bs-placement="top"'
                . ' title="Users with running jobs in the low-priority partition (p_low) on this node.">'
-               . '<i title="Click here for more information">&#9432;</i>&nbsp;<span class="monospaced">p_low</span> jobs:'
+               . '<i style="flex-shrink:0" title="Click here for more information">&#9432;</i><span class="monospaced">p_low</span> jobs:'
                . '</button>'
                . '</td>'
                . '<td><div style="display:flex;flex-wrap:wrap;gap:4px">'

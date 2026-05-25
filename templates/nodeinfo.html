@@ -5,12 +5,12 @@
         <tr style="width: 100px">
             <td style="width: 100px">
                 <button type="button"
-                        class="btn p-0 text-start"
+                        class="btn p-0 text-start" style="display:flex;align-items:flex-start;gap:0.25em"
                         data-bs-toggle="tooltip"
                         data-bs-trigger="click focus"
                         data-bs-placement="top"
                         title="State of the compute node.">
-                    <i title="Click here for more information">&#9432;</i>&nbsp;State:
+                    <i style="flex-shrink:0" title="Click here for more information">&#9432;</i>State:
                 </button>
             </td>
             <td style="background-color: {{STATE_COLOR}}">
@@ -27,12 +27,12 @@
         <tr>
             <td style="width: 100px">
                 <button type="button"
-                        class="btn p-0 text-start"
+                        class="btn p-0 text-start" style="display:flex;align-items:flex-start;gap:0.25em"
                         data-bs-toggle="tooltip"
                         data-bs-trigger="click focus"
                         data-bs-placement="top"
                         title="Usage of the CPUs on that node.">
-                    <i title="Click here for more information">&#9432;</i>&nbsp;CPUs:
+                    <i style="flex-shrink:0" title="Click here for more information">&#9432;</i>CPUs:
                 </button>
             </td>
             <td>
@@ -48,12 +48,12 @@
         <tr>
             <td>
                 <button type="button"
-                        class="btn p-0 text-start"
+                        class="btn p-0 text-start" style="display:flex;align-items:flex-start;gap:0.25em"
                         data-bs-toggle="tooltip"
                         data-bs-trigger="click focus"
                         data-bs-placement="top"
                         title="The sum of all RAM memory currently used on that node. This might include buffer and cache memory, which is currently in use but available. However, mem_used is calculated as mem_total-mem_free. Since mem_free is the total free memory of the node but mem_total is only the memory that is available for slurm (which might be lower than the actual RAM of the node), this value could be negative. We truncate at 0.">
-                    <i title="Click here for more information">&#9432;</i>&nbsp;Memory:
+                    <i style="flex-shrink:0" title="Click here for more information">&#9432;</i>Memory:
                 </button>
             </td>
             <td>
@@ -68,12 +68,12 @@
         <tr>
             <td>
                 <button type="button"
-                        class="btn p-0 text-start"
+                        class="btn p-0 text-start" style="display:flex;align-items:flex-start;gap:0.25em"
                         data-bs-toggle="tooltip"
                         data-bs-trigger="click focus"
                         data-bs-placement="top"
                         title="Sum of RAM used by SLURM jobs. Does not include memory used by other processes or the kernel.">
-                    <i title="Click here for more information">&#9432;</i>&nbsp;RAM of jobs:
+                    <i style="flex-shrink:0" title="Click here for more information">&#9432;</i>RAM of jobs:
                 </button>
             </td>
             <td>
@@ -89,12 +89,12 @@
         <tr>
             <td>
                 <button type="button"
-                        class="btn p-0 text-start"
+                        class="btn p-0 text-start" style="display:flex;align-items:flex-start;gap:0.25em"
                         data-bs-toggle="tooltip"
                         data-bs-trigger="click focus"
                         data-bs-placement="top"
                         title="Number of GPUs in use/available on that compute node.">
-                    <i title="Click here for more information">&#9432;</i>&nbsp;GPUs:
+                    <i style="flex-shrink:0" title="Click here for more information">&#9432;</i>GPUs:
                 </button>
             </td>
             <td>
@@ -130,12 +130,12 @@
                 <tr>
                     <td>
                         <button type="button"
-                                class="btn p-0 text-start"
+                                class="btn p-0 text-start" style="display:flex;align-items:flex-start;gap:0.25em"
                                 data-bs-toggle="tooltip"
                                 data-bs-trigger="click focus"
                                 data-bs-placement="top"
                                 title="SLURM partitions this node belongs to. A node can be a member of multiple partitions.">
-                            <i title="Click here for more information">&#9432;</i>&nbsp;Partitions:
+                            <i style="flex-shrink:0" title="Click here for more information">&#9432;</i>Partitions:
                         </button>
                     </td>
                     <td>
@@ -147,12 +147,12 @@
                 <tr>
                     <td>
                         <button type="button"
-                                class="btn p-0 text-start"
+                                class="btn p-0 text-start" style="display:flex;align-items:flex-start;gap:0.25em"
                                 data-bs-toggle="tooltip"
                                 data-bs-trigger="click focus"
                                 data-bs-placement="top"
                                 title="Static features configured for this node in slurm.conf. Can be used in job constraints.">
-                            <i title="Click here for more information">&#9432;</i>&nbsp;Features:
+                            <i style="flex-shrink:0" title="Click here for more information">&#9432;</i>Features:
                         </button>
                     </td>
                     <td>{{FEATURES}}</td>
@@ -160,12 +160,12 @@
                 <tr>
                     <td>
                         <button type="button"
-                                class="btn p-0 text-start"
+                                class="btn p-0 text-start" style="display:flex;align-items:flex-start;gap:0.25em"
                                 data-bs-toggle="tooltip"
                                 data-bs-trigger="click focus"
                                 data-bs-placement="top"
                                 title="Features currently active on this node. May differ from the configured features if features were changed dynamically at runtime.">
-                            <i title="Click here for more information">&#9432;</i>&nbsp;Active features:
+                            <i style="flex-shrink:0" title="Click here for more information">&#9432;</i>Active features:
                         </button>
                     </td>
                     <td>{{ACTIVE_FEATURES}}</td>
@@ -173,12 +173,12 @@
                 <tr>
                     <td>
                         <button type="button"
-                                class="btn p-0 text-start"
+                                class="btn p-0 text-start" style="display:flex;align-items:flex-start;gap:0.25em"
                                 data-bs-toggle="tooltip"
                                 data-bs-trigger="click focus"
                                 data-bs-placement="top"
                                 title="Trackable RESources (TRES) configured for this node — total available resources such as CPUs, memory, and GPUs.">
-                            <i title="Click here for more information">&#9432;</i>&nbsp;TRES:
+                            <i style="flex-shrink:0" title="Click here for more information">&#9432;</i>TRES:
                         </button>
                     </td>
                     <td><span class="feature">{{TRES}}</span></td>
@@ -186,12 +186,12 @@
                 <tr>
                     <td>
                         <button type="button"
-                                class="btn p-0 text-start"
+                                class="btn p-0 text-start" style="display:flex;align-items:flex-start;gap:0.25em"
                                 data-bs-toggle="tooltip"
                                 data-bs-trigger="click focus"
                                 data-bs-placement="top"
                                 title="Trackable RESources (TRES) currently allocated to running jobs on this node.">
-                            <i title="Click here for more information">&#9432;</i>&nbsp;TRES used:
+                            <i style="flex-shrink:0" title="Click here for more information">&#9432;</i>TRES used:
                         </button>
                     </td>
                     <td><span class="feature">{{TRES_USED}}</span></td>
@@ -199,12 +199,12 @@
                 <tr>
                     <td>
                         <button type="button"
-                                class="btn p-0 text-start"
+                                class="btn p-0 text-start" style="display:flex;align-items:flex-start;gap:0.25em"
                                 data-bs-toggle="tooltip"
                                 data-bs-trigger="click focus"
                                 data-bs-placement="top"
                                 title="Name of the advance reservation this node is currently assigned to, if any.">
-                            <i title="Click here for more information">&#9432;</i>&nbsp;Reservation:
+                            <i style="flex-shrink:0" title="Click here for more information">&#9432;</i>Reservation:
                         </button>
                     </td>
                     <td>{{RESERVATION}}</td>
@@ -212,12 +212,12 @@
                 <tr>
                     <td>
                         <button type="button"
-                                class="btn p-0 text-start"
+                                class="btn p-0 text-start" style="display:flex;align-items:flex-start;gap:0.25em"
                                 data-bs-toggle="tooltip"
                                 data-bs-trigger="click focus"
                                 data-bs-placement="top"
                                 title="If the node has been scheduled exclusively, this field is set to the UID of the user whose job(s) occupy the node">
-                            <i title="Click here for more information">&#9432;</i>&nbsp;Owner:
+                            <i style="flex-shrink:0" title="Click here for more information">&#9432;</i>Owner:
                         </button>
                     </td>
                     <td>{{OWNER}}</td>
@@ -229,12 +229,12 @@
                 <tr>
                     <td>
                         <button type="button"
-                                class="btn p-0 text-start"
+                                class="btn p-0 text-start" style="display:flex;align-items:flex-start;gap:0.25em"
                                 data-bs-toggle="tooltip"
                                 data-bs-trigger="click focus"
                                 data-bs-placement="top"
                                 title="Hostname of the compute node as configured in slurm.conf.">
-                            <i title="Click here for more information">&#9432;</i>&nbsp;Hostname:
+                            <i style="flex-shrink:0" title="Click here for more information">&#9432;</i>Hostname:
                         </button>
                     </td>
                     <td><span class="feature">{{HOSTNAME}}</span></td>
@@ -242,12 +242,12 @@
                 <tr>
                     <td>
                         <button type="button"
-                                class="btn p-0 text-start"
+                                class="btn p-0 text-start" style="display:flex;align-items:flex-start;gap:0.25em"
                                 data-bs-toggle="tooltip"
                                 data-bs-trigger="click focus"
                                 data-bs-placement="top"
                                 title="Network address used by SLURM to communicate with this node. May differ from the hostname if NodeAddr is set in slurm.conf.">
-                            <i title="Click here for more information">&#9432;</i>&nbsp;Address:
+                            <i style="flex-shrink:0" title="Click here for more information">&#9432;</i>Address:
                         </button>
                     </td>
                     <td><span class="feature">{{ADDRESS}}</span></td>
@@ -255,12 +255,12 @@
                 <tr>
                     <td>
                         <button type="button"
-                                class="btn p-0 text-start"
+                                class="btn p-0 text-start" style="display:flex;align-items:flex-start;gap:0.25em"
                                 data-bs-toggle="tooltip"
                                 data-bs-trigger="click focus"
                                 data-bs-placement="top"
                                 title="CPU architecture of the node (e.g. x86_64, aarch64).">
-                            <i title="Click here for more information">&#9432;</i>&nbsp;Architecture:
+                            <i style="flex-shrink:0" title="Click here for more information">&#9432;</i>Architecture:
                         </button>
                     </td>
                     <td>{{ARCHITECTURE}}</td>
@@ -268,12 +268,12 @@
                 <tr>
                     <td>
                         <button type="button"
-                                class="btn p-0 text-start"
+                                class="btn p-0 text-start" style="display:flex;align-items:flex-start;gap:0.25em"
                                 data-bs-toggle="tooltip"
                                 data-bs-trigger="click focus"
                                 data-bs-placement="top"
                                 title="Number of physical boards in the node.">
-                            <i title="Click here for more information">&#9432;</i>&nbsp;Boards:
+                            <i style="flex-shrink:0" title="Click here for more information">&#9432;</i>Boards:
                         </button>
                     </td>
                     <td>{{BOARDS}}</td>
@@ -281,12 +281,12 @@
                 <tr>
                     <td>
                         <button type="button"
-                                class="btn p-0 text-start"
+                                class="btn p-0 text-start" style="display:flex;align-items:flex-start;gap:0.25em"
                                 data-bs-toggle="tooltip"
                                 data-bs-trigger="click focus"
                                 data-bs-placement="top"
                                 title="Operating system and kernel version running on this node, as reported by the SLURM daemon.">
-                            <i title="Click here for more information">&#9432;</i>&nbsp;Operating system:
+                            <i style="flex-shrink:0" title="Click here for more information">&#9432;</i>Operating system:
                         </button>
                     </td>
                     <td><span class="feature">{{OPERATING_SYSTEM}}</span></td>
@@ -298,12 +298,12 @@
                 <tr>
                     <td>
                         <button type="button"
-                                class="btn p-0 text-start"
+                                class="btn p-0 text-start" style="display:flex;align-items:flex-start;gap:0.25em"
                                 data-bs-toggle="tooltip"
                                 data-bs-trigger="click focus"
                                 data-bs-placement="top"
                                 title="Timestamp when the node was last booted.">
-                            <i title="Click here for more information">&#9432;</i>&nbsp;Boot time:
+                            <i style="flex-shrink:0" title="Click here for more information">&#9432;</i>Boot time:
                         </button>
                     </td>
                     <td>{{BOOT_TIME}}</td>
@@ -311,12 +311,12 @@
                 <tr>
                     <td>
                         <button type="button"
-                                class="btn p-0 text-start"
+                                class="btn p-0 text-start" style="display:flex;align-items:flex-start;gap:0.25em"
                                 data-bs-toggle="tooltip"
                                 data-bs-trigger="click focus"
                                 data-bs-placement="top"
                                 title="Timestamp when this node last had running jobs. Useful for identifying idle nodes.">
-                            <i title="Click here for more information">&#9432;</i>&nbsp;Last busy:
+                            <i style="flex-shrink:0" title="Click here for more information">&#9432;</i>Last busy:
                         </button>
                     </td>
                     <td>{{LAST_BUSY}}</td>
@@ -324,12 +324,12 @@
                 <tr>
                     <td>
                         <button type="button"
-                                class="btn p-0 text-start"
+                                class="btn p-0 text-start" style="display:flex;align-items:flex-start;gap:0.25em"
                                 data-bs-toggle="tooltip"
                                 data-bs-trigger="click focus"
                                 data-bs-placement="top"
                                 title="Version of the SLURM daemon (slurmd) running on this node.">
-                            <i title="Click here for more information">&#9432;</i>&nbsp;SLURM version:
+                            <i style="flex-shrink:0" title="Click here for more information">&#9432;</i>SLURM version:
                         </button>
                     </td>
                     <td>{{SLURM_VERSION}}</td>

@@ -6,12 +6,14 @@ require_once __DIR__ . '/../globals.inc.php';
 require_once __DIR__ . '/utils/jwt.inc.php';
 require_once __DIR__ . '/../exceptions/RequestFailedException.inc.php';
 require_once __DIR__ . '/../exceptions/ConfigurationError.inc.php';
+require_once __DIR__ . '/../cache/CacheWrapper.inc.php';
 
 use exceptions\ConfigurationError;
 use exceptions\RequestFailedException;
 
 interface Request {
     /**
+     * Send a GET request to slurmrestd (and decode the response as JSON).
      * @param string $endpoint Endpoint to call
      * @param string $namespace slurm or slurmdb
      * @param string $api_version API version, e.g. v0.0.40
@@ -22,6 +24,8 @@ interface Request {
     function request_json(string $endpoint, string $namespace, string $api_version, int|bool $ttl = 5) : array;
 
     /**
+     * Send a GET request to slurmrestd (and decode the response as JSON).
+     * Here, $full_endpoint must contain the namespace.
      * @param string $full_endpoint Endpoint to call (incl. namespace and api version)
      * @param int|bool $ttl how long to cache the request, FALSE to disable caching
      * @return array associative array
@@ -29,6 +33,7 @@ interface Request {
     function request_json2(string $full_endpoint, int|bool $ttl = 5) : array;
 
     /**
+     * Send a GET request to slurmrestd and return the plain response.
      * @param string $endpoint Endpoint to call
      * @param string $namespace slurm or slurmdb
      * @param string $api_version API version, e.g. v0.0.40
@@ -64,63 +69,99 @@ interface Request {
     function request_post_json(string $endpoint, string $namespace, string $api_version, array $data) : array;
 }
 
-class UnixRequest implements Request {
-    // Path to the Unix socket
-    const socketPath = '/run/slurmrestd/slurmrestd.socket';
-    private mixed $socket;
+abstract class AbstractRequest implements Request {
 
-    function __construct(){
-        // Create a Unix socket connection
-        $this->socket = stream_socket_client("unix://" . self::socketPath, $errno, $errstr);
-        if (!$this->socket) {
+    abstract protected function get_base_url(): string;
+    abstract protected function apply_transport(\CurlHandle $ch): void;
+
+    /**
+     * Adds JWT headers if we are using JWT for authentication.
+     * If $as_slurm_user == TRUE, then the request may be performed as SLURM_USER if $SESSION['USER'] is not set.
+     * This is required to request data before login.
+     * @note $as_slurm_user should not be TRUE except for GET requests.
+     * @param bool $as_slurm_user if true, allow use of SLURM_USER instead of the current user, otherwise require $_SESSION['USER'] to be set.
+     * @return array|string[] authentication headers as an array or an empty array (if we are not using JWT)
+     */
+    private function build_auth_headers(bool $as_slurm_user = FALSE): array {
+        if (!\client\utils\jwt\JwtAuthentication::is_supported())
+            return [];
+
+        $user = $as_slurm_user ? ($_SESSION['USER'] ?? config('SLURM_USER')) : $_SESSION['USER'];
+        $user = str_replace(["\r", "\n"], '', $user);
+        return [
+            "X-SLURM-USER-NAME: " . $user,
+            "X-SLURM-USER-TOKEN: " . \client\utils\jwt\JwtAuthentication::gen_jwt($user),
+        ];
+    }
+
+    /**
+     * Set up connection and return curl handle
+     * @param string $url The full URL to connect to (incl. endpoint and parameters)
+     * @param string $method GET/POST/DELETE
+     * @param array $headers e.g. authentication headers as a PHP array/dictionary
+     * @return \CurlHandle curl handle
+     */
+    private function new_handle(string $url, string $method, array $headers = []): \CurlHandle {
+        $ch = curl_init($url);
+        $this->apply_transport($ch);
+        curl_setopt_array($ch, [
+            CURLOPT_RETURNTRANSFER  => TRUE,
+            CURLOPT_CUSTOMREQUEST   => $method,
+            CURLOPT_HTTPHEADER      => $headers,
+            CURLOPT_CONNECTTIMEOUT  => 10,   // abort if connection cannot be established within 10s
+            CURLOPT_TIMEOUT         => 300,  // hard cap for slow responses (e.g. large job lists)
+        ]);
+        return $ch;
+    }
+
+    /**
+     * Executes the cURL handle and returns [http_code, content_type, body].
+     * @param \CurlHandle $ch Curl handle
+     * @return array [http_code, content_type, body]
+     *@throws RequestFailedException on cURL-level error (e.g. connection refused, timeout)
+     */
+    private function execute(\CurlHandle $ch): array {
+        $body = curl_exec($ch);
+        if ($body === FALSE) {
+            $errno  = curl_errno($ch);
+            $errstr = curl_error($ch);
+            curl_close($ch);
             throw new RequestFailedException(
-                "Unable to connect to socket.",
-                "errno=$errno, errstr=$errstr",
-                "Unable to connect to socket."
+                "Request failed.",
+                "curl_errno=$errno, curl_error=$errstr",
+                "Unable to connect to server."
+            );
+        }
+        $http_code    = (int)curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $content_type = (string)(curl_getinfo($ch, CURLINFO_CONTENT_TYPE) ?? '');
+        curl_close($ch);
+        return [$http_code, $content_type, $body];
+    }
+
+    /**
+     * Validate response (e.g. against UNAUTHORIZED or content type).
+     * @param int $http_code HTTP response code
+     * @param string $content_type Content type of response
+     * @param string|null $expected_ct Expected content type of response (or NULL to skip content type check)
+     * @throws RequestFailedException on HTTP 401 or unexpected content-type
+     */
+    private function check_response(int $http_code, string $content_type, ?string $expected_ct = NULL): void {
+        if ($http_code === 401) {
+            throw new RequestFailedException('UNAUTHORIZED', 'Server answered 401 UNAUTHORIZED.', NULL, 401);
+        }
+        if ($expected_ct !== NULL && !str_starts_with(strtolower($content_type), strtolower($expected_ct))) {
+            throw new RequestFailedException(
+                "Server response malformed. We got another content type than expected.",
+                "Expected content-type: $expected_ct, but got: $content_type",
+                NULL,
+                500
             );
         }
     }
 
-    function request_json(string $endpoint, string $namespace, string $api_version, int|bool $ttl = 5) : array {
-
-        if( $ttl !== FALSE && @apcu_exists($namespace . '/' . $endpoint)){
-            return apcu_fetch($namespace . '/' . $endpoint);
-        }
-
-        // Prepare the HTTP request
-        $request = "GET /{$namespace}/{$api_version}/{$endpoint} HTTP/1.1\r\n" .
-            "Host: localhost\r\n";
-        if(\client\utils\jwt\JwtAuthentication::is_supported()){
-            $slurm_user = str_replace(["\r", "\n"], '', $_SESSION['USER'] ?? config('SLURM_USER'));
-            $request .= "X-SLURM-USER-NAME: " . $slurm_user . "\r\n";
-            $request .= "X-SLURM-USER-TOKEN: " . \client\utils\jwt\JwtAuthentication::gen_jwt($slurm_user) . "\r\n";
-        }
-        $request .= "Connection: close\r\n\r\n";
-        // Send the request
-        fwrite($this->socket, $request);
-
-        // Read the response
-        $response = '';
-        while (!feof($this->socket)) {
-            $response .= fread($this->socket, 8192);
-        }
-
-        // Split the response headers and body
-        list($header, $body) = explode("\r\n\r\n", $response, 2);
-        $this->handle_http_headers(trim($header), array("content-type"=>'application/json')); // may throw an exception
-        $body = trim(str_replace("Connection: Close", "", $body));
-
-        #print "<pre>";
-        #print_r($header);
-        #print "\n\n";
-        #print_r($body);
-        #print "</pre>";
-
-        // Decode the JSON response
-        $data = json_decode($body, true);
-
+    private function decode_json(string $body): array {
+        $data = json_decode($body, TRUE);
         if (json_last_error() !== JSON_ERROR_NONE) {
-            #addError("JSON decode error: " . json_last_error_msg());
             throw new RequestFailedException(
                 "Server response could not be interpreted.",
                 json_last_error_msg(),
@@ -128,148 +169,83 @@ class UnixRequest implements Request {
                 json_last_error()
             );
         }
-
-        if( $ttl !== FALSE ) @apcu_store($namespace . '/' . $endpoint , $data, $ttl);
         return $data;
     }
 
-    function request_json2(string $full_endpoint, int|bool $ttl = 5) : array {
+    /** @inheritDoc */
+    function request_json(string $endpoint, string $namespace, string $api_version, int|bool $ttl = 5): array {
+        $cache = \cache\CacheWrapper::getInstance();
+        $cache_key = $namespace . '/' . $endpoint;
+        if ($cache->exists($cache_key))
+            return $cache->get($cache_key);
 
-        if( $ttl !== FALSE && @apcu_exists($full_endpoint)){
-            return apcu_fetch($full_endpoint);
-        }
+        $ch = $this->new_handle(
+            $this->get_base_url() . "/{$namespace}/{$api_version}/{$endpoint}",
+            'GET',
+            $this->build_auth_headers(TRUE)
+        );
+        [$http_code, $content_type, $body] = $this->execute($ch);
+        $this->check_response($http_code, $content_type, 'application/json');
 
-        // Prepare the HTTP request
-        $request = "GET /{$full_endpoint} HTTP/1.1\r\n" .
-            "Host: localhost\r\n";
-        if(\client\utils\jwt\JwtAuthentication::is_supported()){
-            $slurm_user = str_replace(["\r", "\n"], '', $_SESSION['USER'] ?? config('SLURM_USER'));
-            $request .= "X-SLURM-USER-NAME: " . $slurm_user . "\r\n";
-            $request .= "X-SLURM-USER-TOKEN: " . \client\utils\jwt\JwtAuthentication::gen_jwt($slurm_user) . "\r\n";
-        }
-        $request .= "Connection: close\r\n\r\n";
-        // Send the request
-        fwrite($this->socket, $request);
-
-        // Read the response
-        $response = '';
-        while (!feof($this->socket)) {
-            $response .= fread($this->socket, 8192);
-        }
-
-        // Split the response headers and body
-        list($header, $body) = explode("\r\n\r\n", $response, 2);
-        $this->handle_http_headers(trim($header), array("content-type"=>'application/json')); // may throw an exception
-        $body = str_replace("Connection: Close", "", $body);
-        #print "<pre>";
-        #print_r($header);
-        #print "\n\n";
-        #print_r($body);
-        #print "</pre>";
-
-        // Decode the JSON response
-        $data = json_decode($body, true);
-
-        if (json_last_error() !== JSON_ERROR_NONE) {
-            #addError("JSON decode error: " . json_last_error_msg());
-            throw new RequestFailedException(
-                "Server response could not be interpreted.",
-                json_last_error_msg(),
-                NULL,
-                json_last_error()
-            );
-        }
-
-        if( $ttl !== FALSE ) @apcu_store($full_endpoint , $data, $ttl);
+        $data = $this->decode_json($body);
+        $cache->set($cache_key, $data, $ttl);
         return $data;
     }
 
-    function request_plain(string $endpoint, string $namespace, string $api_version, int $ttl = 5) : string {
+    /** @inheritDoc */
+    function request_json2(string $full_endpoint, int|bool $ttl = 5): array {
+        $cache = \cache\CacheWrapper::getInstance();
+        if ($cache->exists($full_endpoint))
+            return $cache->get($full_endpoint);
 
-        if( @apcu_exists($namespace . '/' . $endpoint)){
-            return apcu_fetch($namespace . '/' . $endpoint);
-        }
+        $ch = $this->new_handle(
+            $this->get_base_url() . "/{$full_endpoint}",
+            'GET',
+            $this->build_auth_headers(TRUE)
+        );
+        [$http_code, $content_type, $body] = $this->execute($ch);
+        $this->check_response($http_code, $content_type, 'application/json');
 
-        // Prepare the HTTP request
-        $request = "GET /{$namespace}/{$api_version}/{$endpoint} HTTP/1.1\r\n" .
-            "Host: localhost\r\n";
-        if(\client\utils\jwt\JwtAuthentication::is_supported()){
-            $slurm_user = str_replace(["\r", "\n"], '', $_SESSION['USER'] ?? config('SLURM_USER'));
-            $request .= "X-SLURM-USER-NAME: " . $slurm_user . "\r\n";
-            $request .= "X-SLURM-USER-TOKEN: " . \client\utils\jwt\JwtAuthentication::gen_jwt($slurm_user) . "\r\n";
-        }
-        $request .= "Connection: close\r\n\r\n";
-        // Send the request
-        fwrite($this->socket, $request);
+        $data = $this->decode_json($body);
+        $cache->set($full_endpoint, $data, $ttl);
+        return $data;
+    }
 
-        // Read the response
-        $response = '';
-        while (!feof($this->socket)) {
-            $response .= fread($this->socket, 8192);
-        }
+    /** @inheritDoc */
+    function request_plain(string $endpoint, string $namespace, string $api_version, int $ttl = 5): string {
+        $cache = \cache\CacheWrapper::getInstance();
+        $cache_key = $namespace . '/' . $endpoint;
+        if ($cache->exists($cache_key))
+            return $cache->get($cache_key);
 
-        // Split the response headers and body
-        list($header, $body) = explode("\r\n\r\n", $response, 2);
-        $this->handle_http_headers(trim($header)); // may throw an exception
-        $body = str_replace("Connection: Close", "", $body);
+        $ch = $this->new_handle(
+            $this->get_base_url() . "/{$namespace}/{$api_version}/{$endpoint}",
+            'GET',
+            $this->build_auth_headers(TRUE)
+        );
+        [$http_code, $content_type, $body] = $this->execute($ch);
+        $this->check_response($http_code, $content_type);
 
-        #print "<pre>";
-        #print_r($header);
-        #print "\n\n";
-        #print_r($body);
-        #print "</pre>";
-
-        @apcu_store($namespace . '/' . $endpoint , $body, $ttl);
+        $cache->set($cache_key, $body, $ttl);
         return $body;
     }
 
-
-    function request_delete(string $endpoint, string $namespace, string $api_version) : array {
-
-        // Prepare the HTTP request
-        $request = "DELETE /{$namespace}/{$api_version}/{$endpoint} HTTP/1.1\r\n" .
-            "Host: localhost\r\n";
-        if(\client\utils\jwt\JwtAuthentication::is_supported()){
-            $slurm_user = str_replace(["\r", "\n"], '', $_SESSION['USER']);
-            $request .= "X-SLURM-USER-NAME: " . $slurm_user . "\r\n";
-            $request .= "X-SLURM-USER-TOKEN: " . \client\utils\jwt\JwtAuthentication::gen_jwt($slurm_user) . "\r\n";
-        }
-        $request .= "Connection: close\r\n\r\n";
-        // Send the request
-        fwrite($this->socket, $request);
-
-        // Read the response
-        $response = '';
-        while (!feof($this->socket)) {
-            $response .= fread($this->socket, 8192);
-        }
-
-        // Split the response headers and body
-        list($header, $body) = explode("\r\n\r\n", $response, 2);
-        $this->handle_http_headers(trim($header)); // may throw an exception
-        $body = str_replace("Connection: Close", "", $body);
-
-        // Decode the JSON response
-        $data = json_decode($body, true);
-
-        if (json_last_error() !== JSON_ERROR_NONE) {
-            #addError("JSON decode error: " . json_last_error_msg());
-            throw new RequestFailedException(
-                "Server response could not be interpreted.",
-                json_last_error_msg(),
-                NULL,
-                json_last_error()
-            );
-        }
-
-        return $data;
+    /** @inheritDoc */
+    function request_delete(string $endpoint, string $namespace, string $api_version): array {
+        $ch = $this->new_handle(
+            $this->get_base_url() . "/{$namespace}/{$api_version}/{$endpoint}",
+            'DELETE',
+            $this->build_auth_headers()
+        );
+        [$http_code, $content_type, $body] = $this->execute($ch);
+        $this->check_response($http_code, $content_type);
+        return $this->decode_json($body);
     }
 
-    function request_post_json(string $endpoint, string $namespace, string $api_version, array $data) : array {
-
-        // Encode POST data as JSON
+    /** @inheritDoc */
+    function request_post_json(string $endpoint, string $namespace, string $api_version, array $data): array {
         $jsonData = json_encode($data);
-        if ($jsonData === false) {
+        if ($jsonData === FALSE) {
             throw new RequestFailedException(
                 "Failed to encode JSON.",
                 json_last_error_msg(),
@@ -278,127 +254,78 @@ class UnixRequest implements Request {
             );
         }
 
-        // Prepare the HTTP request
-        $request = "POST /{$namespace}/{$api_version}/{$endpoint} HTTP/1.1\r\n" .
-            "Host: localhost\r\n" .
-            "Content-Type: application/json\r\n" .
-            "Content-Length: " . strlen($jsonData) . "\r\n";
-        if(\client\utils\jwt\JwtAuthentication::is_supported()){
-            $slurm_user = str_replace(["\r", "\n"], '', $_SESSION['USER']);
-            $request .= "X-SLURM-USER-NAME: " . $slurm_user . "\r\n";
-            $request .= "X-SLURM-USER-TOKEN: " . \client\utils\jwt\JwtAuthentication::gen_jwt($slurm_user) . "\r\n";
-        }
-        $request .= "Connection: close\r\n\r\n";
+        $headers = array_merge(['Content-Type: application/json'], $this->build_auth_headers());
+        $ch = $this->new_handle(
+            $this->get_base_url() . "/{$namespace}/{$api_version}/{$endpoint}",
+            'POST',
+            $headers
+        );
+        curl_setopt($ch, CURLOPT_POSTFIELDS, $jsonData);
+        [$http_code, $content_type, $body] = $this->execute($ch);
+        $this->check_response($http_code, $content_type);
+        return $this->decode_json($body);
+    }
+}
 
-        // JSON Body
-        $request .= $jsonData;
 
-        // Send the request
-        fwrite($this->socket, $request);
+class UnixRequest extends AbstractRequest {
 
-        // Read the response
-        $response = '';
-        while (!feof($this->socket)) {
-            $response .= fread($this->socket, 8192);
-        }
-
-        // Split the response headers and body
-        list($header, $body) = explode("\r\n\r\n", $response, 2);
-        $this->handle_http_headers(trim($header)); // may throw an exception
-        $body = str_replace("Connection: Close", "", $body);
-
-        // Decode the JSON response
-        $data = json_decode($body, true);
-
-        if (json_last_error() !== JSON_ERROR_NONE) {
-            #addError("JSON decode error: " . json_last_error_msg());
-            throw new RequestFailedException(
-                "Server response could not be interpreted.",
-                json_last_error_msg(),
-                NULL,
-                json_last_error()
-            );
-        }
-
-        return $data;
+    protected function get_base_url(): string {
+        return 'http://localhost';
     }
 
-    /**
-     * Check if all HTTP headers that we expect are actually here.
-     * @throws RequestFailedException if some header is missing.
-     */
-    function handle_http_headers($header, $expected_headers = array()) {
-        $headers = explode("\r\n", $header);
-        $statusLine = array_shift($headers);
-        preg_match('#HTTP/\d\.\d\s+(\d+)\s+(.*)#', $statusLine, $m);
-
-        $statusCode = (int)$m[1];
-
-        $statusText = $m[2];
-
-        $parsed = [];
-        foreach ($headers as $line) {
-            [$name, $value] = explode(':', $line, 2);
-            $parsed[strtolower(trim($name))] = trim($value);
-        }
-
-        if( $statusCode == 401 ) /* UNAUTHORIZED */ {
-            throw new RequestFailedException(
-                'UNAUTHORIZED',
-                'Server answered 401 UNAUTHORIZED.',
-                NULL,
-                401
-            );
-        }
-
-        foreach( $expected_headers as $expected_header => $expected_value ){
-            $expected_header = strtolower($expected_header);
-            $expected_value = strtolower($expected_value);
-            if( ! array_key_exists($expected_header, $parsed) ){
-                throw new RequestFailedException(
-                    "Server response malformed.",
-                    "Expected header '$expected_header' but was missing.",
-                    NULL,
-                    500
-                );
-            }
-
-            // Special handling for content type
-            if($expected_header == 'content-type' && $parsed[$expected_header] != $expected_value ){
-                throw new RequestFailedException(
-                    "Server response malformed. We got another content type than expected.",
-                    "Expected content-type: $expected_value, but got: $parsed[$expected_header]",
-                    NULL,
-                    500
-                );
-            }
-            // Others
-            elseif( $parsed[$expected_header] != $expected_value ){
-                throw new RequestFailedException(
-                    "Server response malformed.",
-                    "Expected: $expected_value, but got: $parsed[$expected_header]",
-                    NULL,
-                    500
-                );
-            }
-        }
-    }
-
-    function __destruct(){
-        // Close the socket
-        fclose($this->socket);
+    protected function apply_transport(\CurlHandle $ch): void {
+        curl_setopt($ch, CURLOPT_UNIX_SOCKET_PATH, config('UNIX_SOCKET_PATH'));
     }
 
     static function socket_exists(): bool {
-        return file_exists(self::socketPath);
+        return file_exists(config('UNIX_SOCKET_PATH'));
+    }
+}
+
+
+class TcpRequest extends AbstractRequest {
+
+    protected function get_base_url(): string {
+        $port = config('SLURM_TCP_PORT');
+        if (!ctype_digit($port) || (int)$port < 1 || (int)$port > 65535) {
+            throw new \exceptions\ConfigurationError(
+                "Invalid TCP port.",
+                "SLURM_TCP_PORT must be a number between 1 and 65535, got: " . $port,
+                "Wrong configuration: SLURM_TCP_PORT is invalid."
+            );
+        }
+        return 'https://' . config('SLURM_TCP_HOST') . ':' . $port;
+    }
+
+    protected function apply_transport(\CurlHandle $ch): void {
+        $ca_cert = config('SLURM_TCP_CA_CERT');
+        if ($ca_cert !== TO_BE_REPLACED) {
+            curl_setopt($ch, CURLOPT_CAINFO, $ca_cert);
+        }
+    }
+
+    static function socket_exists(): bool {
+        $host = config('SLURM_TCP_HOST');
+        $port = config('SLURM_TCP_PORT');
+        if (!$host || $host === TO_BE_REPLACED) return FALSE;
+        $socket = @stream_socket_client("tcp://{$host}:{$port}", $errno, $errstr, 2);
+        if ($socket) {
+            fclose($socket);
+            return TRUE;
+        }
+        return FALSE;
     }
 }
 
 
 class RequestFactory {
-    public static function newRequest() : Request {
-        if(config('CONNECTION_MODE') == 'unix')
+    public static function newRequest(): Request {
+        if (config('CONNECTION_MODE') == 'unix')
             return new UnixRequest();
+
+        if (config('CONNECTION_MODE') == 'tcp')
+            return new TcpRequest();
 
         throw new ConfigurationError(
             "Unknown socket type.",
@@ -411,9 +338,12 @@ class RequestFactory {
         );
     }
 
-    public static function socket_exists() : bool {
-        if(config('CONNECTION_MODE') == 'unix')
+    public static function socket_exists(): bool {
+        if (config('CONNECTION_MODE') == 'unix')
             return UnixRequest::socket_exists();
+
+        if (config('CONNECTION_MODE') == 'tcp')
+            return TcpRequest::socket_exists();
 
         throw new ConfigurationError(
             "Unknown socket type.",

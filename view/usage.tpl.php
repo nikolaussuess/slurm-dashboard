@@ -465,16 +465,26 @@ function _render_user_breakdown(array $user_breakdown, int $cpu_total, int $mem_
 
     // One stacked-bar row per resource type
     $resources = [
-        ['key' => 'cpus', 'key_pl' => 'cpus_pl', 'total' => $cpu_total, 'show' => $cpu_total > 0, 'label' => 'CPUs by user:',   'suffix' => ' CPUs'],
-        ['key' => 'mem',  'key_pl' => 'mem_pl',  'total' => $mem_total, 'show' => $has_mem,       'label' => 'Memory by user:', 'suffix' => ' MiB'],
-        ['key' => 'gpus', 'key_pl' => 'gpus_pl', 'total' => $gpu_total, 'show' => $has_gpu,       'label' => 'GPUs by user:',   'suffix' => ' GPUs'],
+        ['key' => 'cpus', 'key_pl' => 'cpus_pl', 'total' => $cpu_total, 'show' => $cpu_total > 0,
+         'label' => 'CPUs by user:', 'suffix' => ' CPUs',
+         'tooltip' => 'CPUs currently allocated to running jobs on this node, broken down per user. Each colored segment represents one individual job.'],
+        ['key' => 'mem',  'key_pl' => 'mem_pl',  'total' => $mem_total, 'show' => $has_mem,
+         'label' => 'Memory by user:', 'suffix' => ' MiB',
+         'tooltip' => 'RAM currently allocated to running jobs on this node, broken down per user. Each colored segment represents one individual job.'],
+        ['key' => 'gpus', 'key_pl' => 'gpus_pl', 'total' => $gpu_total, 'show' => $has_gpu,
+         'label' => 'GPUs by user:', 'suffix' => ' GPUs',
+         'tooltip' => 'GPUs currently allocated to running jobs on this node, broken down per user. Each colored segment represents one individual job.'],
     ];
 
     foreach ($resources as $res_def) {
         if (!$res_def['show'])
             continue;
         $total = $res_def['total'];
-        $html .= '<tr><td>' . $res_def['label'] . '</td><td>';
+        $label_btn = '<button type="button" class="btn p-0 text-start" style="display:flex;align-items:flex-start;gap:0.25em" data-bs-toggle="tooltip" data-bs-trigger="click focus" data-bs-placement="top"'
+                   . ' title="' . htmlspecialchars($res_def['tooltip'], ENT_QUOTES, 'UTF-8') . '">'
+                   . '<i style="flex-shrink:0" title="Click here for more information">&#9432;</i>' . $res_def['label']
+                   . '</button>';
+        $html .= '<tr><td>' . $label_btn . '</td><td>';
         $html .= '<div class="progress" style="height:20px">';
 
         // Regular (colored) segments — one per individual job, with a white divider between jobs
@@ -522,12 +532,22 @@ function _render_user_breakdown(array $user_breakdown, int $cpu_total, int $mem_
     }
 
     // Legend rows
-    $html .= '<tr><td>Normal jobs:</td>'
+    $html .= '<tr><td>'
+           . '<button type="button" class="btn p-0 text-start" style="display:flex;align-items:flex-start;gap:0.25em" data-bs-toggle="tooltip" data-bs-trigger="click focus" data-bs-placement="top"'
+           . ' title="Users with running jobs on this node and their total resource usage (sum of all their jobs).">'
+           . '<i style="flex-shrink:0" title="Click here for more information">&#9432;</i>Normal jobs:'
+           . '</button>'
+           . '</td>'
            . '<td><div style="display:flex;flex-wrap:wrap;gap:4px">'
            . _build_user_badges($user_breakdown, FALSE, $has_mem, $has_gpu)
            . '</div></td></tr>';
     if ($has_plow) {
-        $html .= '<tr><td><span class="monospaced">p_low</span> jobs:</td>'
+        $html .= '<tr><td>'
+               . '<button type="button" class="btn p-0 text-start" style="display:flex;align-items:flex-start;gap:0.25em" data-bs-toggle="tooltip" data-bs-trigger="click focus" data-bs-placement="top"'
+               . ' title="Users with running jobs in the low-priority partition (p_low) on this node.">'
+               . '<i style="flex-shrink:0" title="Click here for more information">&#9432;</i><span class="monospaced">p_low</span> jobs:'
+               . '</button>'
+               . '</td>'
                . '<td><div style="display:flex;flex-wrap:wrap;gap:4px">'
                . _build_user_badges($user_breakdown, TRUE, $has_mem, $has_gpu)
                . '</div></td></tr>';

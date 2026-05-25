@@ -24,6 +24,7 @@ namespace {
 
     require_once __DIR__ . '/../client/Client.inc.php';
     require_once __DIR__ . '/../globals.inc.php';
+    require_once __DIR__ . '/../cache/CacheWrapper.inc.php';
     require_once __DIR__ . '/auth.ldap.inc.php';
     require_once __DIR__ . '/auth.local.inc.php';
 
@@ -148,9 +149,10 @@ namespace auth {
         $key = 'login_attempts_from_' . md5($_SERVER['REMOTE_ADDR']);
         $max_attempts = 3;
 
-        // apcu_add only writes if the key does not yet exist, preserving the TTL on subsequent calls
-        apcu_add($key, 0, 60);
-        $attempts = apcu_inc($key);
+        $cache = \cache\CacheWrapper::getInstance();
+        // add() only writes if the key does not yet exist, preserving the TTL on subsequent calls
+        $cache->add($key, 0, 60);
+        $attempts = $cache->increment($key);
 
         if ($attempts > $max_attempts) {
             log_msg(

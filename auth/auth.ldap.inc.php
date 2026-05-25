@@ -4,6 +4,7 @@ namespace auth {
 
     require_once __DIR__ . "/auth.inc.php";
     require_once __DIR__ . "/../exceptions/AuthenticationError.php";
+    require_once __DIR__ . "/../cache/CacheWrapper.inc.php";
 
     use exceptions\AuthenticationError;
 
@@ -140,9 +141,10 @@ namespace auth {
             $filter = "(uid=$escaped_uid)";
             $attributes = ["uid", "displayName", "department", "departmentNumber", "mail", "telephoneNumber"];
 
-            if( apcu_exists("ldap" . '/' . $filter)){
-                return apcu_fetch("ldap" . '/' . $filter);
-            }
+            $cache = \cache\CacheWrapper::getInstance();
+            $cache_key = "ldap" . '/' . $filter;
+            if ($cache->exists($cache_key))
+                return $cache->get($cache_key);
 
             $result = ldap_search($this->ldapConn, config('LDAP_BASE'), $filter, $attributes, 0, 1);
             if ($result === FALSE) {
@@ -151,7 +153,7 @@ namespace auth {
             }
             $entries = ldap_get_entries($this->ldapConn, $result);
 
-            apcu_store("ldap" . '/' . $filter , $entries, 600);
+            $cache->set($cache_key, $entries, 600);
 
             return $entries;
         }

@@ -51,9 +51,35 @@ $config = [
 
     /**
      * Connection mode for connections to slurmrestd.
-     * Currently, the only supported value is 'unix'!
+     * Supported values: 'unix' (Unix socket), 'tcp' (TCP socket).
      */
     'CONNECTION_MODE' => cfg_env('CONNECTION_MODE', 'unix'),
+
+    /**
+     * Path to the Unix socket for slurmrestd.
+     * Only used when CONNECTION_MODE=unix.
+     */
+    'UNIX_SOCKET_PATH' => cfg_env('UNIX_SOCKET_PATH', '/run/slurmrestd/slurmrestd.socket'),
+
+    /**
+     * Hostname or IP address for TCP connections to slurmrestd.
+     * Only required when CONNECTION_MODE=tcp. Defaults to 'localhost'.
+     */
+    'SLURM_TCP_HOST' => cfg_env('SLURM_TCP_HOST', 'localhost'),
+
+    /**
+     * Port for TCP connections to slurmrestd.
+     * Only required when CONNECTION_MODE=tcp. Defaults to 6820.
+     */
+    'SLURM_TCP_PORT' => cfg_env('SLURM_TCP_PORT', '6820'),
+
+    /**
+     * Path to a PEM CA certificate file for verifying the slurmrestd TLS certificate.
+     * Only required when CONNECTION_MODE=tcp and slurmrestd uses a self-signed certificate
+     * or a certificate signed by a private/internal CA.
+     * Leave TO_BE_REPLACED to use the system CA store.
+     */
+    'SLURM_TCP_CA_CERT' => cfg_env('SLURM_TCP_CA_CERT'),
 
     /**
      * OpenAPI version to use for communication with slurmrestd.
@@ -122,6 +148,20 @@ $config = [
     'SLURM_USER' => cfg_env('SLURM_USER', 'slurm'),
 
     'PRIV_USERS' => explode(',', getenv('PRIV_USERS') ?: ''),
+
+    // ------------------------------------------------------------------
+    // CACHE CONFIGURATION
+    // ------------------------------------------------------------------
+
+    /**
+     * Cache backend to use.
+     * Supported values: 'apcu' (default), 'no' (disables caching entirely).
+     * Set env var USE_CACHE=no to disable caching (e.g. for development or if php-apcu is not installed).
+     * Note: Disabling the cache is NOT recommended!
+     */
+    'USE_CACHE' => in_array(cfg_env('USE_CACHE', 'apcu'), ['apcu', 'no'], TRUE)
+        ? cfg_env('USE_CACHE', 'apcu')
+        : 'apcu',
 
     // ------------------------------------------------------------------
     // FEATURE FLAGS
@@ -240,3 +280,26 @@ set_error_handler(function($errno, $errstr, $errfile, $errline) {
     }
     throw new ErrorException($errstr, 0, $errno, $errfile, $errline);
 });
+
+
+// --- Required PHP extension checks ---
+require_once __DIR__ . '/exceptions/ConfigurationError.inc.php';
+
+if (!extension_loaded('curl')) {
+    throw new \exceptions\ConfigurationError(
+        'Required PHP extension missing: curl',
+        'extension_loaded("curl") returned false',
+        'Required PHP extension <kbd>php-curl</kbd> is not installed or not enabled. '
+        . 'Please install it (e.g. <kbd>apt install php-curl</kbd>) and restart your web server.'
+    );
+}
+
+if (!extension_loaded('ldap') && !extension_loaded('ssh2')) {
+    throw new \exceptions\ConfigurationError(
+        'No authentication backend available: neither php-ldap nor php-ssh2 is installed',
+        'extension_loaded("ldap") and extension_loaded("ssh2") both returned false',
+        'No authentication backend is available. Please install at least one of '
+        . '<kbd>php-ldap</kbd> or <kbd>php-ssh2</kbd> and restart your web server.'
+    );
+}
+// --- End of extension checks ---

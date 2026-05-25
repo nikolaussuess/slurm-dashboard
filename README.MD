@@ -21,8 +21,8 @@ However, any slurm version `>= 23.11.x` should work. If you encounter any issues
 - Display cluster usage information (CPUs, memory, gpus per node) per node and user. (This feature is disabled per default and can be enabled for all users or for privileged users only.)
 - Display the current job queue, including a job detail page.
 - Authentication via LDAP or local, and it additionally checks whether the user exists in the accounting database.
-- Communication with `slurmrestd` via unix socket.
-- Caching of the `slurmrestd` responses (using APCu).
+- Communication with `slurmrestd` via unix socket or TCP.
+- Caching of the `slurmrestd` responses (using APCu; optional, can be disabled via `USE_CACHE=no`).
 - Display and filter job history (from `slurmdbd`).
 - Display list of users with their respective accounts (for administrators and privileged users only). Unprivileged users may only view their own user (incl. Fair-share value, accounts and so on).
 - Show planned maintenances (`flags=maint`) that were created with e.g. `scontrol create reservation starttime=2024-11-02T13:30:00 duration=5 user=root flags=maint nodes=mynode`.
@@ -38,8 +38,6 @@ However, any slurm version `>= 23.11.x` should work. If you encounter any issues
 ![Job history](./imgs/job_history.png?raw=true "Job history")
 
 ### Planned features
-- Support TCP sockets (in addition to unix sockets).
-  See branch [feature-tcp](https://github.com/nikolaussuess/slurm-dashboard/tree/feature-tcp).
 #### Currently not under active development
 - Allow admins to add users via the web interface.
 - Allow admins to add advanced reservations and maintenances via the web interface.
@@ -48,15 +46,16 @@ However, any slurm version `>= 23.11.x` should work. If you encounter any issues
 ## Requirements
 - PHP (currently only tested with PHP 8.2)<br>
   including
-  - `php-apcu` for caching `slurmrestd` responses
-  - `php-ldap` for LDAP authentication (if you are using LDAP; optional)
-  - `php-ssh2` for local authentication (if you are using local authentication; optional)
-  - Please note, that future versions will also require `php-curl`!
+  - `php-curl` for communicating with `slurmrestd` (**required**)
+  - `php-apcu` for caching `slurmrestd` responses and rate-limiting logins (optional but **strongly recommended**; disable via `USE_CACHE=no` if not available)
+  - `php-ldap` for LDAP authentication (optional, required if using LDAP)
+  - `php-ssh2` for local/SSH authentication (optional, required if using local authentication)
+  - At least one of `php-ldap` or `php-ssh2` must be installed for any authentication to work.
 - Apache2<br>
   including
   - `libapache2-mpm-itk` in order to change to user to the same `slurmrestd` is running with.
   - `libapache2-mod-php`
-- `slurmrestd` using Unix sockets, running with the same user that the website is running with.
+- `slurmrestd` accessible via Unix socket (running with the same user as the website) or via TCP.
 
 ## Setup
 1) Install the requirements.
@@ -133,7 +132,7 @@ However, any slurm version `>= 23.11.x` should work. If you encounter any issues
     WantedBy=multi-user.target
     ```
 
-4) Add correct user to the apache vhost (e.g. `/etc/apache2/sites-enabled/slurm-dashboard.conf`). Also set the environment variables accordingly to configure the dashboard. (Alternatively, you could also edit the `globals.inc.php` file to set them, but this is not recommended anymore.
+4) Add correct user to the apache vhost (e.g. `/etc/apache2/sites-enabled/slurm-dashboard.conf`). Also set the environment variables accordingly to configure the dashboard. (Alternatively, you could also edit the `globals.inc.php` file to set them, but this is not recommended anymore.)
 ```apacheconf
 <VirtualHost *:80>
     ...
@@ -149,29 +148,39 @@ However, any slurm version `>= 23.11.x` should work. If you encounter any issues
     SetEnv CLUSTER_NAME     "MyCluster"
     # Name of the admin. Publicly available in error messages.
     SetEnv ADMIN_NAMES      "John Doe"
+    # E-mail address of the admin. Publicly available in error messages.
+    SetEnv ADMIN_EMAIL      "admin@example.com"
     # Hostname of the login node.
     SetEnv SLURM_LOGIN_NODE "slurm01.example.com"
     # Link to a wiki page where one can find more info about the cluster.
     SetEnv WIKI_LINK        "https://wiki.example.com"
     
     # OPTIONAL REST API PARAMETERS
-    # Unix is already the default connection mode
-    # SetEnv CONNECTION_MODE "unix"
+    # Unix socket mode (default). UNIX_SOCKET_PATH defaults to /run/slurmrestd/slurmrestd.socket.
+    # SetEnv CONNECTION_MODE  "unix"
+    # SetEnv UNIX_SOCKET_PATH "/run/slurmrestd/slurmrestd.socket"
+    # For TCP, CONNECTION_MODE must be set to "tcp". SLURM_TCP_HOST defaults to "localhost".
+    # SLURM_TCP_PORT defaults to 6820.
+    # SetEnv CONNECTION_MODE  "tcp"
+    # SetEnv SLURM_TCP_HOST   "slurmrestd.example.com"
+    # SetEnv SLURM_TCP_PORT   "6820"
+    # PEM CA certificate for verifying the slurmrestd TLS certificate.
+    # Only required when CONNECTION_MODE=tcp and slurmrestd uses a self-signed or private-CA certificate.
+    # SetEnv SLURM_TCP_CA_CERT "/etc/ssl/certs/my-ca.pem"
     # REST_API_VERSION must be set only if it cannot be auto detected
     # SetEnv REST_API_VERSION "v0.0.40"
     
     # OPTIONAL LDAP PARAMETERS
-    # URI for LDAP server, e.g. 'dc.example.com'. OPTIONAL
+    # Required for LDAP authentication. Both php-ldap AND all four variables below must be set.
+    # If you do not use LDAP authentication, you can omit all four variables.
     SetEnv LDAP_URI            "dc1.example.com"
-    # LDAP base, e.g. 'cn=users,dc=i,dc=example,dc=com'. OPTIONAL
     SetEnv LDAP_BASE           "cn=users,dc=i,dc=example,dc=com"
-    # LDAP admin user used for querying users, e.g. 'adminuser'. OPTIONAL
     SetEnv LDAP_ADMIN_USER     "ldapadmin"
-    # LDAP admin password
     SetEnv LDAP_ADMIN_PASSWORD "password"
-    
+
     # OPTIONAL SSH/LOCAL AUTHENTICATION PARAMETERS
-    # URL used for SSH connections, e.g. the login node. OPTIONAL
+    # Required for local (SSH) authentication. Both php-ssh2 must be installed AND SSH_SERVER_URL must be set.
+    # If you do not use local authentication, you can omit this variable.
     # SetEnv SSH_SERVER_URL     "slurm01.example.com"
     
     # OPTIONAL JWT CONFIGURATION
@@ -181,10 +190,19 @@ However, any slurm version `>= 23.11.x` should work. If you encounter any issues
     # SetEnv SLURM_USER        "slurm"
     
     # Privileged users (OPTIONAL)
+    # Comma-separated list of usernames that are granted elevated access without being a Slurm admin.
+    # Privileged users can view the full user list, all user profiles, and per-user resource breakdowns.
     # SetEnv PRIV_USERS        "user1,user2"
-    
-    # Features
-    # SetEnv FEATURE_RESOURCES_PER_USER "disabled" # possible values: disabled,privileged,all
+
+    # OPTIONAL CACHE CONFIGURATION
+    # Cache backend. Possible values: apcu (default, strongly recommended), no (disables caching).
+    # Set to "no" if php-apcu is not installed. Note: disabling the cache also disables rate limiting.
+    # SetEnv USE_CACHE         "apcu"
+
+    # OPTIONAL FEATURE FLAGS
+    # SetEnv FEATURE_RESOURCES_PER_USER          "disabled" # possible values: disabled, privileged, all
+    # Show p_low partition as a separate segment in the cluster-wide overview bars (extra API call).
+    # SetEnv FEATURE_P_LOW_IN_CLUSTER_OVERVIEW   "disabled" # possible values: disabled, enabled
 </VirtualHost>
 ```
 5) Make sure that your apache2 config file is not readable by other users (especially if it contains passwords)!

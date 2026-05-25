@@ -118,7 +118,7 @@ abstract class AbstractClient implements Client {
         }
 
         # curl --unix-socket /run/slurmrestd/slurmrestd.socket http://slurm/slurmdb/v0.0.40/jobs
-        // FALSE: slurmdb/jobs responses can be very large, causing apcu_store() to trigger an OOM fatal error.
+        // FALSE: slurmdb/jobs responses can be very large, causing cache store to trigger an OOM fatal error.
         $json = RequestFactory::newRequest()->request_json("jobs" . $query_string, 'slurmdb', static::api_version, FALSE);
 
         /*

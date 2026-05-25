@@ -6,6 +6,7 @@ require_once __DIR__ . '/../globals.inc.php';
 require_once __DIR__ . '/utils/jwt.inc.php';
 require_once __DIR__ . '/../exceptions/RequestFailedException.inc.php';
 require_once __DIR__ . '/../exceptions/ConfigurationError.inc.php';
+require_once __DIR__ . '/../cache/CacheWrapper.inc.php';
 
 use exceptions\ConfigurationError;
 use exceptions\RequestFailedException;
@@ -147,8 +148,10 @@ abstract class AbstractRequest implements Request {
     }
 
     function request_json(string $endpoint, string $namespace, string $api_version, int|bool $ttl = 5): array {
+        $cache = \cache\CacheWrapper::getInstance();
         $cache_key = $namespace . '/' . $endpoint;
-        if ($ttl !== FALSE && @apcu_exists($cache_key)) return apcu_fetch($cache_key);
+        if ($cache->exists($cache_key))
+            return $cache->get($cache_key);
 
         $ch = $this->new_handle(
             $this->get_base_url() . "/{$namespace}/{$api_version}/{$endpoint}",
@@ -159,12 +162,14 @@ abstract class AbstractRequest implements Request {
         $this->check_response($http_code, $content_type, 'application/json');
 
         $data = $this->decode_json($body);
-        if ($ttl !== FALSE) @apcu_store($cache_key, $data, $ttl);
+        $cache->set($cache_key, $data, $ttl);
         return $data;
     }
 
     function request_json2(string $full_endpoint, int|bool $ttl = 5): array {
-        if ($ttl !== FALSE && @apcu_exists($full_endpoint)) return apcu_fetch($full_endpoint);
+        $cache = \cache\CacheWrapper::getInstance();
+        if ($cache->exists($full_endpoint))
+            return $cache->get($full_endpoint);
 
         $ch = $this->new_handle(
             $this->get_base_url() . "/{$full_endpoint}",
@@ -175,13 +180,15 @@ abstract class AbstractRequest implements Request {
         $this->check_response($http_code, $content_type, 'application/json');
 
         $data = $this->decode_json($body);
-        if ($ttl !== FALSE) @apcu_store($full_endpoint, $data, $ttl);
+        $cache->set($full_endpoint, $data, $ttl);
         return $data;
     }
 
     function request_plain(string $endpoint, string $namespace, string $api_version, int $ttl = 5): string {
+        $cache = \cache\CacheWrapper::getInstance();
         $cache_key = $namespace . '/' . $endpoint;
-        if (@apcu_exists($cache_key)) return apcu_fetch($cache_key);
+        if ($cache->exists($cache_key))
+            return $cache->get($cache_key);
 
         $ch = $this->new_handle(
             $this->get_base_url() . "/{$namespace}/{$api_version}/{$endpoint}",
@@ -191,7 +198,7 @@ abstract class AbstractRequest implements Request {
         [$http_code, $content_type, $body] = $this->execute($ch);
         $this->check_response($http_code, $content_type);
 
-        @apcu_store($cache_key, $body, $ttl);
+        $cache->set($cache_key, $body, $ttl);
         return $body;
     }
 
@@ -232,18 +239,17 @@ abstract class AbstractRequest implements Request {
 
 
 class UnixRequest extends AbstractRequest {
-    const socketPath = '/run/slurmrestd/slurmrestd.socket';
 
     protected function get_base_url(): string {
         return 'http://localhost';
     }
 
     protected function apply_transport(\CurlHandle $ch): void {
-        curl_setopt($ch, CURLOPT_UNIX_SOCKET_PATH, self::socketPath);
+        curl_setopt($ch, CURLOPT_UNIX_SOCKET_PATH, config('UNIX_SOCKET_PATH'));
     }
 
     static function socket_exists(): bool {
-        return file_exists(self::socketPath);
+        return file_exists(config('UNIX_SOCKET_PATH'));
     }
 }
 

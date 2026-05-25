@@ -16,6 +16,7 @@ if (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') {
 
 require_once __DIR__ . '/../TemplateLoader.inc.php';
 require_once __DIR__ . '/../globals.inc.php';
+require_once __DIR__ . '/../cache/CacheWrapper.inc.php';
 require_once __DIR__ . '/../client/Client.inc.php';
 require_once __DIR__ . '/../client/utils/DependencyResolver.inc.php';
 require_once __DIR__ . '/../auth/auth.inc.php';
@@ -310,8 +311,9 @@ if( isset($_SESSION['USER']) ){
                 else {
                     addError("Something went wrong when cancelling job " . $job_id);
                 }
-                apcu_delete("slurm/jobs"); // Delete cached entry because we KNOW that it has changed.
-                apcu_delete("slurm/job/".$job_id); // Delete cached entry because we KNOW that it has changed.
+                $cache = \cache\CacheWrapper::getInstance();
+                $cache->delete("slurm/jobs"); // Delete cached entry because we KNOW that it has changed.
+                $cache->delete("slurm/job/".$job_id); // Delete cached entry because we KNOW that it has changed.
                 $contents .= \view\actions\get_slurm_queue($dao->get_jobs(), 0, $csp_nonce);
             }
             break;
@@ -422,8 +424,9 @@ if( isset($_SESSION['USER']) ){
                 else {
                     addError("Something went wrong when updating job " . $job_id);
                 }
-                apcu_delete("slurm/jobs"); // Delete cached entry because we KNOW that it has changed.
-                apcu_delete("slurm/job/".$job_id); // Delete cached entry because we KNOW that it has changed.
+                $cache = \cache\CacheWrapper::getInstance();
+                $cache->delete("slurm/jobs"); // Delete cached entry because we KNOW that it has changed.
+                $cache->delete("slurm/job/".$job_id); // Delete cached entry because we KNOW that it has changed.
                 $contents .= \view\actions\get_slurm_queue($dao->get_jobs(), 0, $csp_nonce);
             }
             break;
@@ -488,7 +491,7 @@ if( isset($_SESSION['USER']) ){
             else {
                 addError("Something went wrong when updating node " . htmlspecialchars($nodename, ENT_QUOTES, 'UTF-8'));
             }
-            apcu_delete("slurm/node/".$nodename); // Delete cached entry because we KNOW that it has changed.
+            \cache\CacheWrapper::getInstance()->delete("slurm/node/".$nodename); // Delete cached entry because we KNOW that it has changed.
 
             $title = 'Cluster usage';
             $contents .= \view\actions\get_all_nodes_usage(

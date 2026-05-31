@@ -163,24 +163,32 @@ EOF;
 
     foreach( $jobs as $job ) {
 
-        $job_name_e = htmlspecialchars($job['job_name'], ENT_QUOTES, 'UTF-8');
-        $partition_e = htmlspecialchars($job['partition'], ENT_QUOTES, 'UTF-8');
-        $user_e     = htmlspecialchars($job['user_name'], ENT_QUOTES, 'UTF-8');
-        $user_id_e  = htmlspecialchars((string)$job['user_id'], ENT_QUOTES, 'UTF-8');
+        $job_name_e  = htmlspecialchars($job['job_name'],        ENT_QUOTES, 'UTF-8');
+        $user_e      = htmlspecialchars($job['user_name'],       ENT_QUOTES, 'UTF-8');
+        $user_id_e   = htmlspecialchars((string)$job['user_id'], ENT_QUOTES, 'UTF-8');
         $contents .= "<tr>";
         $contents .=    "<td>" . $job['job_id'] . "</td>";
         $contents .=    "<td class='breakable'>" . $job_name_e . "</td>";
-        $contents .=    "<td>" . $partition_e . "</td>";
+        $partition_linked = implode(', ', array_map(
+            fn($p) => \utils\auto_link_partition(htmlspecialchars($p, ENT_QUOTES, 'UTF-8'), $p),
+            explode(',', $job['partition'])
+        ));
+        $contents .=    "<td>" . $partition_linked . "</td>";
         $contents .=    '<td title="' . $user_e . " (" . $user_id_e . ') ">' . $user_e . "</td>";
         $contents .=    "<td>" . \utils\get_job_state_view($job) . "</td>";
         $contents .=    "<td>" . $job['time_start'] . "</td>";
         $contents .=    "<td>" . $job['time_limit'] . "</td>";
         $contents .=    "<td>";
-        if($job['nodes'] != '?')
-            $contents .= htmlspecialchars($job['nodes'], ENT_QUOTES, 'UTF-8');
-        else
+        if ($job['nodes'] != '?') {
+            $nodes_e = htmlspecialchars($job['nodes'], ENT_QUOTES, 'UTF-8');
+            // Only auto-link single node names; hostlist expressions (brackets/commas) stay plain.
+            $contents .= (strpbrk($job['nodes'], '[,') === FALSE)
+                ? \utils\auto_link_node($nodes_e, $job['nodes'])
+                : $nodes_e;
+        } else {
             $contents .= '<span title="Not yet scheduled. Showing node count instead." class="node-count">' .
                 ($job['node_count'] != NULL ? $job['node_count'] : "?") . '</span>';
+        }
         $contents .= "</td>";
         $contents .= '<td>' . (int)$job['priority'] . '</td>';
         $contents .= <<<EOF
@@ -271,14 +279,17 @@ EOF;
 
     foreach( $jobs as $job ) {
 
-        $job_name_e = htmlspecialchars($job['job_name'], ENT_QUOTES, 'UTF-8');
-        $partition_e = htmlspecialchars($job['partition'], ENT_QUOTES, 'UTF-8');
-        $user_e     = htmlspecialchars($job['user_name'], ENT_QUOTES, 'UTF-8');
-        $user_id_e  = htmlspecialchars((string)$job['user_id'], ENT_QUOTES, 'UTF-8');
+        $job_name_e  = htmlspecialchars($job['job_name'],       ENT_QUOTES, 'UTF-8');
+        $user_e      = htmlspecialchars($job['user_name'],       ENT_QUOTES, 'UTF-8');
+        $user_id_e   = htmlspecialchars((string)$job['user_id'], ENT_QUOTES, 'UTF-8');
+        $partition_linked = implode(', ', array_map(
+            fn($p) => \utils\auto_link_partition(htmlspecialchars($p, ENT_QUOTES, 'UTF-8'), $p),
+            explode(',', $job['partition'])
+        ));
         $contents .= "<tr>";
         $contents .=    "<td title='Job-ID'>" . $job['job_id'] . "</td>";
         $contents .=    "<td class='breakable' rowspan='2'>" . $job_name_e . "</td>";
-        $contents .=    '<td>' . $partition_e . "</td>";
+        $contents .=    '<td>' . $partition_linked . "</td>";
         $contents .=    "<td>" . $job['time_start'] . "</td>";
         $contents .=    "<td>" . \utils\get_job_state_view($job) . "</td>";
 
@@ -340,11 +351,16 @@ EOF;
         $contents .=    "<td>" . $job['time_limit'] . "</td>";
 
         $contents .=    "<td>";
-        if($job['nodes'] != '?')
-            $contents .= htmlspecialchars($job['nodes'], ENT_QUOTES, 'UTF-8');
-        else
+        if ($job['nodes'] != '?') {
+            $nodes_e = htmlspecialchars($job['nodes'], ENT_QUOTES, 'UTF-8');
+            // Only auto-link single node names; hostlist expressions (brackets/commas) stay plain.
+            $contents .= (strpbrk($job['nodes'], '[,') === FALSE)
+                ? \utils\auto_link_node($nodes_e, $job['nodes'])
+                : $nodes_e;
+        } else {
             $contents .= '<span title="Not yet scheduled. Showing node count instead." class="node-count">' .
                          ($job['node_count'] != NULL ? $job['node_count'] : "?") . '</span>';
+        }
         $contents .= "</td>";
 
         $contents .= <<<EOF

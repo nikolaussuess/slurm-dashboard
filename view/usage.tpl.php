@@ -561,7 +561,8 @@ function get_usage(array $data, array $user_breakdown = [], string $show_users_t
 
     $templateBuilder = new TemplateLoader("nodeinfo.html");
     $nodename_e = htmlspecialchars($data['node_name'], ENT_QUOTES, 'UTF-8');
-    $templateBuilder->setParam("NODENAME", $nodename_e);
+    $templateBuilder->setParam("NODENAME",    \utils\auto_link_node($nodename_e, $data['node_name']));
+    $templateBuilder->setParam("NODENAME_ID", $nodename_e);
 
     if (\auth\current_user_is_admin()) {
         $node_state_actions =
@@ -641,13 +642,15 @@ function get_usage(array $data, array $user_breakdown = [], string $show_users_t
 
     $feature_str = "";
     foreach ($data["features"] as $feature){
-        $feature_str .= '<span class="feature">' . htmlspecialchars($feature, ENT_QUOTES, 'UTF-8') . '</span> ';
+        $span         = '<span class="feature">' . htmlspecialchars($feature, ENT_QUOTES, 'UTF-8') . '</span>';
+        $feature_str .= \utils\auto_link_feature($span, $feature) . ' ';
     }
     $templateBuilder->setParam("FEATURES", $feature_str);
 
     $feature_str = "";
     foreach ($data["active_features"] as $feature){
-        $feature_str .= '<span class="feature">' . htmlspecialchars($feature, ENT_QUOTES, 'UTF-8') . '</span> ';
+        $span         = '<span class="feature">' . htmlspecialchars($feature, ENT_QUOTES, 'UTF-8') . '</span>';
+        $feature_str .= \utils\auto_link_feature($span, $feature) . ' ';
     }
     $templateBuilder->setParam("ACTIVE_FEATURES", $feature_str);
 
@@ -659,8 +662,11 @@ function get_usage(array $data, array $user_breakdown = [], string $show_users_t
     $templateBuilder->setParam("TRES_USED", htmlspecialchars($data["tres_used"] ?? '', ENT_QUOTES, 'UTF-8'));
     $templateBuilder->setParam("BOOT_TIME", $data["boot_time"] ?? '');
     $templateBuilder->setParam("LAST_BUSY", $data["last_busy"] ?? '');
-    $escaped_partitions = array_map(fn($p) => htmlspecialchars($p, ENT_QUOTES, 'UTF-8'), $data["partitions"]);
-    $templateBuilder->setParam("PARTITIONS", count($escaped_partitions) > 0 ? '<li><span class="monospaced">' . implode('</span></li><li><span class="monospaced">', $escaped_partitions) . '</span></li>' : '');
+    $partition_items = array_map(function (string $p): string {
+        $inner = '<span class="monospaced">' . htmlspecialchars($p, ENT_QUOTES, 'UTF-8') . '</span>';
+        return \utils\auto_link_partition($inner, $p);
+    }, $data["partitions"]);
+    $templateBuilder->setParam("PARTITIONS", count($partition_items) > 0 ? '<li>' . implode('</li><li>', $partition_items) . '</li>' : '');
     $templateBuilder->setParam("RESERVATION", htmlspecialchars($data["reservation"] ?? '', ENT_QUOTES, 'UTF-8'));
     $templateBuilder->setParam("SLURM_VERSION", $data["slurm_version"] ?? '');
     $templateBuilder->setParam("SHOW_USERS_TOGGLE", $show_users_toggle);

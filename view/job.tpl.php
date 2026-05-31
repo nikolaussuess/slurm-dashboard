@@ -13,6 +13,8 @@ function get_slurm_jobinfo(array $query, string $transitive_dependencies = '') :
     $user_name = htmlspecialchars($query['user_name'], ENT_QUOTES, 'UTF-8');
     $group = htmlspecialchars($query['group_name'] . " (" . $query['group_id'] . ')', ENT_QUOTES, 'UTF-8');
     $requeue = $query['requeue'] ? 'allowed' : 'not allowed';
+    $nodes_raw = $query['nodes'] ?? '';
+    $nodes_e   = htmlspecialchars($nodes_raw, ENT_QUOTES, 'UTF-8');
 
     $templateBuilder = new TemplateLoader("jobinfo.html");
     $templateBuilder->setParam("JOBID",             $query['job_id']                    );
@@ -20,8 +22,8 @@ function get_slurm_jobinfo(array $query, string $transitive_dependencies = '') :
     $templateBuilder->setParam("USER",              $user                               );
     $templateBuilder->setParam("USER_NAME",         $user_name                          );
     $templateBuilder->setParam("GROUP",             $group                              );
-    $templateBuilder->setParam("ACCOUNT",           htmlspecialchars($query['account'], ENT_QUOTES, 'UTF-8'));
-    $templateBuilder->setParam("PARTITIONS",        htmlspecialchars($query['partition'], ENT_QUOTES, 'UTF-8'));
+    $templateBuilder->setParam("ACCOUNT",           \utils\auto_link_account(htmlspecialchars($query['account'], ENT_QUOTES, 'UTF-8'), $query['account']));
+    $templateBuilder->setParam("PARTITIONS",        \utils\auto_link_csv($query['partition'], '\utils\auto_link_partition'));
     $templateBuilder->setParam("PRIORITY",    isset($query['priority']) ? (int)$query['priority'] : '');
     $templateBuilder->setParam("SUBMIT_LINE",       htmlspecialchars($query['submit_line'] ?? "", ENT_QUOTES, 'UTF-8'));
     $templateBuilder->setParam("WORKING_DIRECTORY", htmlspecialchars($query['working_directory'] ?? "", ENT_QUOTES, 'UTF-8'));
@@ -29,7 +31,7 @@ function get_slurm_jobinfo(array $query, string $transitive_dependencies = '') :
     $templateBuilder->setParam("EXIT_CODE",         htmlspecialchars($query['exit_code'] ?? '', ENT_QUOTES, 'UTF-8'));
     $templateBuilder->setParam("SCHEDNODES",  htmlspecialchars($query['scheduled_nodes'] ?? '', ENT_QUOTES, 'UTF-8'));
     $templateBuilder->setParam("REQNODES",    htmlspecialchars($query['required_nodes'] ?? '', ENT_QUOTES, 'UTF-8'));
-    $templateBuilder->setParam("NODES",             htmlspecialchars($query['nodes'], ENT_QUOTES, 'UTF-8'));
+    $templateBuilder->setParam("NODES",             (strpbrk($nodes_raw, '[,') === FALSE && $nodes_raw !== '') ? \utils\auto_link_node($nodes_e, $nodes_raw) : $nodes_e);
     $templateBuilder->setParam("QOS",               htmlspecialchars($query['qos'] ?? '', ENT_QUOTES, 'UTF-8'));
     $templateBuilder->setParam("NICE",              isset($query['nice']) ? (int)$query['nice'] : '');
     $templateBuilder->setParam("CONTAINER",         htmlspecialchars($query['container'] ?? '', ENT_QUOTES, 'UTF-8'));
@@ -41,7 +43,7 @@ function get_slurm_jobinfo(array $query, string $transitive_dependencies = '') :
     $templateBuilder->setParam("DEADLINE",          $query['deadline'] ?? ''      );
     $templateBuilder->setParam("DEPENDENCY",        htmlspecialchars($query['dependency'] ?? '', ENT_QUOTES, 'UTF-8'));
     $templateBuilder->setParam("TRANSITIVE_DEPENDENCIES", $transitive_dependencies      );
-    $templateBuilder->setParam("FEATURES",          htmlspecialchars($query['features'], ENT_QUOTES, 'UTF-8'));
+    $templateBuilder->setParam("FEATURES",          \utils\auto_link_csv($query['features'], '\utils\auto_link_feature'));
     $templateBuilder->setParam("GRES_DETAIL",       htmlspecialchars(implode(",", $query['gres']), ENT_QUOTES, 'UTF-8'));
     $templateBuilder->setParam("CPUS",              $query['cpus'] ?? ''           );
     $templateBuilder->setParam("NODE_COUNT",        $query['node_count'] ?? ''     );
@@ -95,19 +97,22 @@ function get_slurmdb_jobinfo(array $query) : string {
         $tres_detail .= '</ul>';
     }
 
+    $sdb_nodes_raw = $query['nodes'] ?? '';
+    $sdb_nodes_e   = htmlspecialchars($sdb_nodes_raw, ENT_QUOTES, 'UTF-8');
+
     $templateBuilder = new TemplateLoader("jobinfo_slurmdb.html");
     $templateBuilder->setParam("JOBID",             $query['job_id']);
     $templateBuilder->setParam("JOBNAME",           htmlspecialchars($query['job_name'], ENT_QUOTES, 'UTF-8'));
     $templateBuilder->setParam("USER",              htmlspecialchars($query['user_name'], ENT_QUOTES, 'UTF-8'));
     $templateBuilder->setParam("GROUP",             htmlspecialchars($query['group_name'], ENT_QUOTES, 'UTF-8'));
-    $templateBuilder->setParam("ACCOUNT",           htmlspecialchars($query['account'], ENT_QUOTES, 'UTF-8'));
-    $templateBuilder->setParam("PARTITIONS",        htmlspecialchars($query['partition'], ENT_QUOTES, 'UTF-8'));
+    $templateBuilder->setParam("ACCOUNT",           \utils\auto_link_account(htmlspecialchars($query['account'], ENT_QUOTES, 'UTF-8'), $query['account']));
+    $templateBuilder->setParam("PARTITIONS",        \utils\auto_link_csv($query['partition'], '\utils\auto_link_partition'));
     $templateBuilder->setParam("PRIORITY",          isset($query['priority']) ? (int)$query['priority'] : '');
     $templateBuilder->setParam("SUBMIT_LINE",       htmlspecialchars($query['submit_line'], ENT_QUOTES, 'UTF-8'));
     $templateBuilder->setParam("WORKING_DIRECTORY", htmlspecialchars($query['working_directory'] ?? "", ENT_QUOTES, 'UTF-8'));
     $templateBuilder->setParam("COMMENT",           $comment);
     $templateBuilder->setParam("EXIT_CODE",         htmlspecialchars($query['exit_code'] ?? '', ENT_QUOTES, 'UTF-8'));
-    $templateBuilder->setParam("NODES",             htmlspecialchars($query['nodes'], ENT_QUOTES, 'UTF-8'));
+    $templateBuilder->setParam("NODES",             (strpbrk($sdb_nodes_raw, '[,') === FALSE && $sdb_nodes_raw !== '') ? \utils\auto_link_node($sdb_nodes_e, $sdb_nodes_raw) : $sdb_nodes_e);
     $templateBuilder->setParam("QOS",               htmlspecialchars($query['qos'], ENT_QUOTES, 'UTF-8'));
     $templateBuilder->setParam("CONTAINER",         htmlspecialchars($query['container'], ENT_QUOTES, 'UTF-8'));
     $escaped_flags = array_map(fn($f) => htmlspecialchars($f, ENT_QUOTES, 'UTF-8'), $flags);

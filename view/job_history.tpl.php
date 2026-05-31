@@ -196,8 +196,8 @@ EOF;
         $contents .= "<tr>";
         $contents .=    "<td>" . $job['job_id'] . "</td>";
         $contents .=    "<td class='breakable'>" . htmlspecialchars($job['job_name'], ENT_QUOTES, 'UTF-8') . "</td>";
-        $contents .=    "<td>" . htmlspecialchars($job['account'], ENT_QUOTES, 'UTF-8') . "</td>";
-        $contents .=    "<td>" . htmlspecialchars($job['partition'], ENT_QUOTES, 'UTF-8') . "</td>";
+        $contents .=    "<td>" . \utils\auto_link_account(htmlspecialchars($job['account'], ENT_QUOTES, 'UTF-8'), $job['account']) . "</td>";
+        $contents .=    "<td>" . \utils\auto_link_csv($job['partition'], '\utils\auto_link_partition') . "</td>";
         $contents .=    "<td>" . htmlspecialchars($job['user_name'], ENT_QUOTES, 'UTF-8') . "</td>";
 
         $contents .=    "<td>" . \utils\get_job_state_view($job) . "</td>";
@@ -206,7 +206,10 @@ EOF;
         $contents .=    "<td>" . $job['time_elapsed'] . "</td>";
         $contents .=    "<td>" . $job['time_limit'] . "</td>";
 
-        $contents .=    "<td>" . htmlspecialchars($job['nodes'], ENT_QUOTES, 'UTF-8') . "</td>";
+        $nodes_e = htmlspecialchars($job['nodes'], ENT_QUOTES, 'UTF-8');
+        $contents .=    "<td>" . ((strpbrk($job['nodes'], '[,') === FALSE)
+            ? \utils\auto_link_node($nodes_e, $job['nodes'])
+            : $nodes_e) . "</td>";
         $contents .=    '<td><a href="?action=job&job_id=' . $job['job_id'] . '">[Details]</a></td>';
 
     }

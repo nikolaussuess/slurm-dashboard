@@ -150,6 +150,19 @@ $config = [
     'PRIV_USERS' => explode(',', getenv('PRIV_USERS') ?: ''),
 
     // ------------------------------------------------------------------
+    // WIKI CONFIGURATION
+    // ------------------------------------------------------------------
+
+    /**
+     * Path to the SQLite database file for the wiki feature.
+     * If set, the wiki is enabled and the database is created automatically on first start.
+     * Requires the php-sqlite3 (pdo_sqlite) extension.
+     * Leave TO_BE_REPLACED (or unset) to disable the wiki entirely.
+     * Example: FEATURE_WIKI_DB=/data/wiki.db
+     */
+    'FEATURE_WIKI_DB' => cfg_env('FEATURE_WIKI_DB'),
+
+    // ------------------------------------------------------------------
     // CACHE CONFIGURATION
     // ------------------------------------------------------------------
 

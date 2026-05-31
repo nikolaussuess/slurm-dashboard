@@ -32,6 +32,7 @@ However, any slurm version `>= 23.11.x` should work. If you encounter any issues
 - Allow users to cancel their own jobs (requires JWT).
 - Allow users to edit their own jobs and allow admins to edit all jobs (requires JWT).
 - Allow administrators to `DRAIN` or undrain nodes (requires JWT).
+- Built-in wiki (optional, see [Wiki feature](#wiki-feature) below).
 
 ![Job queue](./imgs/queue.png?raw=true "Job queue")
 
@@ -203,6 +204,8 @@ However, any slurm version `>= 23.11.x` should work. If you encounter any issues
     # SetEnv FEATURE_RESOURCES_PER_USER          "disabled" # possible values: disabled, privileged, all
     # Show p_low partition as a separate segment in the cluster-wide overview bars (extra API call).
     # SetEnv FEATURE_P_LOW_IN_CLUSTER_OVERVIEW   "disabled" # possible values: disabled, enabled
+    # Built-in wiki (requires php-sqlite3). Relative paths are resolved from the project root.
+    # SetEnv FEATURE_WIKI_DB                     "wiki.db"
 </VirtualHost>
 ```
 5) Make sure that your apache2 config file is not readable by other users (especially if it contains passwords)!
@@ -293,6 +296,49 @@ if [[ $REPLY =~ ^[Yy]$ ]]; then
     find $WEB_DIRECTORY -type f -exec chmod 640 {} \;
 fi
 ```
+
+## Wiki feature
+
+The dashboard includes an optional built-in wiki. Requires `php-sqlite3`. Enable it by setting `FEATURE_WIKI_DB` to a path for the SQLite database file (created automatically). Relative paths are resolved from the project root.
+
+```apacheconf
+# SetEnv FEATURE_WIKI_DB "wiki.db"
+```
+
+### Permissions
+
+| Role | Capabilities |
+|---|---|
+| Not logged in | View pages with visibility *public* |
+| Logged-in user | View pages with visibility *public* and *users* |
+| Privileged user | View and edit/create/delete pages with visibility up to *privileged* |
+| Admin | View and edit/create/delete all pages |
+
+### Placeholders
+
+The following placeholders are replaced at render time in wiki page content:
+
+| Placeholder         | Value                        |
+|---------------------|------------------------------|
+| `{{CLUSTER_NAME}}`  | Name of the cluster          |
+| `{{ADMIN_NAMES}}`   | Name(s) of the administrators |
+| `{{ADMIN_EMAIL}}`   | E-mail address of the administrators |
+| `{{SLURM_LOGIN_NODE}}` | Hostname of the login node   |
+| `{{WIKI_LINK}}`     | Link to an external wiki     |
+| `{{wiki=url}}`      | Link to an internal wiki page |
+| `{{wiki=url&vert;Label}}` | Link to an internal wiki page with custom label |
+
+### Auto-linking
+
+If a wiki page exists for a node (`node/<name>`), partition (`partition/<name>`), feature (`feature/<name>`), or account (`account/<name>`), the dashboard automatically links the corresponding name to that wiki page wherever it appears in the cluster usage overview, job queue, job history, and job detail pages.
+
+If you want to document multiple items on a single page (e.g. several features in one `features` page with `<div id="...">` anchors), you can define **URL aliases**. An alias maps a virtual URL (e.g. `feature/avx512`) to a target page and an optional anchor (e.g. page `features`, anchor `avx512`). Auto-links then point to `?action=wiki&url=features#avx512` instead. Aliases are managed in the *URL Aliases* section at the bottom of the wiki overview page (`?action=wiki`), which is visible to privileged users and admins.
+
+Pages with a *Show in nav* value greater than 0 appear in the Wiki dropdown in the navigation bar, ordered by that value ascending.
+
+### About page
+
+If a wiki page with the URL `about` exists, it is used as the about page instead of the static `templates/about.html` file. All placeholders listed above are supported.
 
 ## License
 This project is currently licensed under the [MIT License](https://github.com/nikolaussuess/slurm-dashboard/blob/master/LICENSE).

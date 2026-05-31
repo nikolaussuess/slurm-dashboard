@@ -30,6 +30,13 @@ require_once __DIR__ . '/../view/slurm-queue.tpl.php';
 require_once __DIR__ . '/../view/job_history.tpl.php';
 require_once __DIR__ . '/../view/users.tpl.php';
 require_once __DIR__ . '/../exceptions/ValidationException.inc.php';
+// Load wiki files only when FEATURE_WIKI_DB is configured so pdo_sqlite is not required otherwise.
+$wiki_enabled = config('FEATURE_WIKI_DB') !== TO_BE_REPLACED && config('FEATURE_WIKI_DB') !== '';
+if ($wiki_enabled) {
+    require_once __DIR__ . '/../wiki/Wiki.inc.php';
+    require_once __DIR__ . '/../wiki/WikiFiles.inc.php';
+    require_once __DIR__ . '/../wiki/wiki.tpl.php';
+}
 
 $dao = \client\ClientFactory::newClient();
 $title = "Clusterinfo " . config('CLUSTER_NAME');
@@ -53,7 +60,26 @@ if( ! $dao->is_available() ){
     );
 }
 
-if(!isset($_SESSION['USER'])) {
+// Set to TRUE once a public wiki page has been rendered for an unauthenticated user,
+// so the login form is suppressed and the authenticated wiki case is skipped.
+$wiki_handled = FALSE;
+
+if( ! isset($_SESSION['USER']) ) {
+
+    // Public wiki pages are served without login; $wiki_handled prevents the login form from appearing below.
+    if ($wiki_enabled && isset($_GET['action']) && $_GET['action'] === 'wiki' && isset($_GET['url'])) {
+        $wiki_url = trim($_GET['url']);
+        if (\wiki\is_valid_wiki_url($wiki_url)) {
+            $wiki_page = \wiki\WikiDatabase::getInstance()->getPage($wiki_url);
+            if ($wiki_page !== NULL && $wiki_page['visibility'] === \wiki\WikiDatabase::VISIBILITY_PUBLIC) {
+                [$wiki_status, $wiki_title, $wiki_html] = \view\wiki\get_wiki_page($wiki_url, $csp_nonce);
+                http_response_code($wiki_status);
+                $title     = $wiki_title;
+                $contents .= $wiki_html;
+                $wiki_handled = TRUE;
+            }
+        }
+    }
 
     if(isset($_GET['action']) && $_GET['action'] == "login"){
         if( !isset($_POST['username']) || !isset($_POST['password']) || !isset($_POST['method']) ){
@@ -84,7 +110,7 @@ if(!isset($_SESSION['USER'])) {
     }
     // Is set above if the login was successful.
     // Otherwise, the login form is displayed again.
-    if( ! isset($_SESSION['USER']) && (!isset($_GET['action']) || $_GET['action'] != "about")) {
+    if( ! isset($_SESSION['USER']) && ! $wiki_handled && (!isset($_GET['action']) || $_GET['action'] != "about")) {
         $contents .= \view\login\get_login_form();
     }
 }
@@ -501,6 +527,315 @@ if( isset($_SESSION['USER']) ){
             );
             break;
 
+        case 'wiki':
+
+            if ( ! $wiki_enabled || $wiki_handled )
+                break;
+
+            $wiki_do  = $_POST['do']  ?? $_GET['do']  ?? '';
+            $wiki_url = trim($_GET['url'] ?? '');
+
+            if ($wiki_url !== '' && !\wiki\is_valid_wiki_url($wiki_url)) {
+                http_response_code(400);
+                addError("Invalid wiki URL.");
+                break;
+            }
+
+            if ($wiki_do === 'image_picker_json') {
+
+                // Returns JSON array of image files for the image picker in the editor.
+                // No CSRF needed — read-only, same visibility rules as page access.
+                header('Content-Type: application/json; charset=utf-8');
+                if (!\auth\current_user_is_privileged() || $wiki_url === '') {
+                    echo '[]';
+                    exit;
+                }
+                $picker_files  = \wiki\WikiDatabase::getInstance()->getFilesForPage($wiki_url);
+                $picker_images = [];
+                foreach ($picker_files as $f) {
+                    if (!str_starts_with($f['mime_type'], 'image/')) continue;
+                    $picker_images[] = [
+                        'url'  => '/get_file.php?id=' . $f['stored_name'],
+                        'name' => $f['filename'],
+                    ];
+                }
+                echo json_encode($picker_images, JSON_HEX_TAG | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE);
+                exit;
+
+            } elseif ($wiki_do === 'files') {
+
+                if (!\auth\current_user_is_privileged()) {
+                    http_response_code(403);
+                    addError("403 Forbidden.");
+                    break;
+                }
+                if ($wiki_url === '') {
+                    http_response_code(400);
+                    addError("No wiki URL given.");
+                    break;
+                }
+                $title     = 'Files: ' . htmlspecialchars($wiki_url, ENT_QUOTES, 'UTF-8');
+                $contents .= \view\wiki\get_wiki_files_page($wiki_url, \auth\get_csrf_token());
+
+            } elseif ($wiki_do === 'upload_file') {
+
+                if (!\auth\current_user_is_privileged()) {
+                    http_response_code(403);
+                    addError("403 Forbidden.");
+                    break;
+                }
+                if (!isset($_POST['csrf_token']) || !\auth\validate_csrf_token($_POST['csrf_token'])) {
+                    http_response_code(403);
+                    addError("Invalid request (CSRF token mismatch).");
+                    break;
+                }
+                $upload_page_url = trim($_POST['page_url'] ?? '');
+                if (!\wiki\is_valid_wiki_url($upload_page_url)) {
+                    http_response_code(400);
+                    addError("Invalid wiki URL.");
+                    break;
+                }
+                $result = \wiki\handle_upload($_FILES['file'] ?? [], $upload_page_url, $_SESSION['USER']);
+                if (!$result['ok']) {
+                    addError(htmlspecialchars($result['error'], ENT_QUOTES, 'UTF-8'));
+                } else {
+                    log_msg("User '{$_SESSION['USER']}' uploaded file to wiki page '$upload_page_url'",
+                        LOG_INFO, LOG_MODE_PHP|LOG_MODE_SYSLOG);
+                }
+                header('Location: ?action=wiki&url=' . urlencode($upload_page_url) . '&do=files');
+                exit;
+
+            } elseif ($wiki_do === 'delete_file') {
+
+                if (!\auth\current_user_is_privileged()) {
+                    http_response_code(403);
+                    addError("403 Forbidden.");
+                    break;
+                }
+                if (!isset($_POST['csrf_token']) || !\auth\validate_csrf_token($_POST['csrf_token'])) {
+                    http_response_code(403);
+                    addError("Invalid request (CSRF token mismatch).");
+                    break;
+                }
+                $del_stored = trim($_POST['stored_name'] ?? '');
+                $del_page   = trim($_POST['page_url']    ?? '');
+                if (!\wiki\is_valid_stored_name($del_stored)) {
+                    http_response_code(400);
+                    addError("Invalid file ID.");
+                    break;
+                }
+                $wiki_db  = \wiki\WikiDatabase::getInstance();
+                $fileRow  = $wiki_db->getFile($del_stored);
+                if ($fileRow !== NULL) {
+                    $filePath = \wiki\get_file_path($del_stored);
+                    if (is_file($filePath)) {
+                        unlink($filePath);
+                    }
+                    $wiki_db->deleteFile($del_stored);
+                    log_msg("User '{$_SESSION['USER']}' deleted wiki file '$del_stored' ({$fileRow['filename']}) from page '{$fileRow['page_url']}'",
+                        LOG_INFO, LOG_MODE_PHP|LOG_MODE_SYSLOG);
+                    $del_page = $del_page !== '' && \wiki\is_valid_wiki_url($del_page)
+                        ? $del_page
+                        : $fileRow['page_url'];
+                }
+                header('Location: ?action=wiki&url=' . urlencode($del_page) . '&do=files');
+                exit;
+
+            } elseif ($wiki_do === 'edit') {
+
+                // Only privileged users may edit wiki pages
+                if ( ! \auth\current_user_is_privileged()) {
+                    http_response_code(403);
+                    addError("403 Forbidden.");
+                    break;
+                }
+
+                $title     = $wiki_url !== '' ? 'Edit: ' . htmlspecialchars($wiki_url, ENT_QUOTES, 'UTF-8') : 'New wiki page';
+                $contents .= \view\wiki\get_wiki_edit_form($wiki_url, \auth\get_csrf_token(), $csp_nonce);
+
+            } elseif ($wiki_do === 'save_alias' || $wiki_do === 'delete_alias') {
+
+                if (!\auth\current_user_is_privileged()) {
+                    http_response_code(403);
+                    addError("403 Forbidden.");
+                    break;
+                }
+                if (!isset($_POST['csrf_token']) || !\auth\validate_csrf_token($_POST['csrf_token'])) {
+                    http_response_code(403);
+                    addError("Invalid request (CSRF token mismatch).");
+                    break;
+                }
+
+                $alias_source = trim($_POST['source_url'] ?? '');
+                if (!\wiki\is_valid_wiki_url($alias_source)) {
+                    http_response_code(400);
+                    addError("Invalid source URL.");
+                    break;
+                }
+
+                if ($wiki_do === 'delete_alias') {
+                    \wiki\WikiDatabase::getInstance()->deleteAlias($alias_source);
+                    log_msg("User '{$_SESSION['USER']}' deleted wiki alias '$alias_source'",
+                        LOG_INFO, LOG_MODE_PHP|LOG_MODE_SYSLOG);
+                    header('Location: ?action=wiki');
+                    exit;
+                }
+
+                // save_alias
+                $alias_target = trim($_POST['target_url'] ?? '');
+                $alias_anchor = trim($_POST['anchor']     ?? '');
+                if (!\wiki\is_valid_wiki_url($alias_target)) {
+                    http_response_code(400);
+                    addError("Invalid target URL.");
+                    break;
+                }
+                if ($alias_anchor !== '' && !preg_match('/^[a-z0-9_-]{1,64}$/', $alias_anchor)) {
+                    http_response_code(400);
+                    addError("Invalid anchor (allowed: a-z, 0-9, hyphens, underscores; max 64 chars).");
+                    break;
+                }
+                \wiki\WikiDatabase::getInstance()->saveAlias($alias_source, $alias_target, $alias_anchor);
+                log_msg("User '{$_SESSION['USER']}' saved wiki alias '$alias_source' → '$alias_target" . ($alias_anchor ? "#$alias_anchor" : '') . "'",
+                    LOG_INFO, LOG_MODE_PHP|LOG_MODE_SYSLOG);
+                header('Location: ?action=wiki');
+                exit;
+
+            } elseif ($wiki_do === 'save' || $wiki_do === 'delete') {
+
+                // Only privileged users may edit wiki pages
+                if (!\auth\current_user_is_privileged()) {
+                    http_response_code(403);
+                    addError("403 Forbidden.");
+                    break;
+                }
+                if (!isset($_POST['csrf_token']) || !\auth\validate_csrf_token($_POST['csrf_token'])) {
+                    http_response_code(403);
+                    addError("Invalid request (CSRF token mismatch).");
+                    break;
+                }
+
+                if ($wiki_do === 'delete') {
+                    $del_url = trim($_POST['original_url'] ?? '');
+                    if (!\wiki\is_valid_wiki_url($del_url)) {
+                        http_response_code(400);
+                        addError("Invalid wiki URL.");
+                        break;
+                    }
+                    $wiki_db = \wiki\WikiDatabase::getInstance();
+                    if ($wiki_db->deletePage($del_url)) {
+                        log_msg("User '{$_SESSION['USER']}' deleted wiki page '$del_url'",
+                            LOG_INFO, LOG_MODE_PHP|LOG_MODE_SYSLOG);
+                        // Redirect to main wiki page
+                        header('Location: ?action=wiki');
+                        exit;
+                    }
+                    addError("Page not found.");
+                    break;
+                }
+
+                // Save
+                $save_url        = trim($_POST['url']        ?? '');
+                $save_title      = trim($_POST['title']      ?? '');
+                $save_content    = $_POST['content']         ?? '';
+                $save_visibility = $_POST['visibility']      ?? \wiki\WikiDatabase::VISIBILITY_USERS;
+                $save_show_in_nav = max(0, (int)($_POST['show_in_nav'] ?? 0));
+
+                if (!\wiki\is_valid_wiki_url($save_url)) {
+                    http_response_code(400);
+                    addError("Invalid wiki URL.");
+                    break;
+                }
+                if (empty($save_title)) {
+                    http_response_code(400);
+                    addError("Title is required.");
+                    break;
+                }
+                if (strlen($save_title) > 255) {
+                    http_response_code(400);
+                    addError("Title must not exceed 255 characters.");
+                    break;
+                }
+                if (strlen($save_content) > 4 * 1024 * 1024) {
+                    http_response_code(400);
+                    addError("Page content exceeds maximum allowed size (4 MB).");
+                    break;
+                }
+                if (!in_array($save_visibility, \wiki\WikiDatabase::VALID_VISIBILITIES, TRUE)) {
+                    http_response_code(400);
+                    addError("Invalid visibility.");
+                    break;
+                }
+
+                $original_url = trim($_POST['original_url'] ?? '');
+                $is_rename    = $original_url !== '' && $original_url !== $save_url;
+                if ($is_rename && !\wiki\is_valid_wiki_url($original_url)) {
+                    http_response_code(400);
+                    addError("Invalid original URL.");
+                    break;
+                }
+
+                $wiki_db = \wiki\WikiDatabase::getInstance();
+                // Save new URL first so data is never lost even if the delete below fails.
+                $wiki_db->savePage(
+                    $save_url, $save_title, $save_content, $save_visibility, $save_show_in_nav, $_SESSION['USER']
+                );
+
+                if ($is_rename) {
+                    $wiki_db->deletePage($original_url);
+                    if (!empty($_POST['rename_alias'])) {
+                        $wiki_db->saveAlias($original_url, $save_url, '');
+                    }
+                    log_msg("User '{$_SESSION['USER']}' renamed wiki page '$original_url' → '$save_url'",
+                        LOG_INFO, LOG_MODE_PHP|LOG_MODE_SYSLOG);
+                } else {
+                    log_msg("User '{$_SESSION['USER']}' saved wiki page '$save_url'",
+                        LOG_INFO, LOG_MODE_PHP|LOG_MODE_SYSLOG);
+                }
+                header('Location: ?action=wiki&url=' . urlencode($save_url));
+                exit;
+
+            }
+            elseif ($wiki_url !== '') {
+                // View normal wiki page; for node/* pages, build the sidebar block first
+                // so it can float right inside the wiki content area.
+                $node_sidebar = '';
+                if (str_starts_with($wiki_url, 'node/')) {
+                    $node_segment = substr($wiki_url, 5);
+                    foreach ($dao->getNodeList() as $node) {
+                        if (\utils\canonical_wiki_segment($node) === $node_segment) {
+                            $node_sidebar = \view\wiki\get_node_slurm_block($dao->get_node_info($node));
+                            break;
+                        }
+                    }
+                }
+
+                // If no page exists at this URL, check for an alias and redirect.
+                $wiki_db_inst = \wiki\WikiDatabase::getInstance();
+                if (!$wiki_db_inst->pageExists($wiki_url)) {
+                    $alias = $wiki_db_inst->getAlias($wiki_url);
+                    if ($alias !== NULL) {
+                        $redir = '?action=wiki&url=' . urlencode($alias['target_url']);
+                        if ($alias['anchor'] !== '') {
+                            $redir .= '#' . rawurlencode($alias['anchor']);
+                        }
+                        header('Location: ' . $redir);
+                        exit;
+                    }
+                }
+
+                [$wiki_status, $wiki_title, $wiki_html] = \view\wiki\get_wiki_page($wiki_url, $csp_nonce, $node_sidebar);
+                http_response_code($wiki_status);
+                $title     = $wiki_title;
+                $contents .= $wiki_html;
+
+            } else {
+
+                $title     = 'Wiki';
+                $contents .= \view\wiki\get_wiki_overview();
+
+            }
+            break;
+
         default:
             http_response_code(404);
             $title = '404 Not Found';
@@ -566,6 +901,9 @@ if( isset($_SESSION['USER']) ){
                         <a class="nav-link" href="?action=users">Users</a>
                     </li>
 <?php
+    endif;
+    if ($wiki_enabled):
+        print \view\wiki\get_wiki_nav_item();
     endif;
 ?>
                 </ul>

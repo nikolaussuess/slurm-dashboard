@@ -8,6 +8,16 @@ namespace utils;
 
 use InvalidArgumentException;
 
+/**
+ * Extracts a date string from a Slurm time-object field in a job array.
+ * Value 0 is treated as absent because Slurm reports 0 for indeterminate start times
+ * (e.g. jobs with unsatisfiable dependencies) as well as for unset fields.
+ *
+ * @param array  $job_arr Slurm job data array.
+ * @param string $param   Key to look up; expects a Slurm time object with 'set' and 'number' keys.
+ * @param string $default Fallback string returned when the field is absent, unset, or zero.
+ * @return string Formatted date string ('Y-m-d H:i:s'), or $default.
+ */
 function get_date_from_unix_if_defined(array $job_arr, string $param, string $default = 'undefined') : string {
     if(! isset($job_arr[$param])){
         return $default;
@@ -32,6 +42,13 @@ function get_date_from_unix_if_defined(array $job_arr, string $param, string $de
     }
 }
 
+/**
+ * Renders job state badges as HTML.
+ *
+ * @param array  $job        Slurm job data array.
+ * @param string $param_name Key containing the job state array (default: 'job_state').
+ * @return string HTML string of colored badge <span> elements, one per state value.
+ */
 # TODO: Should in the future only do the *view* and NOT look into the original job array
 function get_job_state_view(array $job, string $param_name = 'job_state'): string {
     $job_state_array = $job[$param_name];
@@ -63,6 +80,11 @@ function get_job_state_view(array $job, string $param_name = 'job_state'): strin
     return $job_state_text;
 }
 
+/**
+ * Appends any API-reported errors from $response to the global error list.
+ *
+ * @param array $response Decoded slurmrestd response array.
+ */
 function show_errors(array $response) : void {
     if(isset($response['errors']) && !empty($response['errors'])){
         foreach ($response['errors'] as $error){
@@ -71,11 +93,25 @@ function show_errors(array $response) : void {
     }
 }
 
+/**
+ * Validates a Slurm time limit string.
+ * Accepted formats: HH:MM or D-HH:MM.
+ *
+ * @param string $str Time limit string to validate.
+ * @return bool TRUE if the format is valid, FALSE otherwise.
+ */
 function validate_time_limit(string $str): bool {
     $pattern = '/^(?:(\d+)-)?((0)?[0-9]|1[0-9]|2[0-3]):([0-5][0-9])$/';
     return preg_match($pattern, $str) === 1;
 }
 
+/**
+ * Converts a Slurm time limit string to a Slurm time object array.
+ *
+ * @param string $time Time limit string; either 'infinite', D-HH:MM, or HH:MM.
+ * @return array Slurm time object with 'set', 'infinite', and 'number' (total minutes) keys.
+ * @throws InvalidArgumentException If $time does not match a recognised format.
+ */
 function slurmTimeLimitFromString(string $time): array {
 
     if($time === "infinite"){
@@ -98,10 +134,23 @@ function slurmTimeLimitFromString(string $time): array {
     return array("set"=> 1, "infinite"=> 0, "number"=>$minutes + 60 * $hours + 1440 * $days);
 }
 
+/**
+ * Formats an integer with thousands separator and an optional unit suffix.
+ *
+ * @param int|null $value  Integer to format, or NULL.
+ * @param string   $suffix Optional unit suffix appended after the formatted number.
+ * @return string Formatted string (e.g. '1.234 GB'), or an empty string if $value is NULL.
+ */
 function format_nullable_int(?int $value, string $suffix = ''): string {
     return $value === NULL ? '' : (number_format($value, 0, ',', '.') . $suffix);
 }
 
+/**
+ * Checks whether a string is a valid POSIX username.
+ *
+ * @param string $username Username to validate.
+ * @return bool TRUE if valid, FALSE otherwise.
+ */
 function is_valid_username(string $username): bool {
     // Pattern: ^[a-z_]([a-z0-9_-]{0,31}|[a-z0-9_-]{0,30}\$)$
     // Copy from \auth\auth.inc.php
@@ -110,12 +159,110 @@ function is_valid_username(string $username): bool {
 }
 
 /**
+ * Converts a Slurm entity name (node, feature, partition, …) to a valid wiki URL segment.
+ * Lowercases and replaces any sequence of non-alphanumeric characters with a hyphen.
+ *
+ * @param string $name Slurm entity name to convert.
+ * @return string Lowercase hyphenated URL segment suitable for wiki page URLs.
+ */
+function canonical_wiki_segment(string $name): string {
+    return trim(preg_replace('/[^a-z0-9_]+/', '-', strtolower($name)), '-');
+}
+
+/**
+ * Wraps $innerHtml in a wiki link if a page or alias exists at $wikiUrl.
+ * Falls back to alias resolution before giving up.
+ *
+ * @param string $wikiUrl   Wiki page URL to look up (e.g. 'node/gpu01').
+ * @param string $innerHtml Already-escaped HTML content to wrap in the link.
+ * @return string $innerHtml wrapped in an <a> tag, or $innerHtml unchanged if the wiki is
+ *                disabled or neither a page nor an alias exists at $wikiUrl.
+ */
+function auto_link_if_exists(string $wikiUrl, string $innerHtml): string {
+    if (!class_exists('\wiki\WikiDatabase', FALSE)) {
+        return $innerHtml;
+    }
+    $db = \wiki\WikiDatabase::getInstance();
+    if ($db === NULL) {
+        return $innerHtml;
+    }
+    if ($db->pageExists($wikiUrl)) {
+        return '<a href="?action=wiki&amp;url=' . urlencode($wikiUrl) . '" class="wiki-auto-link">'
+             . $innerHtml . '</a>';
+    }
+    $alias = $db->getAlias($wikiUrl);
+    if ($alias !== NULL) {
+        $href = '?action=wiki&amp;url=' . urlencode($alias['target_url']);
+        if ($alias['anchor'] !== '') {
+            $href .= '#' . htmlspecialchars($alias['anchor'], ENT_QUOTES, 'UTF-8');
+        }
+        return '<a href="' . $href . '" class="wiki-auto-link">'
+             . $innerHtml . '</a>';
+    }
+    return $innerHtml;
+}
+
+/**
+ * @param string $innerHtml   Already-escaped HTML content to wrap in the link.
+ * @param string $featureName Slurm feature name used to derive the wiki URL (feature/<segment>).
+ * @return string $innerHtml wrapped in a wiki link, or unchanged if no page/alias exists.
+ */
+function auto_link_feature(string $innerHtml, string $featureName): string {
+    return auto_link_if_exists('feature/' . canonical_wiki_segment($featureName), $innerHtml);
+}
+
+/**
+ * @param string $innerHtml Already-escaped HTML content to wrap in the link.
+ * @param string $nodeName  Slurm node name used to derive the wiki URL (node/<segment>).
+ * @return string $innerHtml wrapped in a wiki link, or unchanged if no page/alias exists.
+ */
+function auto_link_node(string $innerHtml, string $nodeName): string {
+    return auto_link_if_exists('node/' . canonical_wiki_segment($nodeName), $innerHtml);
+}
+
+/**
+ * @param string $innerHtml     Already-escaped HTML content to wrap in the link.
+ * @param string $partitionName Slurm partition name used to derive the wiki URL (partition/<segment>).
+ * @return string $innerHtml wrapped in a wiki link, or unchanged if no page/alias exists.
+ */
+function auto_link_partition(string $innerHtml, string $partitionName): string {
+    return auto_link_if_exists('partition/' . canonical_wiki_segment($partitionName), $innerHtml);
+}
+
+/**
+ * @param string $innerHtml   Already-escaped HTML content to wrap in the link.
+ * @param string $accountName Slurm account name used to derive the wiki URL (account/<segment>).
+ * @return string $innerHtml wrapped in a wiki link, or unchanged if no page/alias exists.
+ */
+function auto_link_account(string $innerHtml, string $accountName): string {
+    return auto_link_if_exists('account/' . canonical_wiki_segment($accountName), $innerHtml);
+}
+
+/**
+ * Splits a comma-separated list, auto-links each entry via $linker, and rejoins with ', '.
+ *
+ * @param string   $csv    Comma-separated raw (unescaped) values.
+ * @param callable $linker Callback with signature function(string $innerHtml, string $raw): string.
+ * @return string Comma-separated HTML string with each entry passed through $linker.
+ */
+function auto_link_csv(string $csv, callable $linker): string {
+    return implode(', ', array_map(
+        fn($item) => $linker(htmlspecialchars($item, ENT_QUOTES, 'UTF-8'), $item),
+        explode(',', $csv)
+    ));
+}
+
+/**
  * Checks whether a node name is contained in a Slurm nodelist string.
  * Handles comma-separated lists and bracket range notation (e.g. node[01-05,08]).
+ *
+ * @param string $node     Single node name to search for.
+ * @param string $nodelist Slurm nodelist expression to search in.
+ * @return bool TRUE if $node is part of $nodelist, FALSE otherwise.
  */
 function node_is_in_nodelist(string $node, string $nodelist): bool {
-    if ($nodelist === '' || $nodelist === '?') return false;
-    if ($node === $nodelist) return true;
+    if ($nodelist === '' || $nodelist === '?') return FALSE;
+    if ($node === $nodelist) return TRUE;
 
     foreach (_split_nodelist($nodelist) as $part) {
         if (preg_match('/^(.+?)\[(.+)\]$/', $part, $m)) {
@@ -125,19 +272,24 @@ function node_is_in_nodelist(string $node, string $nodelist): bool {
             foreach (explode(',', $m[2]) as $range) {
                 if (str_contains($range, '-')) {
                     [$lo, $hi] = explode('-', $range, 2);
-                    if ((int)$suffix >= (int)$lo && (int)$suffix <= (int)$hi) return true;
+                    if ((int)$suffix >= (int)$lo && (int)$suffix <= (int)$hi) return TRUE;
                 } elseif ($range === $suffix) {
-                    return true;
+                    return TRUE;
                 }
             }
         } elseif ($part === $node) {
-            return true;
+            return TRUE;
         }
     }
-    return false;
+    return FALSE;
 }
 
-/** Splits a Slurm nodelist on top-level commas (skipping commas inside brackets). */
+/**
+ * Splits a Slurm nodelist on top-level commas (skipping commas inside brackets).
+ *
+ * @param string $nodelist Slurm nodelist expression to split.
+ * @return string[] Array of individual nodelist tokens.
+ */
 function _split_nodelist(string $nodelist): array {
     $parts = [];
     $depth = 0;

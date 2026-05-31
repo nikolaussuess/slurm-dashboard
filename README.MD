@@ -38,6 +38,7 @@ However, any slurm version `>= 23.11.x` should work. If you encounter any issues
 ![Job history](./imgs/job_history.png?raw=true "Job history")
 
 ### Planned features
+- Wiki feature to add useful information about features, nodes and so on (see branch [feature-wiki](https://github.com/nikolaussuess/slurm-dashboard/tree/feature-wiki)).
 #### Currently not under active development
 - Allow admins to add users via the web interface.
 - Allow admins to add advanced reservations and maintenances via the web interface.

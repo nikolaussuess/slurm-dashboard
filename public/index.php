@@ -128,7 +128,7 @@ if( isset($_SESSION['USER']) ){
             $job_id_view = (int)$_GET['job_id'];
 
             # SLURM QUEUE information
-            $contents .= "<h2>Job " . $job_id_view . "</h2>";
+            // Title will also set <h1>
             $title = 'Job ' . $job_id_view;
             $query = $dao->get_job($job_id_view);
             if( $query == NULL ){

@@ -164,3 +164,173 @@ button, input, select {
 .tooltip-inner {
     text-align: left;
 }
+
+.nodes-cell {
+    word-break: break-word;
+    max-width: 220px;
+}
+
+/* --- Active filter chip bar --- */
+
+.active-filter-chips {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 12px;
+}
+
+.filter-chips-label {
+    font-weight: 600;
+}
+
+.filter-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    background-color: #e9ecef;
+    border: 1px solid #ced4da;
+    border-radius: 20px;
+    padding: 3px 10px;
+    font-size: 0.85rem;
+}
+
+/* Added by JS — not visible without JS */
+.filter-chip-remove {
+    background: none;
+    border: none;
+    padding: 0 2px;
+    cursor: pointer;
+    font-size: 1rem;
+    line-height: 1;
+    color: #6c757d;
+}
+
+.filter-chip-remove:hover {
+    color: #dc3545;
+}
+
+/* --- Searchable multi-select widget (multiselect.js) --- */
+
+.ms-widget {
+    position: relative;
+    width: 100%;
+    font-size: 1rem; /* match native <select> which gets 1rem via button/input/select rule */
+}
+
+/* Mimics a form-control input box; contains chips + search field. */
+.ms-control {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 4px;
+    cursor: text;
+    min-height: 44px;
+    padding: 4px 8px;
+    height: auto; /* override Bootstrap's fixed height */
+}
+
+.ms-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+}
+
+.ms-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background-color: #0d6efd;
+    color: #fff;
+    border-radius: 4px;
+    padding: 2px 6px;
+    font-size: 0.85rem;
+    white-space: nowrap;
+}
+
+.ms-chip-remove {
+    background: none;
+    border: none;
+    color: #fff;
+    cursor: pointer;
+    padding: 0 2px;
+    font-size: 1rem;
+    line-height: 1;
+}
+
+.ms-search {
+    flex: 1;
+    min-width: 80px;
+    border: none;
+    outline: none;
+    padding: 2px 4px;
+    font-size: 1rem;
+    background: transparent;
+}
+
+/* Dropdown panel */
+.ms-dropdown {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    z-index: 1050;
+    background: #fff;
+    border: 1px solid #dee2e6;
+    border-radius: 4px;
+    max-height: 220px;
+    overflow-y: auto;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+    font-size: 1rem;
+}
+
+.ms-dropdown.ms-open {
+    display: block;
+}
+
+.ms-options {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.ms-option {
+    padding: 8px 12px;
+    cursor: pointer;
+}
+
+.ms-option:hover {
+    background-color: #f0f4ff;
+}
+
+/* Highlight already-selected items in the dropdown. */
+.ms-option.ms-selected {
+    background-color: #cfe2ff;
+    font-weight: 600;
+}
+
+.ms-option.ms-selected:hover {
+    background-color: #b6d4fe;
+}
+
+.ms-option.ms-no-results {
+    color: #6c757d;
+    cursor: default;
+    font-style: italic;
+}
+
+.ms-optgroup-label {
+    padding: 6px 12px 2px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: #6c757d;
+    cursor: default;
+    letter-spacing: 0.05em;
+}
+
+.ms-option.ms-disabled {
+    color: #adb5bd;
+    cursor: default;
+}

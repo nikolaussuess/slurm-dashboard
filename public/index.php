@@ -191,11 +191,12 @@ if( isset($_SESSION['USER']) ){
             $accounts = $dao->get_account_list();
             $users = $dao->get_users_list();
             $nodes = $dao->getNodeList();
+            $partitions = $dao->get_partition_list();
 
-            $contents .= \view\actions\get_slurmdb_filter_form($filter, $accounts, $users, $nodes);
+            $contents .= \view\actions\get_slurmdb_filter_form($filter, $accounts, $users, $nodes, $partitions);
 
             $jobs = $dao->get_jobs_from_slurmdb($filter);
-            $contents .= \view\actions\get_filtered_jobs_from_slurmdb($jobs);
+            $contents .= \view\actions\get_filtered_jobs_from_slurmdb($jobs, $filter);
 
             break;
 
@@ -538,6 +539,7 @@ if( isset($_SESSION['USER']) ){
     </script>
 
     <link rel="stylesheet" href="/style.css" crossorigin="anonymous">
+    <script src="/multiselect.js"></script>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
 </head>
 <body>

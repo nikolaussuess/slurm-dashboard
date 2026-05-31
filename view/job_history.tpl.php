@@ -10,17 +10,20 @@ use TemplateLoader;
  * Get options from the filter form.
  * @return array Array of filter options
  *
- * Filter options:
- * - cluster (CSV list)
- * - account (CSV list)
- * - job_name (CSV list)
- * - constraints (CSV list)
- * - exit_code (numeric)
- * - partition (CSV list)
- * - state (CSV state list)
- * - end_time (UNIX timestamp)
- * - node (node string)
- * - users (CSV user list)
+ * Filter options (passed to the API):
+ * - account        (array of strings)
+ * - users          (array of strings)
+ * - partition      (array of strings)
+ * - node           (array of strings)
+ * - state          (array of strings, validated against known Slurm states)
+ * - job_name       (string)
+ * - constraints    (string)
+ * - start_time     (int, UNIX timestamp)
+ * - end_time       (int, UNIX timestamp)
+ *
+ * Other indices:
+ * - start_time_value (string, raw datetime string for form repopulation)
+ * - end_time_value   (string, raw datetime string for form repopulation)
  */
 function get_slurmdb_filter_form_evaluation() : array {
     // BEGIN evaluate filter form
@@ -54,19 +57,24 @@ function get_slurmdb_filter_form_evaluation() : array {
             }
         }
 
-        $user = $_POST['form_user'] ?? '';
-        if($user != ''){
-            $filter['users'] = $user;
+        $user = array_filter(array_map('trim', $_POST['form_user'] ?? []));
+        if (!empty($user)) {
+            $filter['users'] = array_values($user);
         }
 
-        $account = $_POST['form_account'] ?? '';
-        if($account != ''){
-            $filter['account'] = $account;
+        $account = array_filter(array_map('trim', $_POST['form_account'] ?? []));
+        if (!empty($account)) {
+            $filter['account'] = array_values($account);
         }
 
-        $node = $_POST['form_nodename'] ?? '';
-        if($node != ''){
-            $filter['node'] = $node;
+        $partition = array_filter(array_map('trim', $_POST['form_partition'] ?? []));
+        if (!empty($partition)) {
+            $filter['partition'] = array_values($partition);
+        }
+
+        $node = array_filter(array_map('trim', $_POST['form_nodename'] ?? []));
+        if (!empty($node)) {
+            $filter['node'] = array_values($node);
         }
 
         $job_name = $_POST['form_job_name'] ?? '';
@@ -79,7 +87,6 @@ function get_slurmdb_filter_form_evaluation() : array {
             $filter['constraints'] = $constraints;
         }
 
-        $state = $_POST['form_state'] ?? '';
         $valid_states = [
             'BOOT_FAIL', 'CANCELLED', 'DEADLINE', 'FAILED', 'NODE_FAIL',
             'OUT_OF_MEMORY', 'STOPPED', 'TIMEOUT', 'COMPLETED', 'COMPLETING',
@@ -87,7 +94,8 @@ function get_slurmdb_filter_form_evaluation() : array {
             'REQUEUED', 'RESV_DEL_HOLD', 'REQUEUE_FED', 'REQUEUE_HOLD',
             'RESIZING', 'REVOKED', 'SPECIAL_EXIT', 'STAGE_OUT',
         ];
-        if(in_array($state, $valid_states, true)){
+        $state = array_values(array_filter($_POST['form_state'] ?? [], fn($s) => in_array($s, $valid_states, TRUE)));
+        if (!empty($state)) {
             $filter['state'] = $state;
         }
     }
@@ -97,65 +105,97 @@ function get_slurmdb_filter_form_evaluation() : array {
 }
 
 
-function get_slurmdb_filter_form(array $filter, array $accounts, array $users, array $nodes) : string {
+function get_slurmdb_filter_form(array $filter, array $accounts, array $users, array $nodes, array $partitions) : string {
 
     // Accounts field
+    $selected_accounts = array_flip($filter['account'] ?? []);
     $account_list = '';
-    $selected = FALSE;
-    foreach ($accounts as $account){
+    foreach ($accounts as $account) {
+        if ($account === 'root') continue;
         $account_e = htmlspecialchars($account, ENT_QUOTES, 'UTF-8');
-        if(isset($filter['account']) && $filter['account'] == $account) {
-            $account_list .= '<option value="' . $account_e . '" selected>' . $account_e . '</option>';
-            $selected = TRUE;
-        }
-        else {
-            $account_list .= '<option value="' . $account_e . '">'. $account_e . '</option>';
-        }
+        $sel = isset($selected_accounts[$account]) ? ' selected' : '';
+        $account_list .= '<option value="' . $account_e . '"' . $sel . '>' . $account_e . '</option>';
     }
-    if(! $selected)
-        $account_list = '<option selected></option>' . $account_list;
-    else
-        $account_list = '<option></option>' . $account_list;
 
     // Users field
+    $selected_users = array_flip($filter['users'] ?? []);
     $users_list = '';
-    $selected = FALSE;
-    foreach ($users as $user){
+    foreach ($users as $user) {
+        if ($user === 'root') continue;
         $user_e = htmlspecialchars($user, ENT_QUOTES, 'UTF-8');
-        if(isset($filter['users']) && $filter['users'] == $user) {
-            $users_list .= '<option value="' . $user_e . '" selected>'. $user_e . '</option>';
-            $selected = TRUE;
-        }
-        else {
-            $users_list .= '<option value="' . $user_e . '">'. $user_e . '</option>';
-        }
+        $sel = isset($selected_users[$user]) ? ' selected' : '';
+        $users_list .= '<option value="' . $user_e . '"' . $sel . '>' . $user_e . '</option>';
     }
-    if(! $selected)
-        $users_list = '<option selected></option>' . $users_list;
-    else
-        $users_list = '<option></option>' . $users_list;
+
+    // Partitions field
+    $selected_partitions = array_flip($filter['partition'] ?? []);
+    $partition_list = '';
+    foreach ($partitions as $partition) {
+        $partition_e = htmlspecialchars($partition, ENT_QUOTES, 'UTF-8');
+        $sel = isset($selected_partitions[$partition]) ? ' selected' : '';
+        $partition_list .= '<option value="' . $partition_e . '"' . $sel . '>' . $partition_e . '</option>';
+    }
 
     // Nodes field
+    $selected_nodes = array_flip($filter['node'] ?? []);
     $node_list = '';
-    $selected = FALSE;
-    foreach ($nodes as $node){
+    foreach ($nodes as $node) {
         $node_e = htmlspecialchars($node, ENT_QUOTES, 'UTF-8');
-        if(isset($filter['node']) && $filter['node'] == $node) {
-            $node_list .= '<option value="' . $node_e . '" selected>' . $node_e . '</option>';
-            $selected = TRUE;
-        }
-        else {
-            $node_list .= '<option value="' . $node_e . '">'. $node_e . '</option>';
-        }
+        $sel = isset($selected_nodes[$node]) ? ' selected' : '';
+        $node_list .= '<option value="' . $node_e . '"' . $sel . '>' . $node_e . '</option>';
     }
-    if(! $selected)
-        $node_list = '<option selected></option>' . $node_list;
-    else
-        $node_list = '<option></option>' . $node_list;
+
+    // State field — options are hardcoded (well-known Slurm states).
+    $state_groups = [
+        'Fail states' => [
+            'BOOT_FAIL'     => FALSE,
+            'CANCELLED'     => FALSE,
+            'DEADLINE'      => FALSE,
+            'FAILED'        => FALSE,
+            'NODE_FAIL'     => FALSE,
+            'OUT_OF_MEMORY' => FALSE,
+            'STOPPED'       => FALSE,
+            'TIMEOUT'       => FALSE,
+            'RESV_DEL_HOLD' => TRUE,  // disabled
+        ],
+        'Success states' => [
+            'COMPLETED'  => FALSE,
+            'COMPLETING' => FALSE,
+            'CONFIGURING'=> FALSE,
+            'RUNNING'    => FALSE,
+        ],
+        'Other states' => [
+            'PENDING'      => FALSE,
+            'PREEMPTED'    => FALSE,
+            'SUSPENDED'    => FALSE,
+            'REQUEUED'     => FALSE,
+            'REQUEUE_FED'  => TRUE,
+            'REQUEUE_HOLD' => TRUE,
+            'RESIZING'     => TRUE,
+            'REVOKED'      => TRUE,
+            'SIGNALING'    => TRUE,
+            'SPECIAL_EXIT' => TRUE,
+            'STAGE_OUT'    => TRUE,
+        ],
+    ];
+    $selected_states = array_flip($filter['state'] ?? []);
+    $state_list = '';
+    foreach ($state_groups as $group_label => $states) {
+        $group_e = htmlspecialchars($group_label, ENT_QUOTES, 'UTF-8');
+        $state_list .= '<optgroup label="' . $group_e . '">';
+        foreach ($states as $val => $disabled) {
+            $val_e = htmlspecialchars($val, ENT_QUOTES, 'UTF-8');
+            $sel = isset($selected_states[$val]) ? ' selected' : '';
+            $dis = $disabled ? ' disabled' : '';
+            $state_list .= '<option value="' . $val_e . '"' . $sel . $dis . '>' . $val_e . '</option>';
+        }
+        $state_list .= '</optgroup>';
+    }
 
     $templateBuilder = new TemplateLoader("job_filter_form.html");
-    $templateBuilder->setParam("CLUSTER", config("CLUSTER_NAME"));
     $templateBuilder->setParam("ACCOUNT_SELECTS", $account_list);
+    $templateBuilder->setParam("PARTITION_SELECTS", $partition_list);
+    $templateBuilder->setParam("STATE_SELECTS", $state_list);
     $templateBuilder->setParam("JOB_NAME", htmlspecialchars($filter['job_name'] ?? '', ENT_QUOTES, 'UTF-8'));
     $templateBuilder->setParam("CONSTRAINTS", htmlspecialchars($filter['constraints'] ?? '', ENT_QUOTES, 'UTF-8'));
     $templateBuilder->setParam("USER_SELECTS", $users_list);
@@ -167,8 +207,43 @@ function get_slurmdb_filter_form(array $filter, array $accounts, array $users, a
 }
 
 
-function get_filtered_jobs_from_slurmdb(array $jobs) : string {
-    $contents = '<div>Found <span style="font-weight: bold">' . count($jobs) . ' jobs</span>.</div>';
+function get_filtered_jobs_from_slurmdb(array $jobs, array $filter = []) : string {
+    // Active filter chips — JS adds the × removal buttons.
+    $chip_configs = [
+        // filter key => [display label, form field name, is multi-select]
+        'account'     => ['Account',      'form_account',    TRUE],
+        'users'       => ['User',         'form_user',       TRUE],
+        'partition'   => ['Partition',    'form_partition',  TRUE],
+        'node'        => ['Node',         'form_nodename',   TRUE],
+        'state'       => ['State',        'form_state',      TRUE],
+        'job_name'    => ['Job name',     'form_job_name',   FALSE],
+        'constraints' => ['Constraints',  'form_constraints',FALSE],
+    ];
+    $chips = '';
+    foreach ($chip_configs as $key => [$label, $field, $multi]) {
+        if (!isset($filter[$key])) continue;
+        foreach (($multi ? $filter[$key] : [$filter[$key]]) as $val) {
+            $val_e   = htmlspecialchars($val,   ENT_QUOTES, 'UTF-8');
+            $field_e = htmlspecialchars($multi ? $field . '[]' : $field, ENT_QUOTES, 'UTF-8');
+            $label_e = htmlspecialchars($label, ENT_QUOTES, 'UTF-8');
+            $chips .= '<span class="filter-chip" data-field="' . $field_e . '" data-value="' . $val_e . '">'
+                    . $label_e . ': <strong>' . $val_e . '</strong></span>';
+        }
+    }
+    if (isset($filter['start_time_value'])) {
+        $val_e  = htmlspecialchars($filter['start_time_value'], ENT_QUOTES, 'UTF-8');
+        $chips .= '<span class="filter-chip" data-field="form_time_min" data-value="">From: <strong>' . $val_e . '</strong></span>';
+    }
+    if (isset($filter['end_time_value'])) {
+        $val_e  = htmlspecialchars($filter['end_time_value'], ENT_QUOTES, 'UTF-8');
+        $chips .= '<span class="filter-chip" data-field="form_time_max" data-value="">To: <strong>' . $val_e . '</strong></span>';
+    }
+
+    $contents = $chips !== ''
+        ? '<div class="active-filter-chips"><span class="filter-chips-label">Active filters:</span> ' . $chips . '</div>'
+        : '';
+
+    $contents .= '<div>Found <span style="font-weight: bold">' . count($jobs) . ' jobs</span>.</div>';
 
     $contents .= <<<EOF
 <div id="jobtable-table" class="table-responsive tableFixHead">
@@ -191,6 +266,8 @@ function get_filtered_jobs_from_slurmdb(array $jobs) : string {
         <tbody>
 EOF;
 
+    $active_states = ['PENDING', 'RUNNING', 'COMPLETING', 'CONFIGURING', 'SUSPENDED', 'REQUEUED'];
+
     foreach( $jobs as $job ) {
 
         $contents .= "<tr>";
@@ -206,9 +283,42 @@ EOF;
         $contents .=    "<td>" . $job['time_elapsed'] . "</td>";
         $contents .=    "<td>" . $job['time_limit'] . "</td>";
 
-        $contents .=    "<td>" . htmlspecialchars($job['nodes'], ENT_QUOTES, 'UTF-8') . "</td>";
-        $contents .=    '<td><a href="?action=job&job_id=' . $job['job_id'] . '">[Details]</a></td>';
+        // Zero-width spaces after commas let the browser wrap at natural break points
+        // without adding visible characters (works for both "a,b,c" and "n[1-5,8]").
+        $nodes_e = str_replace(',', ',&#8203;', htmlspecialchars($job['nodes'], ENT_QUOTES, 'UTF-8'));
+        $contents .=    "<td class='nodes-cell'>" . $nodes_e . "</td>";
 
+        $contents .= '<td><div class="btn-group">';
+        $contents .= '<a href="?action=job&job_id=' . $job['job_id'] . '" class="btn btn-info" type="button">Details</a>';
+        $contents .= '<button type="button" class="btn btn-danger dropdown-toggle dropdown-toggle-split"'
+                   . ' data-bs-toggle="dropdown" aria-expanded="false">'
+                   . '<span class="visually-hidden">Toggle Dropdown</span></button>';
+
+        if (\client\utils\jwt\JwtAuthentication::is_supported() && !empty(array_intersect($job['job_state'], $active_states))) {
+            $contents .= '<ul class="dropdown-menu">'
+                       . '<li><a class="dropdown-item" href="?action=cancel-job&job_id=' . $job['job_id'] . '">Cancel job</a></li>'
+                       . '<li><a class="dropdown-item" href="?action=edit-job&job_id=' . $job['job_id'] . '">Edit job</a></li>'
+                       . '</ul>';
+        } elseif (!\client\utils\jwt\JwtAuthentication::is_supported()) {
+            $tooltip = 'This feature is not supported by the current configuration.';
+            $contents .= '<ul class="dropdown-menu"><li>'
+                       . '<span class="dropdown-item" data-bs-toggle="tooltip" data-bs-placement="right" title="' . $tooltip . '">'
+                       . '<a class="dropdown-item disabled" href="?action=cancel-job&job_id=' . $job['job_id'] . '" aria-disabled="true">Cancel job</a></span>'
+                       . '<span class="dropdown-item" data-bs-toggle="tooltip" data-bs-placement="right" title="' . $tooltip . '">'
+                       . '<a class="dropdown-item disabled" href="?action=edit-job&job_id=' . $job['job_id'] . '" aria-disabled="true">Edit job</a></span>'
+                       . '</li></ul>';
+        } else {
+            $tooltip = 'Job is no longer active.';
+            $contents .= '<ul class="dropdown-menu"><li>'
+                       . '<span class="dropdown-item" data-bs-toggle="tooltip" data-bs-placement="right" title="' . $tooltip . '">'
+                       . '<a class="dropdown-item disabled" href="?action=cancel-job&job_id=' . $job['job_id'] . '" aria-disabled="true">Cancel job</a></span>'
+                       . '<span class="dropdown-item" data-bs-toggle="tooltip" data-bs-placement="right" title="' . $tooltip . '">'
+                       . '<a class="dropdown-item disabled" href="?action=edit-job&job_id=' . $job['job_id'] . '" aria-disabled="true">Edit job</a></span>'
+                       . '</li></ul>';
+        }
+
+        $contents .= '</div></td>';
+        $contents .= '</tr>';
     }
     $contents .= <<<EOF
         </tbody>

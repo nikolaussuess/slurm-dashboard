@@ -69,6 +69,12 @@ interface Client{
     function get_account_list(): array;
 
     /**
+     * Query the partition list as a list of strings.
+     * @return array List of strings with the partition names.
+     */
+    function get_partition_list(): array;
+
+    /**
      * Returns the list of Users as an array of strings with the usernames.
      * @return array List of Users as an array of strings with the usernames.
      */

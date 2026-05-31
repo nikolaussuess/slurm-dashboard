@@ -6,7 +6,7 @@ use TemplateLoader;
 
 function get_slurm_jobinfo(array $query, string $transitive_dependencies = '') : string {
 
-    $contents = '<h3>Job queue information</h3>';
+    $contents = '<h2>Job queue information</h2>';
 
     $job_state_text = \utils\get_job_state_view($query);
     $user = htmlspecialchars($query['user_name'] . " (" . $query['user_id'] . ')', ENT_QUOTES, 'UTF-8');
@@ -62,7 +62,7 @@ function get_slurm_jobinfo(array $query, string $transitive_dependencies = '') :
 
 
 function get_slurmdb_jobinfo(array $query) : string {
-    $contents = '<h3>Slurmdb information</h3>';
+    $contents = '<h2>Slurmdb information</h2>';
 
     $job_state_text = \utils\get_job_state_view($query);
 

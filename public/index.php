@@ -154,7 +154,7 @@ if( isset($_SESSION['USER']) ){
             $job_id_view = (int)$_GET['job_id'];
 
             # SLURM QUEUE information
-            $contents .= "<h2>Job " . $job_id_view . "</h2>";
+            // Title will also set <h1>
             $title = 'Job ' . $job_id_view;
             $query = $dao->get_job($job_id_view);
             if( $query == NULL ){
@@ -217,11 +217,12 @@ if( isset($_SESSION['USER']) ){
             $accounts = $dao->get_account_list();
             $users = $dao->get_users_list();
             $nodes = $dao->getNodeList();
+            $partitions = $dao->get_partition_list();
 
-            $contents .= \view\actions\get_slurmdb_filter_form($filter, $accounts, $users, $nodes);
+            $contents .= \view\actions\get_slurmdb_filter_form($filter, $accounts, $users, $nodes, $partitions);
 
             $jobs = $dao->get_jobs_from_slurmdb($filter);
-            $contents .= \view\actions\get_filtered_jobs_from_slurmdb($jobs);
+            $contents .= \view\actions\get_filtered_jobs_from_slurmdb($jobs, $filter);
 
             break;
 
@@ -873,6 +874,7 @@ if( isset($_SESSION['USER']) ){
     </script>
 
     <link rel="stylesheet" href="/style.css" crossorigin="anonymous">
+    <script src="/multiselect.js"></script>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
 </head>
 <body>

@@ -87,14 +87,7 @@ function get_slurmdb_filter_form_evaluation() : array {
             $filter['constraints'] = $constraints;
         }
 
-        $valid_states = [
-            'BOOT_FAIL', 'CANCELLED', 'DEADLINE', 'FAILED', 'NODE_FAIL',
-            'OUT_OF_MEMORY', 'STOPPED', 'TIMEOUT', 'COMPLETED', 'COMPLETING',
-            'CONFIGURING', 'RUNNING', 'PENDING', 'PREEMPTED', 'SUSPENDED',
-            'REQUEUED', 'RESV_DEL_HOLD', 'REQUEUE_FED', 'REQUEUE_HOLD',
-            'RESIZING', 'REVOKED', 'SPECIAL_EXIT', 'STAGE_OUT',
-        ];
-        $state = array_values(array_filter($_POST['form_state'] ?? [], fn($s) => in_array($s, $valid_states, TRUE)));
+        $state = array_values(array_filter($_POST['form_state'] ?? [], fn($s) => isset(\utils\SLURM_JOB_STATES[$s])));
         if (!empty($state)) {
             $filter['state'] = $state;
         }
@@ -145,49 +138,19 @@ function get_slurmdb_filter_form(array $filter, array $accounts, array $users, a
         $node_list .= '<option value="' . $node_e . '"' . $sel . '>' . $node_e . '</option>';
     }
 
-    // State field — options are hardcoded (well-known Slurm states).
-    $state_groups = [
-        'Fail states' => [
-            'BOOT_FAIL'     => FALSE,
-            'CANCELLED'     => FALSE,
-            'DEADLINE'      => FALSE,
-            'FAILED'        => FALSE,
-            'NODE_FAIL'     => FALSE,
-            'OUT_OF_MEMORY' => FALSE,
-            'STOPPED'       => FALSE,
-            'TIMEOUT'       => FALSE,
-            'RESV_DEL_HOLD' => TRUE,  // disabled
-        ],
-        'Success states' => [
-            'COMPLETED'  => FALSE,
-            'COMPLETING' => FALSE,
-            'CONFIGURING'=> FALSE,
-            'RUNNING'    => FALSE,
-        ],
-        'Other states' => [
-            'PENDING'      => FALSE,
-            'PREEMPTED'    => FALSE,
-            'SUSPENDED'    => FALSE,
-            'REQUEUED'     => FALSE,
-            'REQUEUE_FED'  => TRUE,
-            'REQUEUE_HOLD' => TRUE,
-            'RESIZING'     => TRUE,
-            'REVOKED'      => TRUE,
-            'SIGNALING'    => TRUE,
-            'SPECIAL_EXIT' => TRUE,
-            'STAGE_OUT'    => TRUE,
-        ],
-    ];
+    // State field — built from the authoritative SLURM_JOB_STATES constant.
     $selected_states = array_flip($filter['state'] ?? []);
     $state_list = '';
-    foreach ($state_groups as $group_label => $states) {
+    foreach (\utils\SLURM_JOB_STATE_GROUP_META as $group_label => $group_meta) {
         $group_e = htmlspecialchars($group_label, ENT_QUOTES, 'UTF-8');
         $state_list .= '<optgroup label="' . $group_e . '">';
-        foreach ($states as $val => $disabled) {
-            $val_e = htmlspecialchars($val, ENT_QUOTES, 'UTF-8');
-            $sel = isset($selected_states[$val]) ? ' selected' : '';
-            $dis = $disabled ? ' disabled' : '';
-            $state_list .= '<option value="' . $val_e . '"' . $sel . $dis . '>' . $val_e . '</option>';
+        foreach (\utils\SLURM_JOB_STATES as $val => $attrs) {
+            if ($attrs['group'] !== $group_label) continue;
+            $val_e     = htmlspecialchars($val, ENT_QUOTES, 'UTF-8');
+            $sel       = isset($selected_states[$val]) ? ' selected' : '';
+            $dis       = $attrs['disabled'] ? ' disabled' : '';
+            $cls_attr  = ' class="' . $group_meta['css_class'] . '"';
+            $state_list .= '<option value="' . $val_e . '"' . $sel . $dis . $cls_attr . '>' . $val_e . '</option>';
         }
         $state_list .= '</optgroup>';
     }
@@ -223,10 +186,14 @@ function get_filtered_jobs_from_slurmdb(array $jobs, array $filter = []) : strin
     foreach ($chip_configs as $key => [$label, $field, $multi]) {
         if (!isset($filter[$key])) continue;
         foreach (($multi ? $filter[$key] : [$filter[$key]]) as $val) {
-            $val_e   = htmlspecialchars($val,   ENT_QUOTES, 'UTF-8');
-            $field_e = htmlspecialchars($multi ? $field . '[]' : $field, ENT_QUOTES, 'UTF-8');
-            $label_e = htmlspecialchars($label, ENT_QUOTES, 'UTF-8');
-            $chips .= '<span class="filter-chip" data-field="' . $field_e . '" data-value="' . $val_e . '">'
+            $val_e      = htmlspecialchars($val,   ENT_QUOTES, 'UTF-8');
+            $field_e    = htmlspecialchars($multi ? $field . '[]' : $field, ENT_QUOTES, 'UTF-8');
+            $label_e    = htmlspecialchars($label, ENT_QUOTES, 'UTF-8');
+            $extra_class = '';
+            if ($key === 'state' && isset(\utils\SLURM_JOB_STATES[$val])) {
+                $extra_class = ' ' . \utils\SLURM_JOB_STATE_GROUP_META[\utils\SLURM_JOB_STATES[$val]['group']]['css_class'];
+            }
+            $chips .= '<span class="filter-chip' . $extra_class . '" data-field="' . $field_e . '" data-value="' . $val_e . '">'
                     . $label_e . ': <strong>' . $val_e . '</strong></span>';
         }
     }

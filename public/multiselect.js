@@ -82,7 +82,8 @@
                 const li = document.createElement('li');
                 li.className = 'ms-option'
                     + (opt.selected  ? ' ms-selected'  : '')
-                    + (opt.disabled  ? ' ms-disabled'  : '');
+                    + (opt.disabled  ? ' ms-disabled'  : '')
+                    + (opt.className ? ' ' + opt.className : '');
                 li.textContent = opt.text;
                 li.dataset.value = opt.value;
                 li.setAttribute('role', 'option');

@@ -8,6 +8,53 @@ namespace utils;
 
 use InvalidArgumentException;
 
+/**
+ * Metadata per state group (label, badge color, CSS class).
+ * Used together with SLURM_JOB_STATES to render optgroups and derive colors/classes.
+ */
+const SLURM_JOB_STATE_GROUP_META = [
+    'Fail states'    => ['color' => '#dc3545', 'css_class' => 'state-fail'],
+    'Success states' => ['color' => '#28a745', 'css_class' => 'state-success'],
+    'Other states'   => ['color' => '#ffc107', 'css_class' => 'state-other'],
+];
+
+/**
+ * Flat state → attribute map. Authoritative source for all state-related
+ * lookups. Color and CSS class are resolved via SLURM_JOB_STATE_GROUP_META.
+ * Used by get_job_state_view(), the filter form, and the active-filter chip bar.
+ *
+ * Structure: state name => [
+ *   'group'    => group label (matches a key in SLURM_JOB_STATE_GROUP_META),
+ *   'disabled' => bool (shown greyed-out in the filter dropdown),
+ * ]
+ */
+const SLURM_JOB_STATES = [
+    'BOOT_FAIL'     => ['group' => 'Fail states',    'disabled' => FALSE],
+    'CANCELLED'     => ['group' => 'Fail states',    'disabled' => FALSE],
+    'DEADLINE'      => ['group' => 'Fail states',    'disabled' => FALSE],
+    'FAILED'        => ['group' => 'Fail states',    'disabled' => FALSE],
+    'NODE_FAIL'     => ['group' => 'Fail states',    'disabled' => FALSE],
+    'OUT_OF_MEMORY' => ['group' => 'Fail states',    'disabled' => FALSE],
+    'STOPPED'       => ['group' => 'Fail states',    'disabled' => FALSE],
+    'TIMEOUT'       => ['group' => 'Fail states',    'disabled' => FALSE],
+    'RESV_DEL_HOLD' => ['group' => 'Fail states',    'disabled' => TRUE],
+    'COMPLETED'     => ['group' => 'Success states', 'disabled' => FALSE],
+    'COMPLETING'    => ['group' => 'Success states', 'disabled' => FALSE],
+    'CONFIGURING'   => ['group' => 'Success states', 'disabled' => FALSE],
+    'RUNNING'       => ['group' => 'Success states', 'disabled' => FALSE],
+    'PENDING'       => ['group' => 'Other states',   'disabled' => FALSE],
+    'PREEMPTED'     => ['group' => 'Other states',   'disabled' => FALSE],
+    'SUSPENDED'     => ['group' => 'Other states',   'disabled' => FALSE],
+    'REQUEUED'      => ['group' => 'Other states',   'disabled' => FALSE],
+    'REQUEUE_FED'   => ['group' => 'Other states',   'disabled' => TRUE],
+    'REQUEUE_HOLD'  => ['group' => 'Other states',   'disabled' => TRUE],
+    'RESIZING'      => ['group' => 'Other states',   'disabled' => TRUE],
+    'REVOKED'       => ['group' => 'Other states',   'disabled' => TRUE],
+    'SIGNALING'     => ['group' => 'Other states',   'disabled' => TRUE],
+    'SPECIAL_EXIT'  => ['group' => 'Other states',   'disabled' => TRUE],
+    'STAGE_OUT'     => ['group' => 'Other states',   'disabled' => TRUE],
+];
+
 function get_date_from_unix_if_defined(array $job_arr, string $param, string $default = 'undefined') : string {
     if(! isset($job_arr[$param])){
         return $default;
@@ -38,26 +85,8 @@ function get_job_state_view(array $job, string $param_name = 'job_state'): strin
 
     $job_state_text = '';
     foreach($job_state_array as $job_state) {
-        $state_color = "#ffc107"; # orange
-        if ($job_state == 'BOOT_FAIL' ||
-            $job_state == 'CANCELLED' ||
-            $job_state == 'DEADLINE' ||
-            $job_state == 'FAILED' ||
-            $job_state == 'NODE_FAIL' ||
-            $job_state == 'OUT_OF_MEMORY' ||
-            $job_state == 'STOPPED' ||
-            $job_state == 'TIMEOUT'
-        ) {
-            $state_color = "#dc3545"; # Red
-        } elseif (
-            $job_state == 'COMPLETED' ||
-            $job_state == 'CONFIGURING' ||
-            $job_state == 'COMPLETING' ||
-            $job_state == 'RUNNING'
-        ) {
-            $state_color = "#28a745"; # green
-        }
-
+        $group = SLURM_JOB_STATES[$job_state]['group'] ?? NULL;
+        $state_color = $group !== NULL ? SLURM_JOB_STATE_GROUP_META[$group]['color'] : '#ffc107';
         $job_state_text .= '<span class="badge" style="background-color: ' . $state_color . '">' . htmlspecialchars($job_state, ENT_QUOTES, 'UTF-8') . '</span> ';
     }
     return $job_state_text;

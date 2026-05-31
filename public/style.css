@@ -334,3 +334,22 @@ button, input, select {
     color: #adb5bd;
     cursor: default;
 }
+
+.filter-chip.state-fail    { background-color: #ffe4e4; border-color: #f5c6cb; }
+.filter-chip.state-success { background-color: #e4ffec; border-color: #b7e4c7; }
+.filter-chip.state-other   { background-color: #fff8d0; border-color: #ffe58f; }
+
+.ms-option.state-fail                        { background-color: #fff0f0; }
+.ms-option.state-fail:hover                  { background-color: #ffe4e4; }
+.ms-option.state-fail.ms-selected            { background-color: #ffe0e0; }
+.ms-option.state-fail.ms-selected:hover      { background-color: #ffd5d5; }
+
+.ms-option.state-success                     { background-color: #f0fff4; }
+.ms-option.state-success:hover               { background-color: #e4ffec; }
+.ms-option.state-success.ms-selected         { background-color: #dcffe8; }
+.ms-option.state-success.ms-selected:hover   { background-color: #d0ffde; }
+
+.ms-option.state-other                       { background-color: #fffde7; }
+.ms-option.state-other:hover                 { background-color: #fff8d0; }
+.ms-option.state-other.ms-selected           { background-color: #fff5c0; }
+.ms-option.state-other.ms-selected:hover     { background-color: #fff0b0; }

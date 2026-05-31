@@ -168,10 +168,12 @@ namespace auth {
 
     /**
      * Checks if the current user is an admin.
+     * @note This function also returns FALSE if the user is not logged in.
      * @return bool TRUE if the currently logged-in user is a SLURM admin, FALSE otherwise.
      */
     function current_user_is_admin() : bool {
         return
+            isset($_SESSION['USER']) &&
             isset($_SESSION['USER_OBJ']['users'][0]['administrator_level']) &&
             isset($_SESSION['USER_OBJ']['users'][0]['administrator_level'][0]) &&
             $_SESSION['USER_OBJ']['users'][0]['administrator_level'][0] == "Administrator";
@@ -180,10 +182,12 @@ namespace auth {
     /**
      * Check if the currently logged-in user has sufficient privileges to view sensitive information.
      * This is the case if he is either a SLURM admin, or in the array $privileged_users.
+     * @note This function also returns FALSE if the user is not logged in.
      * @return bool TRUE if the user is privileged, FALSE otherwise.
      */
     function current_user_is_privileged() : bool {
-        return current_user_is_admin() || in_array($_SESSION['USER'], config('PRIV_USERS'), TRUE);
+        return isset($_SESSION['USER']) &&
+               (current_user_is_admin() || in_array($_SESSION['USER'], config('PRIV_USERS'), TRUE));
     }
 
     function get_csrf_token(): string {

@@ -84,13 +84,26 @@ abstract class AbstractClient implements Client {
                 $query_string .= '&end_time=uts' . (int)$filter['end_time'];
             }
             if(isset($filter['users'])){
-                $query_string .= '&users=' . urlencode($filter['users']);
+                // Repeated parameters (users=a&users=b): slurmrestd uses array
+                // serialization here despite documenting a "CSV list".
+                foreach($filter['users'] as $u){
+                    $query_string .= '&users=' . urlencode($u);
+                }
             }
             if(isset($filter['account'])){
-                $query_string .= '&account=' . urlencode($filter['account']);
+                foreach($filter['account'] as $a){
+                    $query_string .= '&account=' . urlencode($a);
+                }
+            }
+            if(isset($filter['partition'])){
+                foreach($filter['partition'] as $p){
+                    $query_string .= '&partition=' . urlencode($p);
+                }
             }
             if(isset($filter['node'])){
-                $query_string .= '&node=' . urlencode($filter['node']);
+                foreach($filter['node'] as $n){
+                    $query_string .= '&node=' . urlencode($n);
+                }
             }
             if(isset($filter['job_name'])){
                 $query_string .= '&job_name=' . urlencode($filter['job_name']);
@@ -103,13 +116,9 @@ abstract class AbstractClient implements Client {
                  * Issue 12 specific code
                  * See https://github.com/nikolaussuess/slurm-dashboard/issues/12
                  */
-                if(
-                    $filter['state'] != 'COMPLETED' &&
-                    $filter['state'] != 'FAILED' &&
-                    $filter['state'] != 'TIMEOUT' &&
-                    $filter['state'] != 'OUT_OF_MEMORY'
-                ){
-                    $query_string .= '&state=' . urlencode($filter['state']);
+                $broken = ['COMPLETED', 'FAILED', 'TIMEOUT', 'OUT_OF_MEMORY'];
+                if(count($filter['state']) === 1 && !in_array($filter['state'][0], $broken, TRUE)){
+                    $query_string .= '&state=' . urlencode($filter['state'][0]);
                 }
                 // ORIGINAL CODE:
                 // $query_string .= '&state=' . $filter['state'];
@@ -124,25 +133,14 @@ abstract class AbstractClient implements Client {
         /*
          * Issue 12 specific code
          * See https://github.com/nikolaussuess/slurm-dashboard/issues/12
+         * RUNNING works on server side; COMPLETED/FAILED/TIMEOUT/OUT_OF_MEMORY do not.
+         * Multiple selected states are also always post-filtered here.
          */
-        // RUNNING works on server side
-        // COMPLETED does not
-        if(isset($filter['state']) && $filter['state'] == 'COMPLETED'){
-            $jobs_array = $this->_issue12_bugfix_post_request_filtering($json['jobs'], 'COMPLETED');
-            $json['jobs'] = $jobs_array;
-        }
-        // FAILED does not
-        elseif(isset($filter['state']) && $filter['state'] == 'FAILED'){
-            $jobs_array = $this->_issue12_bugfix_post_request_filtering($json['jobs'], 'FAILED');
-            $json['jobs'] = $jobs_array;
-        }
-        elseif(isset($filter['state']) && $filter['state'] == 'TIMEOUT'){
-            $jobs_array = $this->_issue12_bugfix_post_request_filtering($json['jobs'], 'TIMEOUT');
-            $json['jobs'] = $jobs_array;
-        }
-        elseif(isset($filter['state']) && $filter['state'] == 'OUT_OF_MEMORY'){
-            $jobs_array = $this->_issue12_bugfix_post_request_filtering($json['jobs'], 'OUT_OF_MEMORY');
-            $json['jobs'] = $jobs_array;
+        if(isset($filter['state'])){
+            $broken = ['COMPLETED', 'FAILED', 'TIMEOUT', 'OUT_OF_MEMORY'];
+            if(count($filter['state']) > 1 || in_array($filter['state'][0], $broken, TRUE)){
+                $json['jobs'] = $this->_issue12_bugfix_post_request_filtering($json['jobs'], $filter['state']);
+            }
         }
         // END Issue 12
 
@@ -158,7 +156,7 @@ abstract class AbstractClient implements Client {
                 'user_name'  => $json_job['user'],
                 'account'    => $json_job['account'],
                 'partition'  => $json_job['partition'],
-                'time_limit' => $this->_get_timelimit_if_defined($json_job['time'], 'limit', 'inf'),
+                'time_limit' => $this->_get_timelimit_if_defined($json_job['time'], 'limit', 'infinite'),
                 'time_start' => $this->_get_date_from_unix($json_job['time'], 'start'),
                 'time_elapsed' => $this->_get_elapsed_time($json_job['time']),
                 'nodes'      => $json_job['nodes']
@@ -173,6 +171,12 @@ abstract class AbstractClient implements Client {
         # curl --unix-socket /run/slurmrestd/slurmrestd.socket http://slurm/slurmdb/v0.0.40/accounts
         $json = RequestFactory::newRequest()->request_json("accounts", 'slurmdb', static::api_version, 3600);
         return array_column($json['accounts'], 'name');
+    }
+
+    function get_partition_list(): array {
+        # curl --unix-socket /run/slurmrestd/slurmrestd.socket http://slurm/slurm/v0.0.43/partitions
+        $json = RequestFactory::newRequest()->request_json("partitions", 'slurm', static::api_version, 3600);
+        return array_column($json['partitions'], 'name');
     }
 
     function get_users_list(): array {
@@ -515,15 +519,17 @@ abstract class AbstractClient implements Client {
      * Filtering for completed jobs does not work in slurmdb. Thus, we do not filter for them at the
      * request, but we filter the response.
      * See https://github.com/nikolaussuess/slurm-dashboard/issues/12
+     * @param array $jobs Raw job array from slurmdb response.
+     * @param array $states List of state strings; a job matches if it has any of them.
+     * @return array Filtered job array (re-indexed).
      */
-    protected function _issue12_bugfix_post_request_filtering(array $array, string $value): array {
-        return array_filter($array, function ($v, $k) use($value) {
-            foreach($v['state']['current'] as $state){
-                if( $state == $value )
-                    return TRUE;
+    protected function _issue12_bugfix_post_request_filtering(array $jobs, array $states): array {
+        return array_values(array_filter($jobs, function($job) use ($states) {
+            foreach($job['state']['current'] as $s){
+                if(in_array($s, $states, TRUE)) return TRUE;
             }
             return FALSE;
-        }, ARRAY_FILTER_USE_BOTH);
+        }));
     }
 
     function get_running_jobs_summary(): array {

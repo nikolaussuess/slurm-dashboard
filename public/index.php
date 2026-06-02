@@ -1,6 +1,18 @@
 <?php
-#error_reporting(E_ALL);
-#ini_set('display_errors', '1');
+
+// Enables PHP warnings
+// Do NOT enable (i.e., set the DEBUG environment variable to 'yes') in productive setups!
+if( getenv('DEBUG') === 'yes' ) {
+    error_reporting(E_ALL);
+    ini_set('display_startup_errors', 1);
+    ini_set('display_errors', '1');
+    ini_set('log_errors', '1');
+}
+else {
+    ini_set('display_startup_errors', '0');
+    ini_set('display_errors', '0');
+}
+
 session_start();
 date_default_timezone_set('Europe/Vienna');
 // Nonce for CSP to allow secure inline JS.

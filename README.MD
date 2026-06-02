@@ -45,7 +45,7 @@ However, any slurm version `>= 23.11.x` should work. If you encounter any issues
 - Allow users to submit jobs via a web interface.
 
 ## Requirements
-- PHP (currently only tested with PHP 8.2)<br>
+- PHP (currently only tested with PHP 8.2 and 8.4)<br>
   including
   - `php-curl` for communicating with `slurmrestd` (**required**)
   - `php-apcu` for caching `slurmrestd` responses and rate-limiting logins (optional but **strongly recommended**; disable via `USE_CACHE=no` if not available)

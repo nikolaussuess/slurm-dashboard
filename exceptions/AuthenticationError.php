@@ -11,7 +11,7 @@ class AuthenticationError extends BaseError {
                                 $debug_info=NULL,
                                 $html_message=NULL,
                                 $code = 0,
-                                Throwable $previous = null){
+                                ?Throwable $previous = null){
         parent::__construct($message, $debug_info, $html_message, $code, $previous);
     }
 

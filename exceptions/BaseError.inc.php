@@ -14,7 +14,7 @@ abstract class BaseError extends Error {
                                 $debug_info=NULL,
                                 $html_message=NULL,
                                 $code = 0,
-                                Throwable $previous = null){
+                                ?Throwable $previous = null){
         parent::__construct($message, $code, $previous);
         if($html_message == NULL)
             $this->html_message = htmlspecialchars($message);

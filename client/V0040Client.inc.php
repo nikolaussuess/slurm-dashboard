@@ -56,6 +56,13 @@ class V0040Client extends AbstractClient {
         }
 
 
+        if (!array_key_exists('shares', $json) || !isset($json['shares']['shares'])) {
+            throw new \exceptions\RequestFailedException(
+                "Could not retrieve fairshare data. slurmctld may be down.",
+                "Response of GET /shares does not contain a 'shares' key. " . $this->_response_debug_info($json)
+            );
+        }
+
         $shares = [];
         foreach ($json['shares']['shares'] as $json_shares){
             // If a user name is given, we are not interested in the whole account hierarchy

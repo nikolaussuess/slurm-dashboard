@@ -28,14 +28,25 @@ abstract class AbstractClient implements Client {
     }
 
     function getNodeList(): array{
-        $request = RequestFactory::newRequest();
-        $json = $request->request_json("nodes", "slurm", static::api_version, 3600);
+        $json = RequestFactory::newRequest()->request_json("nodes", "slurm", static::api_version, 300);
+        if (!array_key_exists('nodes', $json) || empty($json['nodes'])) {
+            throw new RequestFailedException(
+                "Could not retrieve node list. slurmctld may be down.",
+                "Response of GET /nodes does not contain a 'nodes' key or array is empty. " . $this->_response_debug_info($json)
+            );
+        }
         return array_column($json['nodes'], 'name');
     }
 
     function get_jobs(?array $filter = NULL): array {
         # curl --unix-socket /run/slurmrestd/slurmrestd.socket http://slurm/slurm/v0.0.39/jobs
         $json = RequestFactory::newRequest()->request_json("jobs", 'slurm', static::api_version);
+        if (!array_key_exists('jobs', $json)) {
+            throw new RequestFailedException(
+                "Could not retrieve job list. slurmctld may be down.",
+                "Response of GET /jobs does not contain a 'jobs' key. " . $this->_response_debug_info($json)
+            );
+        }
 
         // Exclude partition p_low if parameter exclude_p_low=1
         if($filter != NULL){
@@ -129,6 +140,12 @@ abstract class AbstractClient implements Client {
         # curl --unix-socket /run/slurmrestd/slurmrestd.socket http://slurm/slurmdb/v0.0.40/jobs
         // FALSE: slurmdb/jobs responses can be very large, causing cache store to trigger an OOM fatal error.
         $json = RequestFactory::newRequest()->request_json("jobs" . $query_string, 'slurmdb', static::api_version, FALSE);
+        if (!array_key_exists('jobs', $json)) {
+            throw new RequestFailedException(
+                "Could not retrieve job list. slurmdbd may be down.",
+                "Response of GET /jobs does not contain a 'jobs' key. " . $this->_response_debug_info($json)
+            );
+        }
 
         /*
          * Issue 12 specific code
@@ -169,25 +186,48 @@ abstract class AbstractClient implements Client {
 
     function get_account_list(): array {
         # curl --unix-socket /run/slurmrestd/slurmrestd.socket http://slurm/slurmdb/v0.0.40/accounts
-        $json = RequestFactory::newRequest()->request_json("accounts", 'slurmdb', static::api_version, 3600);
+        $json = RequestFactory::newRequest()->request_json("accounts", 'slurmdb', static::api_version, 900);
+        // Accounts are not technically required by Slurm, so we silently ignore this possible error.
+        if (!array_key_exists('accounts', $json) || empty($json['accounts'])) {
+            log_msg("GET /accounts: 'accounts' key missing or empty (slurmdbd may be down). " . $this->_response_debug_info($json));
+            return [];
+        }
         return array_column($json['accounts'], 'name');
     }
 
     function get_partition_list(): array {
         # curl --unix-socket /run/slurmrestd/slurmrestd.socket http://slurm/slurm/v0.0.43/partitions
-        $json = RequestFactory::newRequest()->request_json("partitions", 'slurm', static::api_version, 3600);
+        $json = RequestFactory::newRequest()->request_json("partitions", 'slurm', static::api_version, 900);
+        if (!array_key_exists('partitions', $json) || empty($json['partitions'])) {
+            throw new RequestFailedException(
+                "Could not retrieve partition list. slurmctld may be down.",
+                "Response of GET /partitions does not contain a 'partitions' key or array is empty. " . $this->_response_debug_info($json)
+            );
+        }
         return array_column($json['partitions'], 'name');
     }
 
     function get_users_list(): array {
         # curl --unix-socket /run/slurmrestd/slurmrestd.socket http://slurm/slurmdb/v0.0.40/users
         $json = RequestFactory::newRequest()->request_json("users", 'slurmdb', static::api_version, 120);
+        if (!array_key_exists('users', $json) || empty($json['users'])) {
+            throw new RequestFailedException(
+                "Could not retrieve user list. slurmdbd may be down.",
+                "Response of GET /users does not contain a 'users' key or array is empty. " . $this->_response_debug_info($json)
+            );
+        }
         return array_column($json['users'], 'name');
     }
 
     function get_job(string $id) : ?array {
         # curl --unix-socket /run/slurmrestd/slurmrestd.socket http://slurm/slurm/v0.0.40/job/id
         $json = RequestFactory::newRequest()->request_json("job/".$id, 'slurm', static::api_version);
+        if (!array_key_exists('jobs', $json)) {
+            throw new RequestFailedException(
+                "Could not retrieve job $id. slurmctld may be down.",
+                "Response of GET /job/$id does not contain a 'jobs' key. " . $this->_response_debug_info($json)
+            );
+        }
 
         foreach ($json['jobs'] as $json_job){
 
@@ -237,6 +277,12 @@ abstract class AbstractClient implements Client {
     function get_job_from_slurmdb(int|string $id) : ?array {
         # curl --unix-socket /run/slurmrestd/slurmrestd.socket http://slurm/slurmdb/v0.0.39/job/id
         $json = RequestFactory::newRequest()->request_json("job/".$id, 'slurmdb', static::api_version);
+        if (!array_key_exists('jobs', $json)) {
+            throw new RequestFailedException(
+                "Could not retrieve job $id. slurmdbd may be down.",
+                "Response of GET /job/$id does not contain a 'jobs' key. " . $this->_response_debug_info($json)
+            );
+        }
 
         foreach ($json['jobs'] as $json_job){
 
@@ -285,6 +331,12 @@ abstract class AbstractClient implements Client {
     function get_users() : array {
         # curl --unix-socket /run/slurmrestd/slurmrestd.socket http://slurm/slurmdb/v0.0.40/users?with_assocs&with_deleted
         $json = RequestFactory::newRequest()->request_json("users?with_assocs&with_deleted", 'slurmdb', static::api_version);
+        if (!array_key_exists('users', $json) || empty($json['users'])) {
+            throw new RequestFailedException(
+                "Could not retrieve user list. slurmdbd may be down.",
+                "Response of GET /users does not contain a 'users' key or array is empty. " . $this->_response_debug_info($json)
+            );
+        }
         return $json['users'];
     }
 
@@ -293,22 +345,18 @@ abstract class AbstractClient implements Client {
         # curl --unix-socket /run/slurmrestd/slurmrestd.socket http://slurm/slurm/v0.0.39/node/nodename
         $json = RequestFactory::newRequest()->request_json("node/{$nodename}", 'slurm', static::api_version);
 
-        // For some reason, $json['nodes'] sometimes does not exist. This yields to a 500 Server Error.
-        // We need to debug it ...
         if( ! array_key_exists("nodes", $json) ){
             throw new MissingArrayKeyException(
-                "An implementation error occurred. Could not read response array.",
-                "Response of GET /node/$nodename does not contain a 'nodes' subarray. Has keys: " . implode(',', array_keys($json))
+                "Could not retrieve node information. slurmctld may be down.",
+                "Response of GET /node/$nodename does not contain a 'nodes' key. " . $this->_response_debug_info($json)
             );
         }
-        elseif( count($json['nodes']) === 0 ){
+        elseif( empty($json['nodes']) ){
             throw new MissingArrayKeyException(
-                "An implementation error occurred. Could not read response array.",
-                "Response of GET /node/$nodename does contain 'nodes' but the array is empty."
+                "Node '$nodename' not found in slurmctld response.",
+                "Response of GET /node/$nodename contains an empty 'nodes' array."
             );
         }
-        // End debug
-
         return array(
             'node_name'  => $nodename,
             'alloc_cpus' => $json["nodes"][0]["alloc_cpus"],
@@ -345,8 +393,10 @@ abstract class AbstractClient implements Client {
 
     function get_maintenances() : array {
         $raw_array = $this->get_reservations();
-        if($raw_array == NULL || !isset($raw_array['reservations']))
+        if($raw_array == NULL || !isset($raw_array['reservations'])) {
+            log_msg("GET /reservations: 'reservations' key missing. " . $this->_response_debug_info($raw_array ?? []));
             return array();
+        }
         return array_filter($raw_array['reservations'], function ($res){
             return isset($res['flags']) && in_array("MAINT", $res['flags']);
         });
@@ -354,6 +404,10 @@ abstract class AbstractClient implements Client {
 
     function cancel_job(string|int $job_id) : bool {
         $json = RequestFactory::newRequest()->request_delete("job/" . $job_id, 'slurm', static::api_version);
+        if (!empty($json['errors']))
+            log_msg("DELETE /job/$job_id: errors: " . json_encode($json['errors']));
+        if (!empty($json['warnings']))
+            log_msg("DELETE /job/$job_id: warnings: " . json_encode($json['warnings']));
         return !isset($json['errors']) || empty($json['errors']);
     }
 
@@ -374,6 +428,10 @@ abstract class AbstractClient implements Client {
 
         $json = RequestFactory::newRequest()
             ->request_post_json("job/" . $job_data['job_id'], 'slurm', static::api_version, $job_data);
+        if (!empty($json['errors']))
+            log_msg("POST /job/{$job_data['job_id']}: errors: " . json_encode($json['errors']));
+        if (!empty($json['warnings']))
+            log_msg("POST /job/{$job_data['job_id']}: warnings: " . json_encode($json['warnings']));
         \utils\show_errors($json);
         return !isset($json['errors']) || empty($json['errors']);
     }
@@ -392,10 +450,23 @@ abstract class AbstractClient implements Client {
 
         $json = RequestFactory::newRequest()
             ->request_post_json("node/" . $nodename, 'slurm', static::api_version, $data);
+        if (!empty($json['errors']))
+            log_msg("POST /node/$nodename: errors: " . json_encode($json['errors']));
+        if (!empty($json['warnings']))
+            log_msg("POST /node/$nodename: warnings: " . json_encode($json['warnings']));
         \utils\show_errors($json);
         return !isset($json['errors']) || empty($json['errors']);
     }
 
+
+    protected function _response_debug_info(array $json): string {
+        $parts = [];
+        if (!empty($json['errors']))
+            $parts[] = "errors: " . json_encode($json['errors']);
+        if (!empty($json['warnings']))
+            $parts[] = "warnings: " . json_encode($json['warnings']);
+        return empty($parts) ? "Has keys: " . implode(',', array_keys($json)) : implode('; ', $parts);
+    }
 
     protected function _get_number_if_defined(array $arr, string $default = 'undefined') : string {
         if($arr['set'])
@@ -503,7 +574,7 @@ abstract class AbstractClient implements Client {
         }
 
         if(isset($job_arr['exit_code']['return_code'])){
-            if(isset($job_arr['exit_code']['signal']) && isset($job_arr['exit_code']['signal']['name']) && $job_arr['exit_code']['signal']['id']['set'])
+            if(isset($job_arr['exit_code']['signal']) && isset($job_arr['exit_code']['signal']['name']) && isset($job_arr['exit_code']['signal']['id']['set']) && $job_arr['exit_code']['signal']['id']['set'])
                 return $this->_get_number_if_defined($job_arr['exit_code']['return_code']) . " with Signal " . $job_arr['exit_code']['signal']['name'] . ' (' . $job_arr['exit_code']['signal']['id']['number'] . ')';
             else
                 return $this->_get_number_if_defined($job_arr['exit_code']['return_code']);
@@ -534,6 +605,12 @@ abstract class AbstractClient implements Client {
 
     function get_running_jobs_summary(): array {
         $json = RequestFactory::newRequest()->request_json("jobs", 'slurm', static::api_version);
+        if (!array_key_exists('jobs', $json)) {
+            throw new RequestFailedException(
+                "Could not retrieve job list. slurmctld may be down.",
+                "Response of GET /jobs does not contain a 'jobs' key. " . $this->_response_debug_info($json)
+            );
+        }
 
         $result = [];
         foreach ($json['jobs'] as $json_job) {

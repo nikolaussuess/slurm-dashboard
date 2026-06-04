@@ -74,6 +74,9 @@ if(!isset($_SESSION['USER'])) {
         elseif (!isset($_POST['csrf_token']) || !\auth\validate_csrf_token($_POST['csrf_token'])) {
             http_response_code(403);
             addError("Invalid request (CSRF token mismatch).");
+            $safe_username = \auth\validate_username($_POST['username']) ? $_POST['username'] : '(invalid username)';
+            log_msg("CSRF token mismatch on action 'login' for '$safe_username' from " . ($_SERVER['REMOTE_ADDR'] ?? 'unknown'),
+                LOG_NOTICE, LOG_MODE_PHP|LOG_MODE_SYSLOG);
         }
         else {
             $username = $_POST['username'];
@@ -201,9 +204,25 @@ if( isset($_SESSION['USER']) ){
             $title = 'Job history';
 
             $accounts = $dao->get_account_list();
-            $users = $dao->get_users_list();
-            $nodes = $dao->getNodeList();
-            $partitions = $dao->get_partition_list();
+            try {
+                $users = $dao->get_users_list();
+            } catch (\exceptions\RequestFailedException $e) {
+                $users = [];
+                addError($e->get_html_message());
+            }
+            // Node list is only used for the filter dropdown; degrade gracefully if slurmctld is down.
+            try {
+                $nodes = $dao->getNodeList();
+            } catch (\exceptions\RequestFailedException $e) {
+                $nodes = [];
+                addError($e->get_html_message());
+            }
+            try {
+                $partitions = $dao->get_partition_list();
+            } catch (\exceptions\RequestFailedException $e) {
+                $partitions = [];
+                addError($e->get_html_message());
+            }
 
             $contents .= \view\actions\get_slurmdb_filter_form($filter, $accounts, $users, $nodes, $partitions);
 
@@ -259,7 +278,12 @@ if( isset($_SESSION['USER']) ){
                     break;
                 }
                 $user_slurm = $user_slurm['users'][0];
-                $shares = $dao->get_fairshare($user_name);
+                try {
+                    $shares = $dao->get_fairshare($user_name);
+                } catch (\exceptions\RequestFailedException $e) {
+                    $shares = [];
+                    addError($e->get_html_message());
+                }
 
                 $title = 'User info';
                 $contents .= \view\actions\get_user($user_name, $user_slurm, $shares);
@@ -314,6 +338,8 @@ if( isset($_SESSION['USER']) ){
                 if (!isset($_POST['csrf_token']) || !\auth\validate_csrf_token($_POST['csrf_token'])) {
                     http_response_code(403);
                     addError("Invalid request (CSRF token mismatch).");
+                    log_msg("CSRF token mismatch on action 'cancel-job' for '{$_SESSION['USER']}' from " . ($_SERVER['REMOTE_ADDR'] ?? 'unknown'),
+                        LOG_WARNING, LOG_MODE_PHP|LOG_MODE_SYSLOG);
                     break;
                 }
                 if( $dao->cancel_job($job_id) ) {
@@ -393,6 +419,8 @@ if( isset($_SESSION['USER']) ){
                 if (!isset($_POST['csrf_token']) || !\auth\validate_csrf_token($_POST['csrf_token'])) {
                     http_response_code(403);
                     addError("Invalid request (CSRF token mismatch).");
+                    log_msg("CSRF token mismatch on action 'edit-job' for '{$_SESSION['USER']}' from " . ($_SERVER['REMOTE_ADDR'] ?? 'unknown'),
+                        LOG_WARNING, LOG_MODE_PHP|LOG_MODE_SYSLOG);
                     break;
                 }
 
@@ -492,6 +520,8 @@ if( isset($_SESSION['USER']) ){
             if (!isset($_POST['csrf_token']) || !\auth\validate_csrf_token($_POST['csrf_token'])) {
                 http_response_code(403);
                 addError("Invalid request (CSRF token mismatch).");
+                log_msg("CSRF token mismatch on action 'node-set-state' for '{$_SESSION['USER']}' from " . ($_SERVER['REMOTE_ADDR'] ?? 'unknown'),
+                    LOG_WARNING, LOG_MODE_PHP|LOG_MODE_SYSLOG);
                 break;
             }
 

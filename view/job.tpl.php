@@ -41,8 +41,8 @@ function get_slurm_jobinfo(array $query, string $transitive_dependencies = '') :
     $templateBuilder->setParam("DEADLINE",          $query['deadline'] ?? ''      );
     $templateBuilder->setParam("DEPENDENCY",        htmlspecialchars($query['dependency'] ?? '', ENT_QUOTES, 'UTF-8'));
     $templateBuilder->setParam("TRANSITIVE_DEPENDENCIES", $transitive_dependencies      );
-    $templateBuilder->setParam("FEATURES",          htmlspecialchars($query['features'], ENT_QUOTES, 'UTF-8'));
-    $templateBuilder->setParam("GRES_DETAIL",       htmlspecialchars(implode(",", $query['gres']), ENT_QUOTES, 'UTF-8'));
+    $templateBuilder->setParam("FEATURES",          htmlspecialchars($query['features'] ?? '', ENT_QUOTES, 'UTF-8'));
+    $templateBuilder->setParam("GRES_DETAIL",       htmlspecialchars(implode(",", $query['gres'] ?? []), ENT_QUOTES, 'UTF-8'));
     $templateBuilder->setParam("CPUS",              $query['cpus'] ?? ''           );
     $templateBuilder->setParam("NODE_COUNT",        $query['node_count'] ?? ''     );
     $templateBuilder->setParam("TASKS",             $query['tasks'] ?? ''          );
@@ -65,12 +65,14 @@ function get_slurmdb_jobinfo(array $query) : string {
     $job_state_text = \utils\get_job_state_view($query);
 
     $comment = '<ul>';
-    if($query['comment']['administrator'] != '')
-        $comment .= '<li><b>Admin comment:</b> ' . htmlspecialchars($query['comment']['administrator'], ENT_QUOTES, 'UTF-8') . '</li>';
-    if($query['comment']['job'] != '')
-        $comment .= '<li><b>Job comment:</b> ' . htmlspecialchars($query['comment']['job'], ENT_QUOTES, 'UTF-8') . '</li>';
-    if($query['comment']['system'] != '')
-        $comment .= '<li><b>System comment:</b> ' . htmlspecialchars($query['comment']['system'], ENT_QUOTES, 'UTF-8') . '</li>';
+    if(is_array($query['comment'])){
+        if(!empty($query['comment']['administrator']))
+            $comment .= '<li><b>Admin comment:</b> ' . htmlspecialchars($query['comment']['administrator'], ENT_QUOTES, 'UTF-8') . '</li>';
+        if(!empty($query['comment']['job']))
+            $comment .= '<li><b>Job comment:</b> ' . htmlspecialchars($query['comment']['job'], ENT_QUOTES, 'UTF-8') . '</li>';
+        if(!empty($query['comment']['system']))
+            $comment .= '<li><b>System comment:</b> ' . htmlspecialchars($query['comment']['system'], ENT_QUOTES, 'UTF-8') . '</li>';
+    }
     $comment .= '</ul>';
 
     $flags = $query['flags'] ?? array();
@@ -103,13 +105,13 @@ function get_slurmdb_jobinfo(array $query) : string {
     $templateBuilder->setParam("ACCOUNT",           htmlspecialchars($query['account'], ENT_QUOTES, 'UTF-8'));
     $templateBuilder->setParam("PARTITIONS",        htmlspecialchars($query['partition'], ENT_QUOTES, 'UTF-8'));
     $templateBuilder->setParam("PRIORITY",          isset($query['priority']) ? (int)$query['priority'] : '');
-    $templateBuilder->setParam("SUBMIT_LINE",       htmlspecialchars($query['submit_line'], ENT_QUOTES, 'UTF-8'));
+    $templateBuilder->setParam("SUBMIT_LINE",       htmlspecialchars($query['submit_line'] ?? '', ENT_QUOTES, 'UTF-8'));
     $templateBuilder->setParam("WORKING_DIRECTORY", htmlspecialchars($query['working_directory'] ?? "", ENT_QUOTES, 'UTF-8'));
     $templateBuilder->setParam("COMMENT",           $comment);
     $templateBuilder->setParam("EXIT_CODE",         htmlspecialchars($query['exit_code'] ?? '', ENT_QUOTES, 'UTF-8'));
     $templateBuilder->setParam("NODES",             htmlspecialchars($query['nodes'], ENT_QUOTES, 'UTF-8'));
-    $templateBuilder->setParam("QOS",               htmlspecialchars($query['qos'], ENT_QUOTES, 'UTF-8'));
-    $templateBuilder->setParam("CONTAINER",         htmlspecialchars($query['container'], ENT_QUOTES, 'UTF-8'));
+    $templateBuilder->setParam("QOS",               htmlspecialchars($query['qos'] ?? '', ENT_QUOTES, 'UTF-8'));
+    $templateBuilder->setParam("CONTAINER",         htmlspecialchars($query['container'] ?? '', ENT_QUOTES, 'UTF-8'));
     $escaped_flags = array_map(fn($f) => htmlspecialchars($f, ENT_QUOTES, 'UTF-8'), $flags);
     $templateBuilder->setParam("FLAGS", count($escaped_flags) > 0 ? '<li><span class="monospaced">' . implode('</span></li><li><span class="monospaced">', $escaped_flags) . '</span></li>' : '');
     $templateBuilder->setParam("GRES_DETAIL",       htmlspecialchars($query['gres'] ?? "", ENT_QUOTES, 'UTF-8'));

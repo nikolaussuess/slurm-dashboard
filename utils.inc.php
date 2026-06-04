@@ -81,7 +81,7 @@ function get_date_from_unix_if_defined(array $job_arr, string $param, string $de
 
 # TODO: Should in the future only do the *view* and NOT look into the original job array
 function get_job_state_view(array $job, string $param_name = 'job_state'): string {
-    $job_state_array = $job[$param_name];
+    $job_state_array = $job[$param_name] ?? [];
 
     $job_state_text = '';
     foreach($job_state_array as $job_state) {
@@ -96,6 +96,11 @@ function show_errors(array $response) : void {
     if(isset($response['errors']) && !empty($response['errors'])){
         foreach ($response['errors'] as $error){
             addError('<b>' . htmlspecialchars($error['error'], ENT_QUOTES, 'UTF-8') . '</b> (source: ' . htmlspecialchars($error['source'], ENT_QUOTES, 'UTF-8') . ')<br>' . htmlspecialchars($error['description'], ENT_QUOTES, 'UTF-8'));
+        }
+    }
+    if(isset($response['warnings']) && !empty($response['warnings'])){
+        foreach ($response['warnings'] as $warning){
+            addError('Warning: <b>' . htmlspecialchars($warning['warning'] ?? '', ENT_QUOTES, 'UTF-8') . '</b> (source: ' . htmlspecialchars($warning['source'] ?? '', ENT_QUOTES, 'UTF-8') . ')<br>' . htmlspecialchars($warning['description'] ?? '', ENT_QUOTES, 'UTF-8'));
         }
     }
 }

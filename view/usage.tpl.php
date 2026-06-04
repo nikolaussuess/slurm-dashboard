@@ -614,7 +614,7 @@ function get_usage(array $data, array $user_breakdown = [], string $show_users_t
         (int)$gpus
     ));
 
-    $templateBuilder->setParam("STATE", implode(", ", $data["state"]));
+    $templateBuilder->setParam("STATE", implode(", ", $data["state"] ?? []));
     $state_color = "#f9c98f"; # orange
     if(
         in_array("IDLE", $data["state"]) ||
@@ -640,13 +640,13 @@ function get_usage(array $data, array $user_breakdown = [], string $show_users_t
     $templateBuilder->setParam("BOARDS", $data["boards"] ?? '');
 
     $feature_str = "";
-    foreach ($data["features"] as $feature){
+    foreach ($data["features"] ?? [] as $feature){
         $feature_str .= '<span class="feature">' . htmlspecialchars($feature, ENT_QUOTES, 'UTF-8') . '</span> ';
     }
     $templateBuilder->setParam("FEATURES", $feature_str);
 
     $feature_str = "";
-    foreach ($data["active_features"] as $feature){
+    foreach ($data["active_features"] ?? [] as $feature){
         $feature_str .= '<span class="feature">' . htmlspecialchars($feature, ENT_QUOTES, 'UTF-8') . '</span> ';
     }
     $templateBuilder->setParam("ACTIVE_FEATURES", $feature_str);

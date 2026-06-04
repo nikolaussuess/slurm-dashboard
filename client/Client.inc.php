@@ -219,7 +219,7 @@ interface Client{
      * 'slurm_version' => $json["nodes"][0]["version"] ?? '',
      *  );
      * </pre>
-     * @throws \exceptions\MissingArrayKeyException If slurmctld is down, the node is unknown, or the response is malformed.
+     * @throws \exceptions\RequestFailedException If slurmctld is down, the node is unknown, or the response is malformed.
      */
     function get_node_info(string $nodename) : array;
 

@@ -145,33 +145,51 @@ if( isset($_SESSION['USER']) ){
             # SLURM QUEUE information
             // Title will also set <h1>
             $title = 'Job ' . $job_id_view;
-            $query = $dao->get_job($job_id_view);
-            if( $query == NULL ){
-                $contents .= "<p>Job " . $job_id_view . " not in active queue anymore.</p>";
-                // Here, it is not a 404 if the job is not found, because a job
-                // is removed vom the queue when it is finished but persists in slurmdb.
-                $in_slurm_queue = FALSE;
-            }
-            else {
-                $dependency_resolver = new \client\utils\DependencyResolver($dao);
-                $contents .= \view\actions\get_slurm_jobinfo($query, $dependency_resolver->renderDependencyListHTML($job_id_view) ?? '');
-                $in_slurm_queue = TRUE;
+            $exception = NULL;
+            $in_slurm_queue = FALSE;
+            try {
+                $query = $dao->get_job($job_id_view);
+                if( $query == NULL ){
+                    $contents .= "<p>Job " . $job_id_view . " not in active queue anymore.</p>";
+                    // Here, it is not a 404 if the job is not found, because a job
+                    // is removed vom the queue when it is finished but persists in slurmdb.
+                    $in_slurm_queue = FALSE;
+                }
+                else {
+                    $dependency_resolver = new \client\utils\DependencyResolver($dao);
+                    $contents .= \view\actions\get_slurm_jobinfo($query, $dependency_resolver->renderDependencyListHTML($job_id_view) ?? '');
+                    $in_slurm_queue = TRUE;
+                }
+            } catch (\exceptions\RequestFailedException $e) {
+                addError('Job queue information: ' . $e->get_html_message());
+                http_response_code(503); // Service unavailable
+                $exception = $e;
             }
 
             # SLURMDB information
-            $query = $dao->get_job_from_slurmdb($job_id_view);
-            if($query == NULL){
-                $contents .= "<p>Job " . $job_id_view . " not found in <span class='monospaced'>slurmdb</span>.</p>";
-                // Here, it is a 404 if the job cannot be found.
-                // However, there might have been a delay while writing into slurmdb. So we only consider it to be a
-                // 404 if it was neither in slurmdb nor in slurm queue.
-                if( ! $in_slurm_queue) {
-                    http_response_code(404);
-                    $title = '404 Not Found';
+            try {
+                $query = $dao->get_job_from_slurmdb($job_id_view);
+                if($query == NULL){
+                    $contents .= "<p>Job " . $job_id_view . " not found in <span class='monospaced'>slurmdb</span>.</p>";
+                    // Here, it is a 404 if the job cannot be found.
+                    // However, there might have been a delay while writing into slurmdb. So we only consider it to be a
+                    // 404 if it was neither in slurmdb nor in slurm queue.
+                    if( $exception === NULL && !$in_slurm_queue ) {
+                        http_response_code(404);
+                        $title = '404 Not Found';
+                    }
                 }
-            }
-            else {
-                $contents .= \view\actions\get_slurmdb_jobinfo($query);
+                else {
+                    $contents .= \view\actions\get_slurmdb_jobinfo($query);
+                }
+            } catch (\exceptions\RequestFailedException $e) {
+                addError('Job history information: ' . $e->get_html_message());
+                http_response_code(503); // Service unavailable
+                // If both slurmctl and slurmdb are down, rethrow the first exception.
+                if( $exception != NULL )
+                    throw $exception;
+                // Otherwise, at least the queue information worked and the user will see
+                // that information along with the error message.
             }
 
             break;

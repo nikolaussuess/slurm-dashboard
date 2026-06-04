@@ -92,17 +92,37 @@ function get_job_state_view(array $job, string $param_name = 'job_state'): strin
     return $job_state_text;
 }
 
-function show_errors(array $response) : void {
+/**
+ * Renders slurmrestd errors and optionally warnings as user-facing addError() messages.
+ * Used after write operations (update_job, set_node_state) where the caller does not want to throw.
+ * @param array $response Decoded slurmrestd response containing optional 'errors'/'warnings' keys.
+ * @param bool $show_warnings Whether to also render warnings, not just errors.
+ * @param bool $verbose Include error source and description in addition to the error string.
+ */
+function show_errors(array $response, bool $show_warnings = TRUE, bool $verbose = FALSE) : void {
     if(isset($response['errors']) && !empty($response['errors'])){
         foreach ($response['errors'] as $error){
-            addError('<b>' . htmlspecialchars($error['error'], ENT_QUOTES, 'UTF-8') . '</b> (source: ' . htmlspecialchars($error['source'], ENT_QUOTES, 'UTF-8') . ')<br>' . htmlspecialchars($error['description'], ENT_QUOTES, 'UTF-8'));
+            if($verbose)
+                addError('<b>' . htmlspecialchars($error['error'], ENT_QUOTES, 'UTF-8') . '</b> (source: ' . htmlspecialchars($error['source'], ENT_QUOTES, 'UTF-8') . ')<br>' . htmlspecialchars($error['description'], ENT_QUOTES, 'UTF-8'));
+            else
+                addError(htmlspecialchars($error['error'], ENT_QUOTES, 'UTF-8'));
         }
     }
-    if(isset($response['warnings']) && !empty($response['warnings'])){
+    if($show_warnings && isset($response['warnings']) && !empty($response['warnings'])){
         foreach ($response['warnings'] as $warning){
-            addError('Warning: <b>' . htmlspecialchars($warning['warning'] ?? '', ENT_QUOTES, 'UTF-8') . '</b> (source: ' . htmlspecialchars($warning['source'] ?? '', ENT_QUOTES, 'UTF-8') . ')<br>' . htmlspecialchars($warning['description'] ?? '', ENT_QUOTES, 'UTF-8'));
+            if($verbose)
+                addError('Warning: <b>' . htmlspecialchars($warning['warning'] ?? '', ENT_QUOTES, 'UTF-8') . '</b> (source: ' . htmlspecialchars($warning['source'] ?? '', ENT_QUOTES, 'UTF-8') . ')<br>' . htmlspecialchars($warning['description'] ?? '', ENT_QUOTES, 'UTF-8'));
+            else
+                addError('<b>Warning:</b> ' . htmlspecialchars($warning['warning'] ?? '', ENT_QUOTES, 'UTF-8'));
         }
     }
+}
+
+function log_errors_and_warnings_in_slurmrestd_response(array $json, string $prefix) : void {
+    if ( ! empty($json['errors']) )
+        log_msg($prefix . json_encode($json['errors']));
+    if ( ! empty($json['warnings']) )
+        log_msg($prefix . json_encode($json['warnings']));
 }
 
 function validate_time_limit(string $str): bool {

@@ -17,6 +17,7 @@ interface Client{
     /**
      * Get the compute-node names.
      * @return array Array of strings with the compute node names.
+     * @throws \exceptions\RequestFailedException If slurmctld is down or the response is malformed.
      */
     function getNodeList(): array;
 
@@ -38,6 +39,7 @@ interface Client{
      *       'time_start' : string
      *    );
      * </pre>
+     * @throws \exceptions\RequestFailedException If slurmctld is down or the response is malformed.
      */
     function get_jobs(?array $filter = NULL) : array;
 
@@ -59,24 +61,28 @@ interface Client{
      *       'time_elapsed' : string
      *    );
      * </pre>
+     * @throws \exceptions\RequestFailedException If slurmdbd is down or the response is malformed.
      */
     function get_jobs_from_slurmdb(?array $filter = NULL) : array;
 
     /**
      * Query the account list as a list of strings.
      * @return array List of strings with the account names.
+     * @note Silently ignores request fails and errors.
      */
     function get_account_list(): array;
 
     /**
      * Query the partition list as a list of strings.
      * @return array List of strings with the partition names.
+     * @throws \exceptions\RequestFailedException If slurmctld is down or the response is malformed.
      */
     function get_partition_list(): array;
 
     /**
      * Returns the list of Users as an array of strings with the usernames.
      * @return array List of Users as an array of strings with the usernames.
+     * @throws \exceptions\RequestFailedException If slurmdbd is down or the response is malformed.
      */
     function get_users_list(): array;
 
@@ -124,6 +130,7 @@ interface Client{
      * 'time_limit' => $this->_get_timelimit_if_defined($json_job, 'time_limit')
      * );
      * </pre>
+     * @throws \exceptions\RequestFailedException If slurmctld is down or the response is malformed.
      */
     function get_job(string $id) : ?array;
 
@@ -159,6 +166,7 @@ interface Client{
      * 'time_eligible' => $this->_get_date_from_unix($json_job['time'], 'eligible'),
      * );
      * </pre>
+     * @throws \exceptions\RequestFailedException If slurmdbd is down or the response is malformed.
      */
     function get_job_from_slurmdb(int|string $id) : ?array;
 
@@ -174,6 +182,7 @@ interface Client{
     /**
      * Get a list of all slurm users from slurmdb.
      * @return array of slurm users.
+     * @throws \exceptions\RequestFailedException If slurmdbd is down or the response is malformed.
      * @unstable
      */
     function get_users() : array;
@@ -210,21 +219,48 @@ interface Client{
      * 'slurm_version' => $json["nodes"][0]["version"] ?? '',
      *  );
      * </pre>
+     * @throws \exceptions\RequestFailedException If slurmctld is down, the node is unknown, or the response is malformed.
      */
     function get_node_info(string $nodename) : array;
 
     /**
      * List of scheduled maintenances.
      * @return array Array of maintenances.
+     * @note Silently ignores request fails and errors.
      * @unstable
      */
     function get_maintenances() : array;
 
+    /**
+     * Get fairshare information, optionally filtered to a specific user.
+     * @param string|null $user_name Username to filter for, or NULL for all users.
+     * @return array Array of fairshare entries.
+     * @throws \exceptions\RequestFailedException If slurmctld is down or the response is malformed.
+     */
     function get_fairshare(?string $user_name) : array;
 
+    /**
+     * Cancel a job.
+     * @param string|int $job_id ID of the job to cancel.
+     * @return bool TRUE if cancellation succeeded, FALSE otherwise.
+     */
     function cancel_job(string|int $job_id) : bool;
+
+    /**
+     * Update job properties (e.g. time limit, nice value, comment).
+     * @param array $job_data Job data array including job_id and fields to update.
+     * @return bool TRUE if the update succeeded, FALSE otherwise.
+     * @throws \exceptions\ValidationException If the provided job data is invalid.
+     */
     function update_job(array $job_data) : bool;
 
+    /**
+     * Set the state of a compute node.
+     * @param string $nodename Name of the node.
+     * @param string $new_state New state to set.
+     * @return bool TRUE if the state change succeeded, FALSE otherwise.
+     * @throws \exceptions\RequestFailedException If the node is unknown or slurmctld is down.
+     */
     function set_node_state(string $nodename, string $new_state) : bool;
 
     /**
@@ -233,6 +269,7 @@ interface Client{
      * @return array Array of running jobs, each with keys:
      *   user_name (string), nodes_str (string), cpus_per_node (int),
      *   mem_per_node (int, MiB), gpus_per_node (int)
+     * @throws \exceptions\RequestFailedException If slurmctld is down or the response is malformed.
      */
     function get_running_jobs_summary(): array;
 }
@@ -270,7 +307,6 @@ class ClientFactory {
             $parsers = array_column($response['info']['x-slurm']['data_parsers'], 'plugin');
             rsort($parsers, SORT_NATURAL | SORT_FLAG_CASE);
 
-            log_msg("Detected the following data parsers: " . implode(', ', $parsers));
         }
 
         if( ! isset($parsers) )
@@ -280,6 +316,7 @@ class ClientFactory {
         foreach ($parsers as $version){
             $classname = strtoupper(str_replace('.', '', $version)) . "Client";
             if(file_exists(__DIR__ . "/{$classname}.inc.php")){
+                log_msg("Detected the following data parsers: " . implode(', ', $parsers) . ", selecting $version" . (config('REST_API_VERSION') === 'auto' ? '' : ' (statically configured)'));
                 require_once __DIR__ . "/{$classname}.inc.php";
                 $classname = '\\client\\' . $classname;
                 return new $classname();

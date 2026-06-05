@@ -19,7 +19,16 @@ function get_all_nodes_usage(\client\Client $dao, string $nonce = '', bool $show
 
     // Fetch jobs when the per-user view is active OR the p_low overview feature needs it
     $need_jobs    = ($can_show_users && $show_users_requested) || $show_plow_overview;
-    $running_jobs = $need_jobs ? $dao->get_running_jobs_summary() : [];
+    $running_jobs = [];
+    if ($need_jobs) {
+        try {
+            $running_jobs = $dao->get_running_jobs_summary();
+        } catch (\exceptions\RequestFailedException $e) {
+            // Degrade gracefully: show the error but keep the node overview visible.
+            // Per-user breakdowns and p_low overview will be empty.
+            addError($e->get_html_message());
+        }
+    }
 
     $cluster_totals = [
         'cpus' => 0, 'cpus_alloc' => 0,
@@ -614,7 +623,7 @@ function get_usage(array $data, array $user_breakdown = [], string $show_users_t
         (int)$gpus
     ));
 
-    $templateBuilder->setParam("STATE", implode(", ", $data["state"]));
+    $templateBuilder->setParam("STATE", implode(", ", $data["state"] ?? []));
     $state_color = "#f9c98f"; # orange
     if(
         in_array("IDLE", $data["state"]) ||
@@ -640,13 +649,13 @@ function get_usage(array $data, array $user_breakdown = [], string $show_users_t
     $templateBuilder->setParam("BOARDS", $data["boards"] ?? '');
 
     $feature_str = "";
-    foreach ($data["features"] as $feature){
+    foreach ($data["features"] ?? [] as $feature){
         $feature_str .= '<span class="feature">' . htmlspecialchars($feature, ENT_QUOTES, 'UTF-8') . '</span> ';
     }
     $templateBuilder->setParam("FEATURES", $feature_str);
 
     $feature_str = "";
-    foreach ($data["active_features"] as $feature){
+    foreach ($data["active_features"] ?? [] as $feature){
         $feature_str .= '<span class="feature">' . htmlspecialchars($feature, ENT_QUOTES, 'UTF-8') . '</span> ';
     }
     $templateBuilder->setParam("ACTIVE_FEATURES", $feature_str);

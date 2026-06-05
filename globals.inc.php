@@ -245,7 +245,7 @@ $successmsg = "";
 
 /**
  * Add an error that will be displayed on the page later.
- * @param $s string Error message
+ * @param string $s Error message
  */
 function addError(string $s): void {
     global $errormsg;
@@ -257,7 +257,7 @@ function addError(string $s): void {
 
 /**
  * Add a success message that will be displayed on the website later.
- * @param $s string Success message
+ * @param string $s Success message
  */
 function addSuccess(string $s): void {
     global $successmsg;

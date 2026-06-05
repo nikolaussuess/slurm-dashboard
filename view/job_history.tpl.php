@@ -98,6 +98,15 @@ function get_slurmdb_filter_form_evaluation() : array {
 }
 
 
+/**
+ * Renders the job history filter form.
+ * @param array $filter Current filter values
+ * @param array $accounts List of account names for the filter dropdown
+ * @param array $users List of usernames for the filter dropdown
+ * @param array $nodes List of node names for the filter dropdown
+ * @param array $partitions List of partition names for the filter dropdown
+ * @return string Rendered HTML
+ */
 function get_slurmdb_filter_form(array $filter, array $accounts, array $users, array $nodes, array $partitions) : string {
 
     // Accounts field
@@ -170,6 +179,12 @@ function get_slurmdb_filter_form(array $filter, array $accounts, array $users, a
 }
 
 
+/**
+ * Renders the job history table.
+ * @param array $jobs Job array as returned by Client::get_jobs_from_slurmdb()
+ * @param array $filter Active filter values
+ * @return string Rendered HTML
+ */
 function get_filtered_jobs_from_slurmdb(array $jobs, array $filter = []) : string {
     // Active filter chips — JS adds the × removal buttons.
     $chip_configs = [

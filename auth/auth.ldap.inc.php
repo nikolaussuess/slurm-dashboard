@@ -33,8 +33,8 @@ namespace auth {
         }
 
         /**
-         * @param $username string Username to be checked
-         * @param $password string Password
+         * @param string $username Username to be checked
+         * @param string $password Password
          * @throws AuthenticationError in case of an (internal) LDAP error
          * @return bool TRUE if authentication was successful, FALSE otherwise
          */
@@ -94,6 +94,9 @@ namespace auth {
             return $login_ok;
         }
 
+        /**
+         * @throws AuthenticationError If LDAP is not supported or the connection cannot be established
+         */
         function __construct() {
 
             if(! self::is_supported() ){

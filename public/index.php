@@ -1,6 +1,18 @@
 <?php
-#error_reporting(E_ALL);
-#ini_set('display_errors', '1');
+
+// Enables PHP warnings
+// Do NOT enable (i.e., set the DEBUG environment variable to 'yes') in productive setups!
+if( getenv('DEBUG') === 'yes' ) {
+    error_reporting(E_ALL);
+    ini_set('display_startup_errors', 1);
+    ini_set('display_errors', '1');
+    ini_set('log_errors', '1');
+}
+else {
+    ini_set('display_startup_errors', '0');
+    ini_set('display_errors', '0');
+}
+
 session_start();
 date_default_timezone_set('Europe/Vienna');
 // Nonce for CSP to allow secure inline JS.
@@ -88,6 +100,9 @@ if( ! isset($_SESSION['USER']) ) {
         elseif (!isset($_POST['csrf_token']) || !\auth\validate_csrf_token($_POST['csrf_token'])) {
             http_response_code(403);
             addError("Invalid request (CSRF token mismatch).");
+            $safe_username = \auth\validate_username($_POST['username']) ? $_POST['username'] : '(invalid username)';
+            log_msg("CSRF token mismatch on action 'login' for '$safe_username' from " . ($_SERVER['REMOTE_ADDR'] ?? 'unknown'),
+                LOG_NOTICE, LOG_MODE_PHP|LOG_MODE_SYSLOG);
         }
         else {
             $username = $_POST['username'];
@@ -156,33 +171,51 @@ if( isset($_SESSION['USER']) ){
             # SLURM QUEUE information
             // Title will also set <h1>
             $title = 'Job ' . $job_id_view;
-            $query = $dao->get_job($job_id_view);
-            if( $query == NULL ){
-                $contents .= "<p>Job " . $job_id_view . " not in active queue anymore.</p>";
-                // Here, it is not a 404 if the job is not found, because a job
-                // is removed vom the queue when it is finished but persists in slurmdb.
-                $in_slurm_queue = FALSE;
-            }
-            else {
-                $dependency_resolver = new \client\utils\DependencyResolver($dao);
-                $contents .= \view\actions\get_slurm_jobinfo($query, $dependency_resolver->renderDependencyListHTML($job_id_view) ?? '');
-                $in_slurm_queue = TRUE;
+            $exception = NULL;
+            $in_slurm_queue = FALSE;
+            try {
+                $query = $dao->get_job($job_id_view);
+                if( $query == NULL ){
+                    $contents .= "<p>Job " . $job_id_view . " not in active queue anymore.</p>";
+                    // Here, it is not a 404 if the job is not found, because a job
+                    // is removed vom the queue when it is finished but persists in slurmdb.
+                    $in_slurm_queue = FALSE;
+                }
+                else {
+                    $dependency_resolver = new \client\utils\DependencyResolver($dao);
+                    $contents .= \view\actions\get_slurm_jobinfo($query, $dependency_resolver->renderDependencyListHTML($job_id_view) ?? '');
+                    $in_slurm_queue = TRUE;
+                }
+            } catch (\exceptions\RequestFailedException $e) {
+                addError('Job queue information: ' . $e->get_html_message());
+                http_response_code(503); // Service unavailable
+                $exception = $e;
             }
 
             # SLURMDB information
-            $query = $dao->get_job_from_slurmdb($job_id_view);
-            if($query == NULL){
-                $contents .= "<p>Job " . $job_id_view . " not found in <span class='monospaced'>slurmdb</span>.</p>";
-                // Here, it is a 404 if the job cannot be found.
-                // However, there might have been a delay while writing into slurmdb. So we only consider it to be a
-                // 404 if it was neither in slurmdb nor in slurm queue.
-                if( ! $in_slurm_queue) {
-                    http_response_code(404);
-                    $title = '404 Not Found';
+            try {
+                $query = $dao->get_job_from_slurmdb($job_id_view);
+                if($query == NULL){
+                    $contents .= "<p>Job " . $job_id_view . " not found in <span class='monospaced'>slurmdb</span>.</p>";
+                    // Here, it is a 404 if the job cannot be found.
+                    // However, there might have been a delay while writing into slurmdb. So we only consider it to be a
+                    // 404 if it was neither in slurmdb nor in slurm queue.
+                    if( $exception === NULL && !$in_slurm_queue ) {
+                        http_response_code(404);
+                        $title = '404 Not Found';
+                    }
                 }
-            }
-            else {
-                $contents .= \view\actions\get_slurmdb_jobinfo($query);
+                else {
+                    $contents .= \view\actions\get_slurmdb_jobinfo($query);
+                }
+            } catch (\exceptions\RequestFailedException $e) {
+                addError('Job history information: ' . $e->get_html_message());
+                http_response_code(503); // Service unavailable
+                // If both slurmctl and slurmdb are down, rethrow the first exception.
+                if( $exception != NULL )
+                    throw $exception;
+                // Otherwise, at least the queue information worked and the user will see
+                // that information along with the error message.
             }
 
             break;
@@ -215,9 +248,25 @@ if( isset($_SESSION['USER']) ){
             $title = 'Job history';
 
             $accounts = $dao->get_account_list();
-            $users = $dao->get_users_list();
-            $nodes = $dao->getNodeList();
-            $partitions = $dao->get_partition_list();
+            try {
+                $users = $dao->get_users_list();
+            } catch (\exceptions\RequestFailedException $e) {
+                $users = [];
+                addError($e->get_html_message());
+            }
+            // Node list is only used for the filter dropdown; degrade gracefully if slurmctld is down.
+            try {
+                $nodes = $dao->getNodeList();
+            } catch (\exceptions\RequestFailedException $e) {
+                $nodes = [];
+                addError($e->get_html_message());
+            }
+            try {
+                $partitions = $dao->get_partition_list();
+            } catch (\exceptions\RequestFailedException $e) {
+                $partitions = [];
+                addError($e->get_html_message());
+            }
 
             $contents .= \view\actions\get_slurmdb_filter_form($filter, $accounts, $users, $nodes, $partitions);
 
@@ -273,7 +322,12 @@ if( isset($_SESSION['USER']) ){
                     break;
                 }
                 $user_slurm = $user_slurm['users'][0];
-                $shares = $dao->get_fairshare($user_name);
+                try {
+                    $shares = $dao->get_fairshare($user_name);
+                } catch (\exceptions\RequestFailedException $e) {
+                    $shares = [];
+                    addError($e->get_html_message());
+                }
 
                 $title = 'User info';
                 $contents .= \view\actions\get_user($user_name, $user_slurm, $shares);
@@ -328,6 +382,8 @@ if( isset($_SESSION['USER']) ){
                 if (!isset($_POST['csrf_token']) || !\auth\validate_csrf_token($_POST['csrf_token'])) {
                     http_response_code(403);
                     addError("Invalid request (CSRF token mismatch).");
+                    log_msg("CSRF token mismatch on action 'cancel-job' for '{$_SESSION['USER']}' from " . ($_SERVER['REMOTE_ADDR'] ?? 'unknown'),
+                        LOG_WARNING, LOG_MODE_PHP|LOG_MODE_SYSLOG);
                     break;
                 }
                 if( $dao->cancel_job($job_id) ) {
@@ -339,8 +395,8 @@ if( isset($_SESSION['USER']) ){
                     addError("Something went wrong when cancelling job " . $job_id);
                 }
                 $cache = \cache\CacheWrapper::getInstance();
-                $cache->delete("slurm/jobs"); // Delete cached entry because we KNOW that it has changed.
-                $cache->delete("slurm/job/".$job_id); // Delete cached entry because we KNOW that it has changed.
+                $cache->delete("slurm/" . $dao::api_version . "/jobs"); // Delete cached entry because we KNOW that it has changed.
+                $cache->delete("slurm/" . $dao::api_version . "/job/" . $job_id); // Delete cached entry because we KNOW that it has changed.
                 $contents .= \view\actions\get_slurm_queue($dao->get_jobs(), 0, $csp_nonce);
             }
             break;
@@ -407,6 +463,8 @@ if( isset($_SESSION['USER']) ){
                 if (!isset($_POST['csrf_token']) || !\auth\validate_csrf_token($_POST['csrf_token'])) {
                     http_response_code(403);
                     addError("Invalid request (CSRF token mismatch).");
+                    log_msg("CSRF token mismatch on action 'edit-job' for '{$_SESSION['USER']}' from " . ($_SERVER['REMOTE_ADDR'] ?? 'unknown'),
+                        LOG_WARNING, LOG_MODE_PHP|LOG_MODE_SYSLOG);
                     break;
                 }
 
@@ -452,8 +510,8 @@ if( isset($_SESSION['USER']) ){
                     addError("Something went wrong when updating job " . $job_id);
                 }
                 $cache = \cache\CacheWrapper::getInstance();
-                $cache->delete("slurm/jobs"); // Delete cached entry because we KNOW that it has changed.
-                $cache->delete("slurm/job/".$job_id); // Delete cached entry because we KNOW that it has changed.
+                $cache->delete("slurm/" . $dao::api_version . "/jobs"); // Delete cached entry because we KNOW that it has changed.
+                $cache->delete("slurm/" . $dao::api_version . "/job/" . $job_id); // Delete cached entry because we KNOW that it has changed.
                 $contents .= \view\actions\get_slurm_queue($dao->get_jobs(), 0, $csp_nonce);
             }
             break;
@@ -506,6 +564,8 @@ if( isset($_SESSION['USER']) ){
             if (!isset($_POST['csrf_token']) || !\auth\validate_csrf_token($_POST['csrf_token'])) {
                 http_response_code(403);
                 addError("Invalid request (CSRF token mismatch).");
+                log_msg("CSRF token mismatch on action 'node-set-state' for '{$_SESSION['USER']}' from " . ($_SERVER['REMOTE_ADDR'] ?? 'unknown'),
+                    LOG_WARNING, LOG_MODE_PHP|LOG_MODE_SYSLOG);
                 break;
             }
 
@@ -518,7 +578,7 @@ if( isset($_SESSION['USER']) ){
             else {
                 addError("Something went wrong when updating node " . htmlspecialchars($nodename, ENT_QUOTES, 'UTF-8'));
             }
-            \cache\CacheWrapper::getInstance()->delete("slurm/node/".$nodename); // Delete cached entry because we KNOW that it has changed.
+            \cache\CacheWrapper::getInstance()->delete("slurm/" . $dao::api_version . "/node/" . $nodename); // Delete cached entry because we KNOW that it has changed.
 
             $title = 'Cluster usage';
             $contents .= \view\actions\get_all_nodes_usage(

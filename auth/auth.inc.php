@@ -30,8 +30,8 @@ namespace {
 
     /**
      * Authentication.
-     * @param $username string Username of user
-     * @param $password string Password of User
+     * @param string $username Username of user
+     * @param string $password Password of User
      * @return bool True if authentication was successful, False otherwise
      */
     function auth(string $username, string $password, string $method = 'ldap') : bool{
@@ -124,7 +124,7 @@ namespace auth {
     /**
      * Checks whether $username is a valid posix / linux username.
      * See https://unix.stackexchange.com/a/435120.
-     * @param $username string Username to check
+     * @param string $username Username to check
      * @return bool TRUE if username is valid, FALSE otherwise.
      */
     function validate_username(string $username) : bool {

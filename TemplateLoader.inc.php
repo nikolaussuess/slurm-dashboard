@@ -8,17 +8,22 @@ class TemplateLoader {
     private const TEMPLATE_DIR = __DIR__ . '/templates/';
 
     /**
-     * @param $filename string Filename of template html file
+     * @param string $filename Filename of template html file
      */
     function __construct(string $filename){
         $this->contents = file_get_contents(self::TEMPLATE_DIR . basename($filename));
+        if ($this->contents === FALSE)
+            throw new \exceptions\ConfigurationError(
+                "Internal server error.",
+                "Template file not found: file_get_contents failed for: " . self::TEMPLATE_DIR . basename($filename)
+            );
     }
 
     /**
      * Replates {{$name}} by $value.
-     * @param $name string Name of parameter.
-     * @param $value mixed Value to be inserted into the HTML file.
-     * @return static $this
+     * @param string $name Name of parameter.
+     * @param mixed $value Value to be inserted into the HTML file.
+     * @return static
      */
     function setParam(string $name, mixed $value): static {
 

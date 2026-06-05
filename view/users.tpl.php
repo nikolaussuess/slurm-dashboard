@@ -5,6 +5,11 @@ namespace view\actions;
 use Exception;
 use TemplateLoader;
 
+/**
+ * Renders the user list table.
+ * @param array $users User array as returned by Client::get_users()
+ * @return string Rendered HTML
+ */
 function get_users(array $users) : string {
     $contents = <<<EOF
 <div class="table-responsive tableFixHead">
@@ -46,22 +51,22 @@ EOF;
             $contents .=    '<td><a href="?action=users&user_name=' . $name_e . '">' . $name_e . '</a></td>';
         }
         $contents .=    "<td><ul>";
-        foreach($user_arr['associations'] as $assoc){
+        foreach($user_arr['associations'] ?? [] as $assoc){
             $account_e = htmlspecialchars($assoc['account'], ENT_QUOTES, 'UTF-8');
-            if($assoc['account'] == $user_arr['default']['account'])
+            if(is_array($user_arr['default']) && $assoc['account'] == $user_arr['default']['account'])
                 $contents .= '<li><b title="Default account">' . $account_e . '</b> (default)</li>';
             else
                 $contents .= '<li>' . $account_e . '</li>';
         }
         $contents .=           "</ul></td>";
-        if( implode(", ", $user_arr['administrator_level']) == 'None' && in_array($user_arr['name'], config('PRIV_USERS')))
+        if( implode(", ", $user_arr['administrator_level'] ?? []) == 'None' && in_array($user_arr['name'], config('PRIV_USERS')))
             $contents .=    "<td title='Web administrators have extended permissions in the dashboard but not in SLURM itself.'>Web admin</td>";
-        elseif( implode(", ", $user_arr['administrator_level']) == 'Administrator')
+        elseif( implode(", ", $user_arr['administrator_level'] ?? []) == 'Administrator')
             $contents .=    '<td title="Admin on the whole SLURM cluster.">Slurm admin</td>';
-        elseif( implode(", ", $user_arr['administrator_level']) == 'None')
+        elseif( implode(", ", $user_arr['administrator_level'] ?? []) == 'None')
             $contents .=    '<td title="Normal user">-</td>';
         else
-            $contents .=    "<td>" . htmlspecialchars(implode(", ", $user_arr['administrator_level']), ENT_QUOTES, 'UTF-8') . "</td>";
+            $contents .=    "<td>" . htmlspecialchars(implode(", ", $user_arr['administrator_level'] ?? []), ENT_QUOTES, 'UTF-8') . "</td>";
 
         // LDAP
         if( ! \auth\LDAP::is_supported() || $user_arr['name'] == "root" || $ldap_client === NULL ){
@@ -100,6 +105,13 @@ EOF;
     return $contents;
 }
 
+/**
+ * Renders the detail view for a single user.
+ * @param string $user_name Username
+ * @param array $user_arr User data as returned by Client::get_user()
+ * @param array $shares Fairshare data as returned by Client::get_fairshare()
+ * @return string Rendered HTML
+ */
 function get_user(string $user_name, array $user_arr, array $shares) : string {
     $contents = '<a href="?action=users"><button type="button" class="btn btn-secondary">Back to the user table</button></a>';
 
@@ -117,7 +129,7 @@ function get_user(string $user_name, array $user_arr, array $shares) : string {
     // Associations
     $accounts = '';
     foreach($user_arr['associations'] as $assoc){
-        if($assoc['account'] == $user_arr['default']['account'])
+        if(is_array($user_arr['default']) && $assoc['account'] == $user_arr['default']['account'])
             $accounts .= '<li><b title="Default account">'
                          . htmlspecialchars($assoc['account'], ENT_QUOTES, 'UTF-8')
                          . '</b> (default), cluster ' . htmlspecialchars($assoc['cluster'], ENT_QUOTES, 'UTF-8')
@@ -129,14 +141,14 @@ function get_user(string $user_name, array $user_arr, array $shares) : string {
     }
 
     // Admin privileges
-    if( implode(", ", $user_arr['administrator_level']) == 'None' && in_array($user_arr['name'], config('PRIV_USERS')))
+    if( implode(", ", $user_arr['administrator_level'] ?? []) == 'None' && in_array($user_arr['name'], config('PRIV_USERS')))
         $admin_privs =    "<span title='Web administrators have extended permissions in the dashboard but not in SLURM itself.'>&#x1F3E2; Web admin</span>";
-    elseif( implode(", ", $user_arr['administrator_level']) == 'Administrator')
+    elseif( implode(", ", $user_arr['administrator_level'] ?? []) == 'Administrator')
         $admin_privs =    '<span title="Admin on the whole SLURM cluster.">&#128273; Slurm admin</span>';
-    elseif( implode(", ", $user_arr['administrator_level']) == 'None')
+    elseif( implode(", ", $user_arr['administrator_level'] ?? []) == 'None')
         $admin_privs =    '<span title="Normal user">-</span>';
     else
-        $admin_privs =    htmlspecialchars(implode(", ", $user_arr['administrator_level']), ENT_QUOTES, 'UTF-8');
+        $admin_privs =    htmlspecialchars(implode(", ", $user_arr['administrator_level'] ?? []), ENT_QUOTES, 'UTF-8');
 
     // retrieve LDAP data
     $ldap_client = NULL;
@@ -271,7 +283,7 @@ EOF;
 
     $templateBuilder->setParam("STATUS", $status);
     $templateBuilder->setParam("ACCOUNTS", $accounts);
-    $templateBuilder->setParam("DEFAULT_ACCOUNT", htmlspecialchars($user_arr['default']['account'], ENT_QUOTES, 'UTF-8'));
+    $templateBuilder->setParam("DEFAULT_ACCOUNT", htmlspecialchars(is_array($user_arr['default']) ? $user_arr['default']['account'] : '', ENT_QUOTES, 'UTF-8'));
     $templateBuilder->setParam("DEFAULT_QOS", htmlspecialchars($user_arr['default']['qos'] ?? 'N/A', ENT_QUOTES, 'UTF-8'));
     $templateBuilder->setParam("PRIVILEGES", $admin_privs);
 

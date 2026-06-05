@@ -80,7 +80,7 @@ abstract class AbstractRequest implements Request {
      * This is required to request data before login.
      * @note $as_slurm_user should not be TRUE except for GET requests.
      * @param bool $as_slurm_user if true, allow use of SLURM_USER instead of the current user, otherwise require $_SESSION['USER'] to be set.
-     * @return array|string[] authentication headers as an array or an empty array (if we are not using JWT)
+     * @return string[] Authentication headers, or an empty array if JWT is not in use
      */
     private function build_auth_headers(bool $as_slurm_user = FALSE): array {
         if (!\client\utils\jwt\JwtAuthentication::is_supported())
@@ -118,7 +118,7 @@ abstract class AbstractRequest implements Request {
      * Executes the cURL handle and returns [http_code, content_type, body].
      * @param \CurlHandle $ch Curl handle
      * @return array [http_code, content_type, body]
-     *@throws RequestFailedException on cURL-level error (e.g. connection refused, timeout)
+     * @throws RequestFailedException on cURL-level error (e.g. connection refused, timeout)
      */
     private function execute(\CurlHandle $ch): array {
         $body = curl_exec($ch);
@@ -159,6 +159,12 @@ abstract class AbstractRequest implements Request {
         }
     }
 
+    /**
+     * Decode a JSON response body.
+     * @param string $body Raw response body
+     * @return array Decoded associative array
+     * @throws RequestFailedException If JSON decoding fails
+     */
     private function decode_json(string $body): array {
         $data = json_decode($body, TRUE);
         if (json_last_error() !== JSON_ERROR_NONE) {
@@ -174,22 +180,7 @@ abstract class AbstractRequest implements Request {
 
     /** @inheritDoc */
     function request_json(string $endpoint, string $namespace, string $api_version, int|bool $ttl = 5): array {
-        $cache = \cache\CacheWrapper::getInstance();
-        $cache_key = $namespace . '/' . $endpoint;
-        if ($cache->exists($cache_key))
-            return $cache->get($cache_key);
-
-        $ch = $this->new_handle(
-            $this->get_base_url() . "/{$namespace}/{$api_version}/{$endpoint}",
-            'GET',
-            $this->build_auth_headers(TRUE)
-        );
-        [$http_code, $content_type, $body] = $this->execute($ch);
-        $this->check_response($http_code, $content_type, 'application/json');
-
-        $data = $this->decode_json($body);
-        $cache->set($cache_key, $data, $ttl);
-        return $data;
+        return $this->request_json2($namespace . '/' . $api_version . '/' . $endpoint, $ttl);
     }
 
     /** @inheritDoc */
@@ -207,7 +198,15 @@ abstract class AbstractRequest implements Request {
         $this->check_response($http_code, $content_type, 'application/json');
 
         $data = $this->decode_json($body);
-        $cache->set($full_endpoint, $data, $ttl);
+
+        // Fix for issue #29: Problem 2: APCu Caches Error Responses
+        // When slurmrestd returns an error (e.g., slurmctld is temporarily down),
+        // APCU previously cached the error response for the full TTL (default 3600 seconds for some endpoints).
+        // We now do not cache responses that include an error or warning field.
+        if ( ! isset($data['errors']) || empty( $data['errors'] ) ) {
+            $cache->set($full_endpoint, $data, $ttl);
+        }
+
         return $data;
     }
 

@@ -122,7 +122,7 @@ function log_errors_and_warnings_in_slurmrestd_response(array $json, string $pre
     if ( ! empty($json['errors']) )
         log_msg($prefix . json_encode($json['errors']));
     if ( ! empty($json['warnings']) )
-        log_msg($prefix . json_encode($json['warnings']));
+        log_msg("Warning/Notice: " . $prefix . json_encode($json['warnings']));
 }
 
 function validate_time_limit(string $str): bool {

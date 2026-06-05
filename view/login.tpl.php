@@ -4,6 +4,10 @@ namespace view\login;
 
 use TemplateLoader;
 
+/**
+ * Renders the login form.
+ * @return string Rendered HTML
+ */
 function get_login_form() : string {
     $methods_string = '';
     foreach(\auth\get_methods() as $method => $settings ){
@@ -27,6 +31,10 @@ function get_login_form() : string {
     return $templateBuilder->build();
 }
 
+/**
+ * Renders the about/info page shown on the login screen.
+ * @return string Rendered HTML
+ */
 function get_about_page() : string {
     $templateBuilder = new TemplateLoader("about.html");
     $templateBuilder->setParam("CLUSTER_NAME", config("CLUSTER_NAME"));

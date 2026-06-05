@@ -5,6 +5,11 @@ namespace view\actions;
 use Exception;
 use TemplateLoader;
 
+/**
+ * Renders the user list table.
+ * @param array $users User array as returned by Client::get_users()
+ * @return string Rendered HTML
+ */
 function get_users(array $users) : string {
     $contents = <<<EOF
 <div class="table-responsive tableFixHead">
@@ -100,6 +105,13 @@ EOF;
     return $contents;
 }
 
+/**
+ * Renders the detail view for a single user.
+ * @param string $user_name Username
+ * @param array $user_arr User data as returned by Client::get_user()
+ * @param array $shares Fairshare data as returned by Client::get_fairshare()
+ * @return string Rendered HTML
+ */
 function get_user(string $user_name, array $user_arr, array $shares) : string {
     $contents = '<a href="?action=users"><button type="button" class="btn btn-secondary">Back to the user table</button></a>';
 

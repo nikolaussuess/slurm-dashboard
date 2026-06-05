@@ -88,8 +88,8 @@ interface Client{
 
     /**
      * Returns more detailed information about a specific job.
-     * @param string $id ID of the job to query for.
-     * @return array|null NULL if the job was not found, an associative array otherwise:
+     * @param int|string $id ID of the job to query for.
+     * @return ?array NULL if the job was not found, an associative array otherwise:
      * <pre>
      * array(
      * 'job_id'     => $json_job['job_id'],    // Int
@@ -132,12 +132,12 @@ interface Client{
      * </pre>
      * @throws \exceptions\RequestFailedException If slurmctld is down or the response is malformed.
      */
-    function get_job(string $id) : ?array;
+    function get_job(int|string $id) : ?array;
 
     /**
      * Returns more detailed information about a specific job from slurmdb.
      * @param int|string $id ID of the job to query for.
-     * @return array|null NULL if the job was not found, an associative array otherwise:
+     * @return ?array NULL if the job was not found, an associative array otherwise:
      * <pre>
      * array(
      * 'job_id'     => $json_job['job_id'],    // Int

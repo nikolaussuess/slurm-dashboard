@@ -28,8 +28,9 @@ namespace auth {
         }
 
         /**
-         * @param $username string Username to be checked
-         * @param $password string Password
+         * @param string $username Username to be checked
+         * @param string $password Password
+         * @throws AuthenticationError If the SSH connection fails
          * @return bool TRUE if authentication was successful, FALSE otherwise
          */
         public static function login(string $username, string $password): bool {

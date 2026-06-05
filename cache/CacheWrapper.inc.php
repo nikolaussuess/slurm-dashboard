@@ -189,7 +189,8 @@ class CacheWrapper {
     public function set(string $key, mixed $value, int|bool $ttl = 0): bool {
         if ($ttl === FALSE)
             return TRUE;
-        return $this->backend->set($key, $value, $ttl);
+        // if someone passes TRUE with strict type we would have an error; TRUE is nevertheless not a valid argument value!
+        return $this->backend->set($key, $value, (int)$ttl);
     }
 
     /**

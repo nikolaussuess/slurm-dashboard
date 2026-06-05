@@ -13,7 +13,7 @@ use function utils\log_errors_and_warnings_in_slurmrestd_response;
  * - v0.0.40
  * - v0.0.43
  *
- * NOTE: This class might be renamed in the future, e.g. to Common_V0040_V0043_AbstractClient.
+ * @note This class might be renamed in the future, e.g. to Common_V0040_V0043_AbstractClient.
  */
 abstract class AbstractClient implements Client {
 
@@ -23,10 +23,12 @@ abstract class AbstractClient implements Client {
     // so that a general implementation does not really make sense ...
     abstract function get_fairshare(?string $user_name) : array;
 
+    /** @inheritDoc */
     function is_available() : bool {
         return RequestFactory::socket_exists();
     }
 
+    /** @inheritDoc */
     function getNodeList(): array {
         $json = RequestFactory::newRequest()->request_json("nodes", "slurm", static::api_version, 300);
         log_errors_and_warnings_in_slurmrestd_response($json, 'GET /slurm/nodes: ');
@@ -41,6 +43,7 @@ abstract class AbstractClient implements Client {
         return array_column($json['nodes'], 'name');
     }
 
+    /** @inheritDoc */
     function get_jobs(?array $filter = NULL): array {
         # curl --unix-socket /run/slurmrestd/slurmrestd.socket http://slurm/slurm/v0.0.39/jobs
         $json = RequestFactory::newRequest()->request_json("jobs", 'slurm', static::api_version);
@@ -101,6 +104,7 @@ abstract class AbstractClient implements Client {
         return $jobs;
     }
 
+    /** @inheritDoc */
     function get_jobs_from_slurmdb(?array $filter = NULL) : array {
         $query_string = '?skip_steps=true';
         if($filter != NULL){
@@ -203,6 +207,7 @@ abstract class AbstractClient implements Client {
         return array_reverse($jobs); // newest entry first
     }
 
+    /** @inheritDoc */
     function get_account_list(): array {
         # curl --unix-socket /run/slurmrestd/slurmrestd.socket http://slurm/slurmdb/v0.0.40/accounts
         $json = RequestFactory::newRequest()->request_json("accounts", 'slurmdb', static::api_version, 900);
@@ -217,6 +222,7 @@ abstract class AbstractClient implements Client {
         return array_column($json['accounts'], 'name');
     }
 
+    /** @inheritDoc */
     function get_partition_list(): array {
         # curl --unix-socket /run/slurmrestd/slurmrestd.socket http://slurm/slurm/v0.0.43/partitions
         $json = RequestFactory::newRequest()->request_json("partitions", 'slurm', static::api_version, 900);
@@ -232,6 +238,7 @@ abstract class AbstractClient implements Client {
         return array_column($json['partitions'], 'name');
     }
 
+    /** @inheritDoc */
     function get_users_list(): array {
         # curl --unix-socket /run/slurmrestd/slurmrestd.socket http://slurm/slurmdb/v0.0.40/users
         $json = RequestFactory::newRequest()->request_json("users", 'slurmdb', static::api_version, 120);
@@ -247,7 +254,8 @@ abstract class AbstractClient implements Client {
         return array_column($json['users'], 'name');
     }
 
-    function get_job(string $id) : ?array {
+    /** @inheritDoc */
+    function get_job(int|string $id) : ?array {
         # curl --unix-socket /run/slurmrestd/slurmrestd.socket http://slurm/slurm/v0.0.40/job/id
         $json = RequestFactory::newRequest()->request_json("job/".$id, 'slurm', static::api_version);
         if ( ! array_key_exists('jobs', $json) ) {
@@ -316,6 +324,7 @@ abstract class AbstractClient implements Client {
         return NULL;
     }
 
+    /** @inheritDoc */
     function get_job_from_slurmdb(int|string $id) : ?array {
         # curl --unix-socket /run/slurmrestd/slurmrestd.socket http://slurm/slurmdb/v0.0.39/job/id
         $json = RequestFactory::newRequest()->request_json("job/".$id, 'slurmdb', static::api_version);
@@ -363,6 +372,7 @@ abstract class AbstractClient implements Client {
         return NULL;
     }
 
+    /** @inheritDoc */
     function get_user(string $user_name, bool $with_deleted = FALSE) : array {
         $parameters = '?with_assocs';
         if($with_deleted)
@@ -385,6 +395,7 @@ abstract class AbstractClient implements Client {
         return $json;
     }
 
+    /** @inheritDoc */
     function get_users() : array {
         # curl --unix-socket /run/slurmrestd/slurmrestd.socket http://slurm/slurmdb/v0.0.40/users?with_assocs&with_deleted
         $json = RequestFactory::newRequest()->request_json("users?with_assocs&with_deleted", 'slurmdb', static::api_version);
@@ -401,6 +412,7 @@ abstract class AbstractClient implements Client {
     }
 
 
+    /** @inheritDoc */
     function get_node_info(string $nodename) : array {
         # curl --unix-socket /run/slurmrestd/slurmrestd.socket http://slurm/slurm/v0.0.39/node/nodename
         $json = RequestFactory::newRequest()->request_json("node/{$nodename}", 'slurm', static::api_version);
@@ -448,6 +460,10 @@ abstract class AbstractClient implements Client {
         );
     }
 
+    /**
+     * Fetches the raw reservations array from slurmrestd.
+     * @return array Raw slurmrestd response
+     */
     private function get_reservations() : array {
         # curl --unix-socket /run/slurmrestd/slurmrestd.socket http://slurm/slurm/v0.0.40/reservations
         $json = RequestFactory::newRequest()->request_json("reservations", 'slurm', static::api_version);
@@ -455,6 +471,7 @@ abstract class AbstractClient implements Client {
         return $json;
     }
 
+    /** @inheritDoc */
     function get_maintenances() : array {
         $raw_array = $this->get_reservations();
 
@@ -468,12 +485,14 @@ abstract class AbstractClient implements Client {
         });
     }
 
+    /** @inheritDoc */
     function cancel_job(string|int $job_id) : bool {
         $json = RequestFactory::newRequest()->request_delete("job/" . $job_id, 'slurm', static::api_version);
         log_errors_and_warnings_in_slurmrestd_response($json, "DELETE /job/$job_id: errors: ");
         return empty($json['errors']);
     }
 
+    /** @inheritDoc */
     function update_job(array $job_data) : bool{
         if(isset($job_data['time_limit']) && (
             !isset($job_data['time_limit']['infinite']) && !isset($job_data['time_limit']['set']) ||
@@ -498,6 +517,7 @@ abstract class AbstractClient implements Client {
         return empty($json['errors']);
     }
 
+    /** @inheritDoc */
     function set_node_state(string $nodename, string $new_state) : bool {
         if( !in_array($nodename, $this->getNodeList()) ){
             throw new RequestFailedException(
@@ -519,6 +539,7 @@ abstract class AbstractClient implements Client {
         return empty($json['errors']);
     }
 
+    /** @inheritDoc */
     function get_running_jobs_summary(): array {
         $json = RequestFactory::newRequest()->request_json("jobs", 'slurm', static::api_version);
         log_errors_and_warnings_in_slurmrestd_response($json, "GET /slurm/jobs: ");
@@ -597,6 +618,11 @@ abstract class AbstractClient implements Client {
     }
 
 
+    /**
+     * Extracts a human-readable debug string from a slurmrestd response for use in log messages.
+     * @param array $json Decoded slurmrestd response
+     * @return string JSON-encoded errors/warnings if present, otherwise a list of top-level keys
+     */
     protected function _response_debug_info(array $json): string {
         $parts = [];
         if (!empty($json['errors']))
@@ -606,13 +632,25 @@ abstract class AbstractClient implements Client {
         return empty($parts) ? "Has keys: " . implode(',', array_keys($json)) : implode('; ', $parts);
     }
 
+    /**
+     * Returns the numeric value from a slurmrestd (optional) number object if the 'set' flag is TRUE.
+     * @param array $arr Slurmrestd number object with 'set' and 'number' keys
+     * @param string $default Value to return if 'set' is FALSE
+     * @return string The number as a string, or $default
+     */
     protected function _get_number_if_defined(array $arr, string $default = 'undefined') : string {
         if($arr['set'])
-            return $arr['number'];
+            return (string)$arr['number'];
         else
             return $default;
     }
 
+    /**
+     * Reads a Unix timestamp from a job array and formats it as a date string.
+     * @param array $job_arr Job array
+     * @param string $param Array key of the Unix timestamp
+     * @return string Date in Y-m-d H:i:s, or "?" if the key is absent or zero
+     */
     protected function _get_date_from_unix(array $job_arr, string $param): string {
         if(! isset($job_arr[$param]) || $job_arr[$param] == 0){
             return "?";
@@ -621,6 +659,14 @@ abstract class AbstractClient implements Client {
         return date('Y-m-d H:i:s', $job_arr[$param]);
     }
 
+    /**
+     * Reads a slurmrestd (optional) timestamp object and formats it as a date string.
+     * @param array $job_arr Job array
+     * @param string $param Array key of the timestamp object (with 'set' and 'number' keys)
+     * @param string|null $default Value to return if absent, not set, or zero
+     * @return string|null Date in Y-m-d H:i:s, or $default
+     * @note Only returns NULL if $default was set to NULL.
+     */
     protected function _get_date_from_unix_if_defined(array $job_arr, string $param, ?string $default = 'undefined') : ?string {
         if(! isset($job_arr[$param])){
             return $default;
@@ -647,9 +693,9 @@ abstract class AbstractClient implements Client {
 
     /**
      * Elapsed time is in seconds. Display it accordingly.
-     * @param $job_arr array Job array as from JSON
-     * @param $param string Array index (e.g. elapsed)
-     * @return string The time in D-HH:MM:SS
+     * @param array $job_arr Job array as from JSON
+     * @param string $param Array index (e.g. elapsed)
+     * @return string The time in D-HH:MM:SS, or "?" if not set or zero
      */
     protected function _get_elapsed_time(array $job_arr, string $param = 'elapsed'): string {
         if(! isset($job_arr[$param]) || $job_arr[$param] == 0 ){
@@ -667,10 +713,10 @@ abstract class AbstractClient implements Client {
 
     /**
      * Time limit is in minutes, so the input is minutes.
-     * @param $job_arr array Job array as from JSON
-     * @param $param string Array index (e.g. time_limit)
-     * @param $default string what to return if not set.
-     * @return string The time limit in D-HH:MM:SS
+     * @param array $job_arr Job array as from JSON
+     * @param string $param Array index (e.g. time_limit)
+     * @param string $default What to return if the value is not set.
+     * @return string The time limit in D-HH:MM:SS, "infinite" if unlimited, "?" if the key is absent, or $default
      */
     protected function _get_timelimit_if_defined(array $job_arr, string $param, string $default = 'undefined'): string {
         if(! isset($job_arr[$param])){
@@ -705,6 +751,11 @@ abstract class AbstractClient implements Client {
         }, ARRAY_FILTER_USE_BOTH);
     }
 
+    /**
+     * Reads and formats the exit code of a job, including signal info if present.
+     * @param array $job_arr Job array
+     * @return string Exit code as a string (e.g. "0", "1 with Signal SIGTERM (15)"), or "?" if absent
+     */
     protected function _read_exit_code(array $job_arr): string {
 
         if(! isset($job_arr['exit_code'])){
@@ -741,6 +792,12 @@ abstract class AbstractClient implements Client {
         }));
     }
 
+    /**
+     * Sorts a job array by the given field.
+     * @param array $jobs Job array as returned by get_jobs()
+     * @param string $orderby Field to sort by; one of job_id, user_name, priority, time_start
+     * @return array Sorted job array (priority DESC, all others ASC)
+     */
     protected function _slurm_queue_order_by(array $jobs, string $orderby) : array {
         if( !in_array($orderby, array('job_id', 'user_name', 'priority', 'time_start')))
             return $jobs;

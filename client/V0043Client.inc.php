@@ -7,6 +7,7 @@ class V0043Client extends AbstractClient {
 
     const api_version = 'v0.0.43';
 
+    /** @inheritDoc */
     protected function get_nodes(array $job_arr) : string {
         // TODO: Eventually also read the other values in that new array ...
         if(isset($job_arr['job_resources']) && isset($job_arr['job_resources']['nodes']['list']))
@@ -15,6 +16,7 @@ class V0043Client extends AbstractClient {
             return "?";
     }
 
+    /** @inheritDoc */
     function get_fairshare(?string $user_name) : array {
         $parameters = '';
         if(!empty($user_name)){

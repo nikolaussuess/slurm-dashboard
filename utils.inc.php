@@ -130,6 +130,12 @@ function validate_time_limit(string $str): bool {
     return preg_match($pattern, $str) === 1;
 }
 
+/**
+ * Parses a Slurm time limit string (D-HH:MM or "infinite") into a slurmrestd number object.
+ * @param string $time Time limit string, e.g. "1-12:30" or "infinite"
+ * @return array Slurmrestd number object with 'set', 'infinite', and 'number' keys
+ * @throws \InvalidArgumentException If the format is not recognized
+ */
 function slurmTimeLimitFromString(string $time): array {
 
     if($time === "infinite"){

@@ -2,7 +2,15 @@
 
 namespace view\actions;
 
-function get_slurm_queue($jobs, $exclude_p_low, string $nonce = '') : string {
+/**
+ * Renders the full job queue page including filter controls and table.
+ * @param array $jobs Job array as returned by Client::get_jobs()
+ * @param bool $exclude_p_low Whether to hide p_low partition jobs or not
+ * @param string $nonce CSP nonce for inline scripts
+ * @return string Rendered HTML
+ */
+// TODO: $exclude_p_low should be typed as bool or int, but call sites pass 0 (int) which PHP interpolates differently in JS strings ("0" vs ""). Fix call sites first, then add bool type hint.
+function get_slurm_queue(array $jobs, $exclude_p_low, string $nonce = '') : string {
     $contents = "<h2>Jobs</h2>";
 
     // Allow to exclude jobs of partition p_low
@@ -140,7 +148,12 @@ EOF;
 }
 
 
-function get_slurm_queue_table($jobs) : string {
+/**
+ * Renders the job queue as a HTML table.
+ * @param array $jobs Job array as returned by Client::get_jobs()
+ * @return string Rendered HTML
+ */
+function get_slurm_queue_table(array $jobs) : string {
     $contents = <<<EOF
 <div class="table-responsive tableFixHead">
     <table class="table" id="jobtable-table">
@@ -245,7 +258,12 @@ EOF;
     return $contents;
 }
 
-function get_slurm_queue_compact($jobs) : string {
+/**
+ * Renders the job queue in compact view.
+ * @param array $jobs Job array as returned by Client::get_jobs()
+ * @return string Rendered HTML
+ */
+function get_slurm_queue_compact(array $jobs) : string {
 
     $contents = <<<EOF
 <div id="jobtable-compact" class="table-responsive tableFixHead">

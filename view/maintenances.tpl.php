@@ -1,6 +1,11 @@
 <?php
 namespace view\maintenances;
 
+/**
+ * Renders the scheduled maintenances banner.
+ * @param array $maintenances Array of maintenance reservations as returned by Client::get_maintenances()
+ * @return string Rendered HTML
+ */
 function get_maintenances(array $maintenances) : string {
     $contents = '';
     if(! empty($maintenances)){

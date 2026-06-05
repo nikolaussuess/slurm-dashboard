@@ -145,6 +145,7 @@ function get_all_nodes_usage(\client\Client $dao, string $nonce = '', bool $show
  * Groups running-job summaries by user for a single node. p_low resources tracked separately via _pl suffix.
  * @param array $running_jobs Array of running jobs, as returned by \\Client\\get_running_jobs_summary
  * @param string $node Node name.
+ * @return array Associative array keyed by username, each entry containing aggregated CPU/RAM/GPU values
  */
 function _build_node_user_breakdown(array $running_jobs, string $node): array {
     $breakdown = [];

@@ -4,6 +4,12 @@ namespace view\actions;
 
 use TemplateLoader;
 
+/**
+ * Renders the job detail view for a live slurmctld job.
+ * @param array $query Job array as returned by Client::get_job()
+ * @param string $transitive_dependencies Rendered HTML of transitive job dependencies
+ * @return string Rendered HTML
+ */
 function get_slurm_jobinfo(array $query, string $transitive_dependencies = '') : string {
 
     $contents = '<h2>Job queue information</h2>';
@@ -59,6 +65,11 @@ function get_slurm_jobinfo(array $query, string $transitive_dependencies = '') :
 }
 
 
+/**
+ * Renders the job detail view for a slurmdbd job history entry.
+ * @param array $query Job array as returned by Client::get_job_from_slurmdb()
+ * @return string Rendered HTML
+ */
 function get_slurmdb_jobinfo(array $query) : string {
     $contents = '<h2>Slurmdb information</h2>';
 

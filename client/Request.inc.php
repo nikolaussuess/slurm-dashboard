@@ -80,7 +80,7 @@ abstract class AbstractRequest implements Request {
      * This is required to request data before login.
      * @note $as_slurm_user should not be TRUE except for GET requests.
      * @param bool $as_slurm_user if true, allow use of SLURM_USER instead of the current user, otherwise require $_SESSION['USER'] to be set.
-     * @return array|string[] authentication headers as an array or an empty array (if we are not using JWT)
+     * @return string[] Authentication headers, or an empty array if JWT is not in use
      */
     private function build_auth_headers(bool $as_slurm_user = FALSE): array {
         if (!\client\utils\jwt\JwtAuthentication::is_supported())
@@ -118,7 +118,7 @@ abstract class AbstractRequest implements Request {
      * Executes the cURL handle and returns [http_code, content_type, body].
      * @param \CurlHandle $ch Curl handle
      * @return array [http_code, content_type, body]
-     *@throws RequestFailedException on cURL-level error (e.g. connection refused, timeout)
+     * @throws RequestFailedException on cURL-level error (e.g. connection refused, timeout)
      */
     private function execute(\CurlHandle $ch): array {
         $body = curl_exec($ch);
@@ -159,6 +159,12 @@ abstract class AbstractRequest implements Request {
         }
     }
 
+    /**
+     * Decode a JSON response body.
+     * @param string $body Raw response body
+     * @return array Decoded associative array
+     * @throws RequestFailedException If JSON decoding fails
+     */
     private function decode_json(string $body): array {
         $data = json_decode($body, TRUE);
         if (json_last_error() !== JSON_ERROR_NONE) {

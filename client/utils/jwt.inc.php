@@ -23,8 +23,9 @@ class JwtAuthentication {
             );
             throw new ConfigurationError(
                 "JWT authentication is enabled but misconfigured.",
-                'JWT authentication path = ' . config('JWT_PATH') . ", exists = " .
-                    file_exists(config('JWT_PATH')) . ", is readable = " . is_readable(config('JWT_PATH')),
+                'JWT authentication path = ' . config('JWT_PATH') .
+                     ", exists = " . (file_exists(config('JWT_PATH')) ? "true":"false") .
+                     ", is readable = " . (is_readable(config('JWT_PATH')) ? "true":"false"),
                 "JWT authentication failed."
             );
         }

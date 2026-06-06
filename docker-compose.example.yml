@@ -1,0 +1,57 @@
+services:
+  slurm-dashboard:
+    build: .
+    # image: nikolaussuess/slurm-dashboard:latest  # use pre-built image from DockerHub
+    ports:
+      - "80:80"
+    environment:
+      # --- Required ---
+      CLUSTER_NAME: "MyCluster"
+      ADMIN_NAMES: "John Doe"
+      ADMIN_EMAIL: "admin@example.com"
+      SLURM_LOGIN_NODE: "slurm01.example.com"
+      WIKI_LINK: "https://wiki.example.com"
+
+      # --- slurmrestd connection ---
+      # Unix socket (default): mount the socket directory below and leave
+      # CONNECTION_MODE unset (or set it to "unix").
+      # CONNECTION_MODE: unix
+      # UNIX_SOCKET_PATH: /run/slurmrestd/slurmrestd.socket
+
+      # TCP: comment out the unix socket volume below and set these instead.
+      # CONNECTION_MODE: tcp
+      # SLURM_TCP_HOST: slurmrestd.example.com
+      # SLURM_TCP_PORT: "6820"
+      # SLURM_TCP_CA_CERT: /etc/ssl/certs/my-ca.pem   # only for self-signed/private CA
+      # SLURM_TCP_PROTOCOL: https                     # https (default), http
+
+      # REST_API_VERSION: auto   # or e.g. v0.0.40
+
+      # --- LDAP authentication (optional) ---
+      # LDAP_URI: dc1.example.com
+      # LDAP_BASE: "cn=users,dc=i,dc=example,dc=com"
+      # LDAP_ADMIN_USER: ldapadmin
+      # LDAP_ADMIN_PASSWORD: secret
+
+      # --- Local / SSH authentication (optional) ---
+      # SSH_SERVER_URL: slurm01.example.com
+
+      # --- JWT — required for job cancel/edit and node drain (optional) ---
+      # JWT_PATH: /var/lib/slurm-dashboard/jwt.key
+      # SLURM_USER: slurm
+
+      # --- Misc ---
+      # PRIV_USERS: "user1,user2"
+      # USE_CACHE: apcu                              # apcu (default) | no
+      # FEATURE_RESOURCES_PER_USER: disabled         # disabled | privileged | all
+      # FEATURE_P_LOW_IN_CLUSTER_OVERVIEW: disabled  # disabled | enabled
+
+    volumes:
+      # Unix socket: mount the directory that contains slurmrestd.socket.
+      # Add this volume when using CONNECTION_MODE=udp.
+      #- /run/slurmrestd:/run/slurmrestd
+
+      # JWT key (read-only). Uncomment when JWT_PATH is set above.
+      # - /var/lib/slurm-dashboard/jwt.key:/var/lib/slurm-dashboard/jwt.key:ro
+
+    restart: unless-stopped

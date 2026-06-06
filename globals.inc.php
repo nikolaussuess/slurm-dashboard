@@ -82,6 +82,13 @@ $config = [
     'SLURM_TCP_CA_CERT' => cfg_env('SLURM_TCP_CA_CERT'),
 
     /**
+     * If you want to use HTTP instead of HTTPS with TCP, set SLURM_TCP_PROTOCOL to 'http'.
+     * @note This is unsafe and should only be done in test environments.
+     * @internal
+     */
+    'SLURM_TCP_PROTOCOL' => cfg_env('SLURM_TCP_PROTOCOL', 'https'),
+
+    /**
      * OpenAPI version to use for communication with slurmrestd.
      * Use 'auto' for auto-detection (if supported), or e.g. v0.0.40.
      * Default is 'auto'.

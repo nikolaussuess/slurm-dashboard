@@ -154,6 +154,8 @@ EOF;
  * @return string Rendered HTML
  */
 function get_slurm_queue_table(array $jobs) : string {
+    $active_states = ['PENDING', 'RUNNING', 'COMPLETING', 'CONFIGURING', 'SUSPENDED', 'REQUEUED'];
+
     $contents = <<<EOF
 <div class="table-responsive tableFixHead">
     <table class="table" id="jobtable-table">
@@ -206,42 +208,16 @@ EOF;
             <span class="visually-hidden">Toggle Dropdown</span>
         </button>
 EOF;
-        if( \client\utils\jwt\JwtAuthentication::is_supported() ){
-            $contents .= <<<EOF
-        <ul class="dropdown-menu">
-            <li><a class="dropdown-item" href="?action=cancel-job&job_id={$job['job_id']}">Cancel job</a></li>
-            <li><a class="dropdown-item" href="?action=edit-job&job_id={$job['job_id']}">Edit job</a></li>
-        </ul>
-EOF;
-        }
-        else {
-            $contents .= <<<EOF
-        <ul class="dropdown-menu">
-            <li>
-                <span class="dropdown-item" 
-                      data-bs-toggle="tooltip" 
-                      data-bs-placement="right"
-                      title="This feature is not supported by the current configuration.">
-                      <a class="dropdown-item disabled" 
-                         href="?action=cancel-job&job_id={$job['job_id']}"
-                         aria-disabled="true">
-                        Cancel job
-                      </a>
-                </span>
-                <span class="dropdown-item" 
-                      data-bs-toggle="tooltip" 
-                      data-bs-placement="right"
-                      title="This feature is not supported by the current configuration.">
-                      <a class="dropdown-item disabled" 
-                         href="?action=edit-job&job_id={$job['job_id']}"
-                         aria-disabled="true">
-                        Edit job
-                      </a>
-                </span>
-            </li>
-        </ul>
-EOF;
-        }
+        // $job['user_name'] may be empty if the user does not exist on slurmrestd host —
+        // in this case the configuration does not allow to determine the user name.
+        if (\client\utils\jwt\JwtAuthentication::is_supported() && !empty(array_intersect($job['job_state'], $active_states)) && !empty($job['user_name']) && (\auth\current_user_is_admin() || $job['user_name'] === $_SESSION['USER']))
+            $contents .= render_job_action_dropdown($job['job_id'], FALSE);
+        elseif (!\client\utils\jwt\JwtAuthentication::is_supported() || empty($job['user_name']))
+            $contents .= render_job_action_dropdown($job['job_id'], TRUE, 'This feature is not supported by the current configuration.');
+        elseif (empty(array_intersect($job['job_state'], $active_states)))
+            $contents .= render_job_action_dropdown($job['job_id'], TRUE, 'Job is no longer active.');
+        else
+            $contents .= render_job_action_dropdown($job['job_id'], TRUE, 'You are not authorized to cancel or edit this job.');
 
         $contents .= <<<EOF
     </div>
@@ -264,6 +240,7 @@ EOF;
  * @return string Rendered HTML
  */
 function get_slurm_queue_compact(array $jobs) : string {
+    $active_states = ['PENDING', 'RUNNING', 'COMPLETING', 'CONFIGURING', 'SUSPENDED', 'REQUEUED'];
 
     $contents = <<<EOF
 <div id="jobtable-compact" class="table-responsive tableFixHead">
@@ -310,42 +287,16 @@ EOF;
             <span class="visually-hidden">Toggle Dropdown</span>
         </button>
 EOF;
-        if( \client\utils\jwt\JwtAuthentication::is_supported() ){
-            $contents .= <<<EOF
-        <ul class="dropdown-menu">
-            <li><a class="dropdown-item" href="?action=cancel-job&job_id={$job['job_id']}">Cancel job</a></li>
-            <li><a class="dropdown-item" href="?action=edit-job&job_id={$job['job_id']}">Edit job</a></li>
-        </ul>
-EOF;
-        }
-        else {
-            $contents .= <<<EOF
-        <ul class="dropdown-menu">
-            <li>
-                <span class="dropdown-item" 
-                      data-bs-toggle="tooltip" 
-                      data-bs-placement="right"
-                      title="This feature is not supported by the current configuration.">
-                      <a class="dropdown-item disabled" 
-                         href="?action=cancel-job&job_id={$job['job_id']}"
-                         aria-disabled="true">
-                        Cancel job
-                      </a>
-                </span>
-                <span class="dropdown-item" 
-                      data-bs-toggle="tooltip" 
-                      data-bs-placement="right"
-                      title="This feature is not supported by the current configuration.">
-                      <a class="dropdown-item disabled" 
-                         href="?action=edit-job&job_id={$job['job_id']}"
-                         aria-disabled="true">
-                        Edit job
-                      </a>
-                </span>
-            </li>
-        </ul>
-EOF;
-        }
+        // $job['user_name'] may be empty if the user does not exist on slurmrestd host —
+        // in this case the configuration does not allow to determine the user name.
+        if (\client\utils\jwt\JwtAuthentication::is_supported() && !empty(array_intersect($job['job_state'], $active_states)) && !empty($job['user_name']) && (\auth\current_user_is_admin() || $job['user_name'] === $_SESSION['USER']))
+            $contents .= render_job_action_dropdown($job['job_id'], FALSE);
+        elseif (!\client\utils\jwt\JwtAuthentication::is_supported() || empty($job['user_name']))
+            $contents .= render_job_action_dropdown($job['job_id'], TRUE, 'This feature is not supported by the current configuration.');
+        elseif (empty(array_intersect($job['job_state'], $active_states)))
+            $contents .= render_job_action_dropdown($job['job_id'], TRUE, 'Job is no longer active.');
+        else
+            $contents .= render_job_action_dropdown($job['job_id'], TRUE, 'You are not authorized to cancel or edit this job.');
 
         $contents .= <<<EOF
     </div>

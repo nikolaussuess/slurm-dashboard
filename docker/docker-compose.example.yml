@@ -1,6 +1,8 @@
 services:
   slurm-dashboard:
-    build: .
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
     # image: nikolaussuess/slurm-dashboard:latest  # use pre-built image from DockerHub
     ports:
       - "80:80"

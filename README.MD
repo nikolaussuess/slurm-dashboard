@@ -226,6 +226,25 @@ systemctl restart apache2
 find /var/www/slurm-dashboard -type f -exec chmod 640 {} \;
 ```
 
+## Docker
+
+All Docker-related files are in `docker/`. The image is based on `php:8.4-apache` and includes all required PHP extensions (`curl`, `apcu`, `ldap`, `ssh2`). Build and run from the project root:
+
+```bash
+docker compose -f docker/docker-compose.yml up -d
+```
+
+Configure the dashboard via environment variables in `docker-compose.yml` (use `docker-compose.example.yml` for reference). For sensitive values like `LDAP_ADMIN_PASSWORD`, Docker Secrets are supported via the `_FILE` convention:
+
+```yaml
+environment:
+  LDAP_ADMIN_PASSWORD_FILE: LDAP_ADMIN_PASSWORD  # reads /run/secrets/LDAP_ADMIN_PASSWORD
+```
+
+If using a Unix socket, the UID/GID of the `slurm-dashboard` container user (default: **994**) must match the owner of the socket. Override with `--build-arg DASHBOARD_UID=...`. Additionally, you must mount the directory with the unix socket as a volume.
+
+For more information see `docker/docker-compose.example.yml`.
+
 ### Update
 Once you have set up the dashboard, you can use the following bash script to upgrade to a new version. (It might also be helpful for the initial setup.)
 

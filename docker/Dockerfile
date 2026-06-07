@@ -44,48 +44,7 @@ RUN a2enmod env rewrite headers \
 
 # All env vars passed via `docker run -e` / --env-file are forwarded to PHP
 # through Apache's PassEnv (mod_env). Unset variables are silently ignored.
-RUN cat > /etc/apache2/sites-available/slurm-dashboard.conf <<'APACHEEOF'
-<VirtualHost *:80>
-    DocumentRoot /var/www/html/public
-
-    <Directory /var/www/html/public>
-        AllowOverride None
-        Require all granted
-
-        # Security headers (inlined from public/.htaccess — no per-request htaccess lookup in Docker)
-        Header always set X-Frame-Options "SAMEORIGIN"
-        Header set X-XSS-Protection "1; mode=block"
-        Header always set Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'; frame-ancestors 'self';"
-        Header always set Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
-        Header set X-Content-Type-Options "nosniff"
-    </Directory>
-
-    # Required
-    PassEnv CLUSTER_NAME ADMIN_NAMES ADMIN_EMAIL SLURM_LOGIN_NODE WIKI_LINK
-
-    # REST API connection (unix socket or TCP)
-    PassEnv CONNECTION_MODE UNIX_SOCKET_PATH
-    PassEnv SLURM_TCP_HOST SLURM_TCP_PORT SLURM_TCP_CA_CERT SLURM_TCP_PROTOCOL
-    PassEnv REST_API_VERSION
-
-    # LDAP authentication
-    PassEnv LDAP_URI LDAP_BASE LDAP_ADMIN_USER LDAP_ADMIN_PASSWORD LDAP_ADMIN_PASSWORD_FILE
-
-    # Local (SSH) authentication
-    PassEnv SSH_SERVER_URL
-
-    # JWT
-    PassEnv JWT_PATH SLURM_USER
-
-    # Misc / feature flags
-    PassEnv PRIV_USERS USE_CACHE
-    PassEnv FEATURE_P_LOW_IN_CLUSTER_OVERVIEW FEATURE_RESOURCES_PER_USER
-
-    # Log on stdout / stderr so docker shows them
-    ErrorLog  /proc/self/fd/2
-    CustomLog /proc/self/fd/1 combined
-</VirtualHost>
-APACHEEOF
+COPY docker/slurm-dashboard.conf /etc/apache2/sites-available/slurm-dashboard.conf
 
 RUN a2ensite slurm-dashboard
 

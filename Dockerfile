@@ -69,7 +69,7 @@ RUN cat > /etc/apache2/sites-available/slurm-dashboard.conf <<'APACHEEOF'
     PassEnv REST_API_VERSION
 
     # LDAP authentication
-    PassEnv LDAP_URI LDAP_BASE LDAP_ADMIN_USER LDAP_ADMIN_PASSWORD
+    PassEnv LDAP_URI LDAP_BASE LDAP_ADMIN_USER LDAP_ADMIN_PASSWORD LDAP_ADMIN_PASSWORD_FILE
 
     # Local (SSH) authentication
     PassEnv SSH_SERVER_URL

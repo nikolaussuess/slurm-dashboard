@@ -8,8 +8,24 @@
 const TO_BE_REPLACED = '<TO BE REPLACED>';
 /**
  * Helper to read environment vars with fallback.
+ * Supports the Docker Secrets _FILE convention: if FOO_FILE is set to a secret name,
+ * the value is read from /run/secrets/<secret_name> (the standard Docker mount point).
+ * Example: LDAP_ADMIN_PASSWORD_FILE=LDAP_ADMIN_PASSWORD reads /run/secrets/LDAP_ADMIN_PASSWORD.
+ *
+ * @param string $name Environment variable name
+ * @param string $default Value returned when neither FOO_FILE nor FOO is set
+ * @return string The resolved configuration value
  */
 function cfg_env(string $name, string $default = TO_BE_REPLACED) : string {
+    // Docker Secrets: FOO_FILE holds the secret name; Docker mounts it at /run/secrets/<name>
+    $secret_name = getenv($name . '_FILE');
+    if ($secret_name !== FALSE && $secret_name !== '') {
+        $secret_path = '/run/secrets/' . $secret_name;
+        if (is_readable($secret_path)) {
+            return trim(file_get_contents($secret_path));
+        }
+    }
+    // Plain environment variable fallback
     $value = getenv($name);
     return ($value !== FALSE && $value !== '') ? $value : $default;
 }

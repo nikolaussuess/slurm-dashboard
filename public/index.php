@@ -34,6 +34,7 @@ require_once __DIR__ . '/../client/utils/DependencyResolver.inc.php';
 require_once __DIR__ . '/../auth/auth.inc.php';
 require_once __DIR__ . '/../utils.inc.php';
 
+require_once __DIR__ . '/../view/job_actions_dropdown.tpl.php';
 require_once __DIR__ . '/../view/login.tpl.php';
 require_once __DIR__ . '/../view/maintenances.tpl.php';
 require_once __DIR__ . '/../view/usage.tpl.php';

@@ -276,28 +276,16 @@ EOF;
                    . ' data-bs-toggle="dropdown" aria-expanded="false">'
                    . '<span class="visually-hidden">Toggle Dropdown</span></button>';
 
-        if (\client\utils\jwt\JwtAuthentication::is_supported() && !empty(array_intersect($job['job_state'], $active_states))) {
-            $contents .= '<ul class="dropdown-menu">'
-                       . '<li><a class="dropdown-item" href="?action=cancel-job&job_id=' . $job['job_id'] . '">Cancel job</a></li>'
-                       . '<li><a class="dropdown-item" href="?action=edit-job&job_id=' . $job['job_id'] . '">Edit job</a></li>'
-                       . '</ul>';
-        } elseif (!\client\utils\jwt\JwtAuthentication::is_supported()) {
-            $tooltip = 'This feature is not supported by the current configuration.';
-            $contents .= '<ul class="dropdown-menu"><li>'
-                       . '<span class="dropdown-item" data-bs-toggle="tooltip" data-bs-placement="right" title="' . $tooltip . '">'
-                       . '<a class="dropdown-item disabled" href="?action=cancel-job&job_id=' . $job['job_id'] . '" aria-disabled="true">Cancel job</a></span>'
-                       . '<span class="dropdown-item" data-bs-toggle="tooltip" data-bs-placement="right" title="' . $tooltip . '">'
-                       . '<a class="dropdown-item disabled" href="?action=edit-job&job_id=' . $job['job_id'] . '" aria-disabled="true">Edit job</a></span>'
-                       . '</li></ul>';
-        } else {
-            $tooltip = 'Job is no longer active.';
-            $contents .= '<ul class="dropdown-menu"><li>'
-                       . '<span class="dropdown-item" data-bs-toggle="tooltip" data-bs-placement="right" title="' . $tooltip . '">'
-                       . '<a class="dropdown-item disabled" href="?action=cancel-job&job_id=' . $job['job_id'] . '" aria-disabled="true">Cancel job</a></span>'
-                       . '<span class="dropdown-item" data-bs-toggle="tooltip" data-bs-placement="right" title="' . $tooltip . '">'
-                       . '<a class="dropdown-item disabled" href="?action=edit-job&job_id=' . $job['job_id'] . '" aria-disabled="true">Edit job</a></span>'
-                       . '</li></ul>';
-        }
+        // $job['user_name'] may be empty if the user does not exist on slurmrestd host —
+        // in this case the configuration does not allow to determine the user name.
+        if (\client\utils\jwt\JwtAuthentication::is_supported() && !empty(array_intersect($job['job_state'], $active_states)) && !empty($job['user_name']) && (\auth\current_user_is_admin() || $job['user_name'] === $_SESSION['USER']))
+            $contents .= render_job_action_dropdown($job['job_id'], FALSE);
+        elseif (!\client\utils\jwt\JwtAuthentication::is_supported() || empty($job['user_name']))
+            $contents .= render_job_action_dropdown($job['job_id'], TRUE, 'This feature is not supported by the current configuration.');
+        elseif (empty(array_intersect($job['job_state'], $active_states)))
+            $contents .= render_job_action_dropdown($job['job_id'], TRUE, 'Job is no longer active.');
+        else
+            $contents .= render_job_action_dropdown($job['job_id'], TRUE, 'You are not authorized to cancel or edit this job.');
 
         $contents .= '</div></td>';
         $contents .= '</tr>';

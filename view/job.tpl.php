@@ -15,16 +15,27 @@ function get_slurm_jobinfo(array $query, string $transitive_dependencies = '') :
     $contents = '<h2>Job queue information</h2>';
 
     $job_state_text = \utils\get_job_state_view($query);
-    $user = htmlspecialchars($query['user_name'] . " (" . $query['user_id'] . ')', ENT_QUOTES, 'UTF-8');
-    $user_name = htmlspecialchars($query['user_name'], ENT_QUOTES, 'UTF-8');
+    // Note: $user can be an empty string if the user does not exist on the host where slurmrestd is running.
+    if( ! empty($query['user_name']) ){
+        $user = htmlspecialchars($query['user_name'] . " (" . $query['user_id'] . ')', ENT_QUOTES, 'UTF-8');
+        $user_link = '<a href="?action=users&user_name='. htmlspecialchars($query['user_name'], ENT_QUOTES, 'UTF-8')
+                     . '" title="Note: Currently, only admins can view this user details.">'
+                     .         $user
+                     . '</a>';
+    }
+    else {
+        // We did not get a username, so display the user id only ...
+        $user = $query['user_id'];
+        $user_link = $user;
+    }
+
     $group = htmlspecialchars($query['group_name'] . " (" . $query['group_id'] . ')', ENT_QUOTES, 'UTF-8');
     $requeue = $query['requeue'] ? 'allowed' : 'not allowed';
 
     $templateBuilder = new TemplateLoader("jobinfo.html");
     $templateBuilder->setParam("JOBID",             $query['job_id']                    );
     $templateBuilder->setParam("JOBNAME",           htmlspecialchars($query['job_name'], ENT_QUOTES, 'UTF-8'));
-    $templateBuilder->setParam("USER",              $user                               );
-    $templateBuilder->setParam("USER_NAME",         $user_name                          );
+    $templateBuilder->setParam("USER",              $user_link                          );
     $templateBuilder->setParam("GROUP",             $group                              );
     $templateBuilder->setParam("ACCOUNT",           htmlspecialchars($query['account'], ENT_QUOTES, 'UTF-8'));
     $templateBuilder->setParam("PARTITIONS",        htmlspecialchars($query['partition'], ENT_QUOTES, 'UTF-8'));

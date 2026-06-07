@@ -295,7 +295,7 @@ if [[ $REPLY =~ ^[Yy]$ ]]; then
 fi
 ```
 
-## Docker
+### Docker
 We also provide a Dockerfile for running the dashboard in a docker container. All Docker-related files are in `docker/`. The image is based on `php:8.4-apache` and includes all required PHP extensions (`curl`, `apcu`, `ldap`, `ssh2`). Build and run from the project root:
 
 ```bash

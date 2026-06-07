@@ -232,7 +232,7 @@ Once you have set up the dashboard, you can use the following bash script to upg
 ```bash
 #!/bin/bash
 
-# TODO: REPLACE THE FOLLOWING VARIABLES or leave the value "TO_BE_REPLACED"
+# TODO: REPLACE THE FOLLOWING VARIABLES
 # Replace by your web directory
 WEB_DIRECTORY="/var/www/slurm-dashboard"
 DASHBOARD_USER="slurm-dashboard"

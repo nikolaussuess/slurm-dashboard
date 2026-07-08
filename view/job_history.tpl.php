@@ -99,6 +99,33 @@ function get_slurmdb_filter_form_evaluation() : array {
 
 
 /**
+ * Gets the non-disabled state values belonging to a SLURM_JOB_STATE_GROUP_META group.
+ * @param string $group Group label (key of \utils\SLURM_JOB_STATE_GROUP_META)
+ * @return array Array of state name strings
+ */
+function get_enabled_states_of_group(string $group) : array {
+    $states = [];
+    foreach (\utils\SLURM_JOB_STATES as $val => $attrs) {
+        if ($attrs['group'] === $group && !$attrs['disabled']) {
+            $states[] = $val;
+        }
+    }
+    return $states;
+}
+
+/**
+ * Checks whether two lists of strings contain exactly the same values, ignoring order.
+ * @param array $a First list
+ * @param array $b Second list
+ * @return bool TRUE if both lists contain the same values
+ */
+function is_same_value_set(array $a, array $b) : bool {
+    sort($a);
+    sort($b);
+    return $a === $b;
+}
+
+/**
  * Renders the job history filter form.
  * @param array $filter Current filter values
  * @param array $accounts List of account names for the filter dropdown
@@ -175,6 +202,23 @@ function get_slurmdb_filter_form(array $filter, array $accounts, array $users, a
     $templateBuilder->setParam("ACTION", 'action=job_history&do=search');
     $templateBuilder->setParam("TIME_MIN_VALUE", htmlspecialchars($filter['start_time_value'] ?? '', ENT_QUOTES, 'UTF-8'));
     $templateBuilder->setParam("TIME_MAX_VALUE", htmlspecialchars($filter['end_time_value'] ?? '', ENT_QUOTES, 'UTF-8'));
+    $templateBuilder->setParam("CURRENT_USER", htmlspecialchars($_SESSION['USER'] ?? '', ENT_QUOTES, 'UTF-8'));
+
+    // Highlight a shortcut button if the current filter matches it exactly.
+    $set_active_params = function (TemplateLoader $builder, string $name, bool $is_active) {
+        $builder->setParam("ACTIVE_$name", $is_active ? ' active' : '');
+        $builder->setParam("PRESSED_$name", $is_active ? 'true' : 'false');
+    };
+
+    $current_states = $filter['state'] ?? [];
+    $set_active_params($templateBuilder, 'COMPLETED', is_same_value_set($current_states, ['COMPLETED']));
+    $set_active_params($templateBuilder, 'RUNNING', is_same_value_set($current_states, ['COMPLETING', 'CONFIGURING', 'RUNNING']));
+    $set_active_params($templateBuilder, 'FAILED', is_same_value_set($current_states, get_enabled_states_of_group('Fail states')));
+    $set_active_params($templateBuilder, 'WAITING', is_same_value_set($current_states, get_enabled_states_of_group('Other states')));
+
+    $current_users = $filter['users'] ?? [];
+    $set_active_params($templateBuilder, 'OWN_USER', is_same_value_set($current_users, [$_SESSION['USER'] ?? '']));
+
     return $templateBuilder->build();
 }
 

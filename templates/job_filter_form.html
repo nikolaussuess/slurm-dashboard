@@ -25,10 +25,43 @@
             /> <span class="text-muted">(default: today midnight to now)</span>
         </div>
 
-        <button class="btn btn-primary" type="button" data-bs-toggle="collapse" data-bs-target="#collapsefilter"
-                aria-expanded="false" aria-controls="collapsefilter">
-            Show/Hide more
-        </button>
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
+            <button class="btn btn-primary" type="button" data-bs-toggle="collapse" data-bs-target="#collapsefilter"
+                    aria-expanded="false" aria-controls="collapsefilter">
+                Show/Hide more
+            </button>
+            <div class="d-flex flex-wrap align-items-center gap-2">
+                <span class="text-muted small d-none d-sm-inline">Quick filters:</span>
+                <div class="btn-group" role="group" aria-label="State filter shortcuts">
+                    <button class="btn btn-outline-success{{ACTIVE_COMPLETED}}" type="button" data-states="COMPLETED"
+                            data-bs-toggle="tooltip" data-bs-placement="left" aria-pressed="{{PRESSED_COMPLETED}}"
+                            title="Show completed jobs only" aria-label="Show completed jobs only">
+                        &#10004;
+                    </button>
+                    <button class="btn btn-outline-info{{ACTIVE_RUNNING}}" type="button" data-states="COMPLETING,CONFIGURING,RUNNING"
+                            data-bs-toggle="tooltip" data-bs-placement="left" aria-pressed="{{PRESSED_RUNNING}}"
+                            title="Show running jobs only" aria-label="Show running jobs only">
+                        &#9654;
+                    </button>
+                    <button class="btn btn-outline-danger{{ACTIVE_FAILED}}" type="button" data-state-class="state-fail"
+                            data-bs-toggle="tooltip" data-bs-placement="left" aria-pressed="{{PRESSED_FAILED}}"
+                            title="Show failed states only" aria-label="Show failed states only">
+                        &#10006;
+                    </button>
+                    <button class="btn btn-outline-warning{{ACTIVE_WAITING}}" type="button" data-state-class="state-other"
+                            data-bs-toggle="tooltip" data-bs-placement="left" aria-pressed="{{PRESSED_WAITING}}"
+                            title="Show waiting states only" aria-label="Show waiting states only">
+                        &#8987;
+                    </button>
+                </div>
+                <button class="btn btn-outline-secondary{{ACTIVE_OWN_USER}}" type="button" id="btn-own-jobs-only"
+                        data-current-user="{{CURRENT_USER}}" data-bs-toggle="tooltip" data-bs-placement="left"
+                        aria-pressed="{{PRESSED_OWN_USER}}"
+                        title="Show own jobs only" aria-label="Show own jobs only">
+                    &#128100;
+                </button>
+            </div>
+        </div>
 
         <div class="collapse mt-2" id="collapsefilter">
             <div class="card card-body">

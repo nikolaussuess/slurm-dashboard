@@ -214,7 +214,7 @@ interface Client{
      * 'tres_used' => $json["nodes"][0]["tres_used"],
      * 'boot_time' => $this->_get_date_from_unix_if_defined($json["nodes"][0], "boot_time"),
      * 'last_busy' => $this->_get_date_from_unix_if_defined($json["nodes"][0], "last_busy"),
-     * 'partitions' => $json["nodes"][0]["partitions"] ?? array(),
+     * 'partitions' => (list of partition names, taken from GET /nodes, see [ISSUE 33]; array('?') if unavailable),
      * 'reservation' => $json["nodes"][0]["reservation"] ??'',
      * 'slurm_version' => $json["nodes"][0]["version"] ?? '',
      *  );

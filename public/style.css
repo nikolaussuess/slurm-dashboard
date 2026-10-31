@@ -165,6 +165,11 @@ button, input, select {
     text-align: left;
 }
 
+/* Overrides the 1rem of the button rule, so that the badge inside has the same size as other badges */
+.job-reason {
+    font-size: inherit;
+}
+
 .nodes-cell {
     word-break: break-word;
     max-width: 220px;

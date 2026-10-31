@@ -69,6 +69,7 @@ function get_slurm_jobinfo(array $query, string $transitive_dependencies = '') :
     $templateBuilder->setParam("SUBMIT_TIME",       $query['submit_time']               );
     $templateBuilder->setParam("TIME_LIMIT",        $query['time_limit']                );
     $templateBuilder->setParam("JOB_STATE",         $job_state_text                     );
+    $templateBuilder->setParam("JOB_REASON",        htmlspecialchars(\utils\get_job_reason_text($query) ?? '', ENT_QUOTES, 'UTF-8'));
 
     $contents .= $templateBuilder->build();
 

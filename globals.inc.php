@@ -209,6 +209,20 @@ $config = [
     )
         ? cfg_env('FEATURE_RESOURCES_PER_USER', 'disabled')
         : 'disabled',
+
+    // ------------------------------------------------------------------
+    // CLUSTER USAGE
+    // ------------------------------------------------------------------
+
+    /**
+     * Minimum free resources a node needs for a new job. Below any of these values, the node's remaining
+     * free resources are shown as unusable on the cluster usage page.
+     * Minimums above a node's total size are capped at that size. Set a value to 0 to disable that check.
+     * The GPU check is disabled by default, because CPU-only jobs can still start on nodes without free GPUs.
+     */
+    'unusable_min_free_cpus' => (int)cfg_env('UNUSABLE_MIN_FREE_CPUS', '2'),
+    'unusable_min_free_mem_gib' => (int)cfg_env('UNUSABLE_MIN_FREE_MEM_GIB', '8'),
+    'unusable_min_free_gpus' => (int)cfg_env('UNUSABLE_MIN_FREE_GPUS', '0'),
 ];
 
 function config($key = null) {

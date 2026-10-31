@@ -321,7 +321,7 @@ function _render_cluster_summary(array $totals, array $user_breakdown, bool $sho
         if (config('unusable_min_free_cpus') > 0)
             $minimums[] = _format_count(config('unusable_min_free_cpus'), 'CPU');
         if (config('unusable_min_free_mem_gib') > 0)
-            $minimums[] = config('unusable_min_free_mem_gib') . ' GiB memory';
+            $minimums[] = config('unusable_min_free_mem_gib') . ' GiB RAM';
         if ($has_gpu && config('unusable_min_free_gpus') > 0)
             $minimums[] = _format_count(config('unusable_min_free_gpus'), 'GPU');
 
@@ -329,8 +329,8 @@ function _render_cluster_summary(array $totals, array $user_breakdown, bool $sho
                . '<span style="display:inline-block;width:14px;height:14px;vertical-align:middle;'
                . 'background:repeating-linear-gradient(45deg,#ffc107,#ffc107 4px,#fff3cd 4px,#fff3cd 8px);'
                . 'border:1px solid #ccc"></span>'
-               . ' Unusable: free resources on nodes that are unavailable (e.g. down or draining)'
-               . ($minimums ? ' or have fewer than ' . implode(' or ', $minimums) . ' free' : '')
+               . ' Unusable: node unavailable'
+               . ($minimums ? ' or fewer than ' . implode(' or ', $minimums) . ' available' : '')
                . '</small></td></tr>' . "\n";
         $html .= _render_unusable_nodes_row($unusable_nodes);
     }

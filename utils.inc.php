@@ -233,7 +233,7 @@ function get_job_state_view(array $job, string $param_name = 'job_state', bool $
         if($job_state === 'PENDING' && $reason_text !== NULL) {
             // Badge and icon form one button, so that a tap on either opens the reason.
             // The tooltip is initialized in public/index.php.
-            $job_state_text .= '<button type="button" class="btn p-0 border-0 job-reason"'
+            $job_state_text .= '<button type="button" class="bg-transparent border-0 p-0 text-reset job-reason"'
                              . ' title="Reason: ' . htmlspecialchars($reason_text, ENT_QUOTES, 'UTF-8') . '">'
                              . $badge . '<i title="Click here for more information">&#9432;</i></button> ';
         }

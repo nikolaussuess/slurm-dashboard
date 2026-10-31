@@ -47,6 +47,9 @@ services:
       # USE_CACHE: apcu                              # apcu (default) | no
       # FEATURE_RESOURCES_PER_USER: disabled         # disabled | privileged | all
       # FEATURE_P_LOW_IN_CLUSTER_OVERVIEW: disabled  # disabled | enabled
+      # UNUSABLE_MIN_FREE_CPUS: 2                    # below these free resources, a node counts as unusable
+      # UNUSABLE_MIN_FREE_MEM_GIB: 8
+      # UNUSABLE_MIN_FREE_GPUS: 0                    # disabled by default
 
     volumes:
       # Unix socket: mount the directory that contains slurmrestd.socket.

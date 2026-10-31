@@ -18,6 +18,7 @@ However, any slurm version `>= 23.11.x` should work. If you encounter any issues
 
 ## Current features
 - Display cluster usage information (state, CPUs, memory, gpus per node).
+- List nodes with unusable resources and the reason (e.g. CPUs full, `DRAIN`); the minimum free resources are configurable via `UNUSABLE_MIN_FREE_CPUS`, `UNUSABLE_MIN_FREE_MEM_GIB` and `UNUSABLE_MIN_FREE_GPUS`.
 - Display cluster usage information (CPUs, memory, gpus per node) per node and user. (This feature is disabled per default and can be enabled for all users or for privileged users only.)
 - Display the current job queue, including a job detail page.
 - Authentication via LDAP or local, and it additionally checks whether the user exists in the accounting database.
@@ -204,6 +205,14 @@ However, any slurm version `>= 23.11.x` should work. If you encounter any issues
     # SetEnv FEATURE_RESOURCES_PER_USER          "disabled" # possible values: disabled, privileged, all
     # Show p_low partition as a separate segment in the cluster-wide overview bars (extra API call).
     # SetEnv FEATURE_P_LOW_IN_CLUSTER_OVERVIEW   "disabled" # possible values: disabled, enabled
+
+    # OPTIONAL CLUSTER USAGE CONFIGURATION
+    # Minimum free resources a node needs for a new job. Below any of them, its remaining free resources
+    # are shown as unusable. Unavailable nodes (e.g. DOWN, FAIL, DRAIN, MAINT) always count as unusable.
+    # Set a value to 0 to disable that check.
+    # SetEnv UNUSABLE_MIN_FREE_CPUS     "2"
+    # SetEnv UNUSABLE_MIN_FREE_MEM_GIB  "8"
+    # SetEnv UNUSABLE_MIN_FREE_GPUS     "0" # disabled by default: CPU-only jobs can still start on nodes without free GPUs
 </VirtualHost>
 ```
 5) Make sure that your apache2 config file is not readable by other users (especially if it contains passwords)!

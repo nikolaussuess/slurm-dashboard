@@ -358,7 +358,7 @@ abstract class AbstractClient implements Client {
                 'container'  => $json_job['container'],
                 'flags'      => $json_job['flags'] ?? array(),
 
-                'gres'       => $json_job['jobs'][0]['used_gres'] ?? NULL,
+                'gres'       => $json_job['used_gres'] ?? NULL,
                 'tres'       => $json_job['tres'],
 
                 'time_submit'=> $this->_get_date_from_unix($json_job['time'], 'submission'),

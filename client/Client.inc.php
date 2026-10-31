@@ -31,6 +31,8 @@ interface Client{
      *       'job_name'   : string
      *       'partition'  : string
      *       'job_state'  : array of strings
+     *       'state_reason' : ?string
+     *       'state_description' : ?string
      *       'user_name'  : string
      *       'user_id'    : int or numeric string
      *       'nodes'      : string
@@ -95,6 +97,8 @@ interface Client{
      * 'job_id'     => $json_job['job_id'],    // Int
      * 'job_name'   => $json_job['name'],      // String
      * 'job_state'  => $json_job['job_state'], // Array of strings
+     * 'state_reason' => $json_job['state_reason'] ?? NULL,
+     * 'state_description' => $json_job['state_description'] ?? NULL,
      * 'user_name'  => $json_job['user_name'],
      * 'user_id'    => $json_job['user_id'],
      * 'group_name' => $json_job['group_name'],

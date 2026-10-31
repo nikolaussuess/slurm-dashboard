@@ -69,7 +69,12 @@ function _render_tres_detail(array $tres) : string {
  */
 function get_slurm_jobinfo(array $query, string $transitive_dependencies = '') : string {
 
-    $job_state_text = \utils\get_job_state_view($query);
+    // The reason is displayed as text here, so the badge does not need a tooltip.
+    $job_state_text = \utils\get_job_state_view($query, reason_tooltip: FALSE);
+    $reason_text = \utils\get_job_reason_text($query);
+    if( $reason_text !== NULL ){
+        $job_state_text .= '(Reason: ' . htmlspecialchars($reason_text, ENT_QUOTES, 'UTF-8') . ')';
+    }
     // Note: $user can be an empty string if the user does not exist on the host where slurmrestd is running.
     if( ! empty($query['user_name']) ){
         $user = htmlspecialchars($query['user_name'] . " (" . $query['user_id'] . ')', ENT_QUOTES, 'UTF-8');

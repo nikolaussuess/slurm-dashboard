@@ -229,15 +229,16 @@ function get_job_state_view(array $job, string $param_name = 'job_state', bool $
     foreach($job_state_array as $job_state) {
         $group = SLURM_JOB_STATES[$job_state]['group'] ?? NULL;
         $state_color = $group !== NULL ? SLURM_JOB_STATE_GROUP_META[$group]['color'] : '#ffc107';
-        $state_e = htmlspecialchars($job_state, ENT_QUOTES, 'UTF-8');
+        $badge = '<span class="badge" style="background-color: ' . $state_color . '">' . htmlspecialchars($job_state, ENT_QUOTES, 'UTF-8') . '</span> ';
         if($job_state === 'PENDING' && $reason_text !== NULL) {
-            // A button instead of a span, so that the reason can be opened by tap and keyboard, too.
+            // Badge and icon form one button, so that a tap on either opens the reason.
             // The tooltip is initialized in public/index.php.
-            $job_state_text .= '<button type="button" class="badge border-0 job-reason" style="background-color: ' . $state_color . '; cursor: help"'
-                             . ' title="Reason: ' . htmlspecialchars($reason_text, ENT_QUOTES, 'UTF-8') . '">' . $state_e . '</button> ';
+            $job_state_text .= '<button type="button" class="btn p-0 border-0 job-reason"'
+                             . ' title="Reason: ' . htmlspecialchars($reason_text, ENT_QUOTES, 'UTF-8') . '">'
+                             . $badge . '<i title="Click here for more information">&#9432;</i></button> ';
         }
         else {
-            $job_state_text .= '<span class="badge" style="background-color: ' . $state_color . '">' . $state_e . '</span> ';
+            $job_state_text .= $badge;
         }
     }
     return $job_state_text;

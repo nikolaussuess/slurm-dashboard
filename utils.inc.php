@@ -310,6 +310,18 @@ function slurmTimeLimitFromString(string $time): array {
     return array("set"=> 1, "infinite"=> 0, "number"=>$minutes + 60 * $hours + 1440 * $days);
 }
 
+/**
+ * Sums up the GPUs in a Slurm GRES string. Other GRES types (e.g. shard or lscratch) are ignored.
+ * Handles e.g. "gpu:2", "gpu:a100:2(S:0-1)" and "gpu:a100:2(IDX:0,1),gpu:b200:1(IDX:0),shard:8".
+ *
+ * @param ?string $gres GRES string of a node
+ * @return int Number of GPUs, 0 if the string is empty or contains no GPUs
+ */
+function count_gpus(?string $gres): int {
+    preg_match_all('/(?:^|,)gpu(?::[^:,(]+)?:(\d+)/', $gres ?? '', $matches);
+    return (int)array_sum($matches[1]);
+}
+
 function format_nullable_int(?int $value, string $suffix = ''): string {
     return $value === NULL ? '' : (number_format($value, 0, ',', '.') . $suffix);
 }

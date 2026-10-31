@@ -20,7 +20,6 @@ if (!isset($exception) || !($exception instanceof Throwable)) {
     <script src="/lib/bootstrap/js/bootstrap.min.js" integrity="sha384-0pUGZvbkm6XF6gxjEnlmuGrJXVbNuzT9qBBavbLwCsOGabYfZo0T0to5eqruptLy" crossorigin="anonymous"></script>
 
     <link rel="stylesheet" href="/style.css" crossorigin="anonymous">
-    <link rel="icon" href="/favicon.svg" type="image/svg+xml">
     <script src="/theme.js"></script>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="theme-color" content="#2457A6">

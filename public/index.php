@@ -617,7 +617,6 @@ if( isset($_SESSION['USER']) ){
     </script>
 
     <link rel="stylesheet" href="/style.css" crossorigin="anonymous">
-    <link rel="icon" href="/favicon.svg" type="image/svg+xml">
     <script src="/theme.js"></script>
     <script src="/multiselect.js"></script>
     <script src="/table-header.js"></script>

@@ -5,14 +5,69 @@ namespace view\actions;
 use TemplateLoader;
 
 /**
+ * Renders the parts of the job detail page: as tabs if there are several, otherwise with a plain heading.
+ * @param array $sections Rendered HTML of each part, keyed by its title
+ * @return string Rendered HTML, empty if there are no parts
+ */
+function get_job_sections(array $sections) : string {
+    if(count($sections) < 2) {
+        $contents = '';
+        foreach($sections as $section_title => $section)
+            $contents .= '<h2>' . $section_title . '</h2>' . $section;
+        return $contents;
+    }
+
+    $tabs = '';
+    $panes = '';
+    $index = 0;
+    foreach($sections as $section_title => $section) {
+        $is_first = ($index === 0);
+        $tabs .= '<li class="nav-item" role="presentation">'
+               . '<button class="nav-link' . ($is_first ? ' active' : '') . '" type="button" role="tab"'
+               . ' id="job-tab-' . $index . '" data-bs-toggle="tab" data-bs-target="#job-pane-' . $index . '"'
+               . ' aria-controls="job-pane-' . $index . '" aria-selected="' . ($is_first ? 'true' : 'false') . '">'
+               . $section_title . '</button></li>';
+        $panes .= '<div class="tab-pane' . ($is_first ? ' show active' : '') . '" id="job-pane-' . $index . '"'
+                . ' role="tabpanel" aria-labelledby="job-tab-' . $index . '" tabindex="0">' . $section . '</div>';
+        $index++;
+    }
+
+    return '<p class="text-body-secondary mb-0">Information about this job comes from two sources: the live job queue and the accounting database (slurmdb). Use the tabs to switch between them.</p>'
+         . '<ul class="nav nav-tabs job-tabs" role="tablist">' . $tabs . '</ul>'
+         . '<div class="tab-content">' . $panes . '</div>';
+}
+
+/**
+ * Renders the allocated and requested trackable resources (TRES) of a job.
+ * @param array $tres TRES data of the job, with the optional keys 'allocated' and 'requested'
+ * @return string Rendered HTML; a list without entries is shown as "none"
+ */
+function _render_tres_detail(array $tres) : string {
+    $contents = '';
+    foreach(['allocated' => 'Allocated', 'requested' => 'Requested'] as $key => $label){
+        if(empty($tres[$key])){
+            $contents .= '<div><b>' . $label . ':</b> <span class="text-body-secondary">none</span></div>';
+            continue;
+        }
+
+        $contents .= '<b>' . $label . ':</b><ul>';
+        foreach($tres[$key] as $entry){
+            $contents .= '<li>Name: ' . ($entry['name'] !== '' ? htmlspecialchars($entry['name'], ENT_QUOTES, 'UTF-8') : '-') .
+                         ', type: ' . htmlspecialchars($entry['type'], ENT_QUOTES, 'UTF-8') .
+                         ', count: ' . $entry['count'] . '</li>';
+        }
+        $contents .= '</ul>';
+    }
+    return $contents;
+}
+
+/**
  * Renders the job detail view for a live slurmctld job.
  * @param array $query Job array as returned by Client::get_job()
  * @param string $transitive_dependencies Rendered HTML of transitive job dependencies
  * @return string Rendered HTML
  */
 function get_slurm_jobinfo(array $query, string $transitive_dependencies = '') : string {
-
-    $contents = '<h2>Job queue information</h2>';
 
     $job_state_text = \utils\get_job_state_view($query);
     // Note: $user can be an empty string if the user does not exist on the host where slurmrestd is running.
@@ -46,6 +101,7 @@ function get_slurm_jobinfo(array $query, string $transitive_dependencies = '') :
     $templateBuilder->setParam("EXIT_CODE",         htmlspecialchars($query['exit_code'] ?? '', ENT_QUOTES, 'UTF-8'));
     $templateBuilder->setParam("SCHEDNODES",  htmlspecialchars($query['scheduled_nodes'] ?? '', ENT_QUOTES, 'UTF-8'));
     $templateBuilder->setParam("REQNODES",    htmlspecialchars($query['required_nodes'] ?? '', ENT_QUOTES, 'UTF-8'));
+    $templateBuilder->setParam("EXCLUDED_NODES", htmlspecialchars($query['excluded_nodes'] ?? '', ENT_QUOTES, 'UTF-8'));
     $templateBuilder->setParam("NODES",             htmlspecialchars($query['nodes'], ENT_QUOTES, 'UTF-8'));
     $templateBuilder->setParam("QOS",               htmlspecialchars($query['qos'] ?? '', ENT_QUOTES, 'UTF-8'));
     $templateBuilder->setParam("NICE",              isset($query['nice']) ? (int)$query['nice'] : '');
@@ -66,13 +122,15 @@ function get_slurm_jobinfo(array $query, string $transitive_dependencies = '') :
     $templateBuilder->setParam("MEMORY_PER_CPU",    \utils\format_nullable_int($query['memory_per_cpu'], " MB"));
     $templateBuilder->setParam("MEMORY_PER_NODE",   \utils\format_nullable_int($query['memory_per_node'], " MB"));
     $templateBuilder->setParam("REQUEUE",           $requeue                            );
+    $templateBuilder->setParam("RESTART_COUNT",     $query['restart_cnt'] ?? ''         );
+    $templateBuilder->setParam("STANDARD_OUTPUT",   htmlspecialchars($query['standard_output'] ?? '', ENT_QUOTES, 'UTF-8'));
+    $templateBuilder->setParam("STANDARD_ERROR",    htmlspecialchars($query['standard_error'] ?? '', ENT_QUOTES, 'UTF-8'));
     $templateBuilder->setParam("SUBMIT_TIME",       $query['submit_time']               );
+    $templateBuilder->setParam("START_TIME",        $query['time_start']                );
     $templateBuilder->setParam("TIME_LIMIT",        $query['time_limit']                );
     $templateBuilder->setParam("JOB_STATE",         $job_state_text                     );
 
-    $contents .= $templateBuilder->build();
-
-    return $contents;
+    return $templateBuilder->build();
 }
 
 
@@ -82,8 +140,6 @@ function get_slurm_jobinfo(array $query, string $transitive_dependencies = '') :
  * @return string Rendered HTML
  */
 function get_slurmdb_jobinfo(array $query) : string {
-    $contents = '<h2>Slurmdb information</h2>';
-
     $job_state_text = \utils\get_job_state_view($query);
 
     $comment = '<ul>';
@@ -98,26 +154,6 @@ function get_slurmdb_jobinfo(array $query) : string {
     $comment .= '</ul>';
 
     $flags = $query['flags'] ?? array();
-
-    $tres_detail = '';
-    if(isset($query['tres']) && isset($query['tres']['allocated'])){
-        $tres_detail .= '<b>Allocated:</b><ul>';
-        foreach($query['tres']['allocated'] as $tres){
-            $tres_detail .= '<li>Name: ' . htmlspecialchars($tres['name'], ENT_QUOTES, 'UTF-8') .
-                            ', type: ' . htmlspecialchars($tres['type'], ENT_QUOTES, 'UTF-8') .
-                            ', count: ' . $tres['count'] . '</li>';
-        }
-        $tres_detail .= '</ul>';
-    }
-    if(isset($query['tres']) && isset($query['tres']['requested'])){
-        $tres_detail .= '<b>Requested:</b><ul>';
-        foreach($query['tres']['requested'] as $tres){
-            $tres_detail .= '<li>Name: ' . htmlspecialchars($tres['name'], ENT_QUOTES, 'UTF-8') .
-                            ', type: ' . htmlspecialchars($tres['type'], ENT_QUOTES, 'UTF-8') .
-                            ', count: ' . $tres['count'] . '</li>';
-        }
-        $tres_detail .= '</ul>';
-    }
 
     $templateBuilder = new TemplateLoader("jobinfo_slurmdb.html");
     $templateBuilder->setParam("JOBID",             $query['job_id']);
@@ -137,7 +173,7 @@ function get_slurmdb_jobinfo(array $query) : string {
     $escaped_flags = array_map(fn($f) => htmlspecialchars($f, ENT_QUOTES, 'UTF-8'), $flags);
     $templateBuilder->setParam("FLAGS", count($escaped_flags) > 0 ? '<li><span class="monospaced">' . implode('</span></li><li><span class="monospaced">', $escaped_flags) . '</span></li>' : '');
     $templateBuilder->setParam("GRES_DETAIL",       htmlspecialchars($query['gres'] ?? "", ENT_QUOTES, 'UTF-8'));
-    $templateBuilder->setParam("TRES_DETAIL",       $tres_detail);
+    $templateBuilder->setParam("TRES_DETAIL",       _render_tres_detail($query['tres'] ?? []));
 
     $templateBuilder->setParam("SUBMIT_TIME",       $query['time_submit']);
     $templateBuilder->setParam("TIME_LIMIT",        $query['time_limit']);
@@ -148,7 +184,5 @@ function get_slurmdb_jobinfo(array $query) : string {
 
     $templateBuilder->setParam("JOB_STATE",         $job_state_text);
 
-    $contents .= $templateBuilder->build();
-
-    return $contents;
+    return $templateBuilder->build();
 }

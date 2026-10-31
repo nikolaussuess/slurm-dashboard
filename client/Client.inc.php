@@ -108,6 +108,7 @@ interface Client{
      * 'exit_code'  => $this->_read_exit_code($json_job),
      * 'scheduled_nodes' => $json_job['scheduled_nodes'] ?? NULL,
      * 'required_nodes' => $json_job['required_nodes'] ?? NULL,
+     * 'excluded_nodes' => $json_job['excluded_nodes'] ?? NULL,
      * 'nodes'      => $this->get_nodes($json_job),
      * 'qos'        => $json_job['qos'],
      * 'container'  => $json_job['container'],
@@ -126,7 +127,11 @@ interface Client{
      * 'memory_per_cpu' => $json_job['memory_per_cpu']['set'] ? $json_job['memory_per_cpu']['number'] : NULL,
      * 'memory_per_node' => $json_job['memory_per_node']['set'] ? $json_job['memory_per_node']['number'] : NULL,
      * 'requeue'    => $json_job['requeue'],
+     * 'restart_cnt'=> $json_job['restart_cnt'] ?? NULL,
+     * 'standard_output' => $json_job['standard_output'] ?? NULL,
+     * 'standard_error' => $json_job['standard_error'] ?? NULL,
      * 'submit_time'=> $this->_get_date_from_unix_if_defined($json_job, 'submit_time'),
+     * 'time_start' => $this->_get_date_from_unix_if_defined($json_job, 'start_time'),
      * 'time_limit' => $this->_get_timelimit_if_defined($json_job, 'time_limit')
      * );
      * </pre>

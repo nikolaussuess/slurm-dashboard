@@ -241,6 +241,15 @@ function dashboard_is_unconfigured() : bool {
     return config('CLUSTER_NAME') == TO_BE_REPLACED || config('SLURM_LOGIN_NODE') == TO_BE_REPLACED;
 }
 
+/**
+ * Determines the name shown in the navbar.
+ *
+ * @return string "Cluster <name>", or "Slurm Dashboard" if no cluster name is configured
+ */
+function dashboard_brand_name() : string {
+    return config('CLUSTER_NAME') == TO_BE_REPLACED ? 'Slurm Dashboard' : 'Cluster ' . config('CLUSTER_NAME');
+}
+
 openlog('slurm-dashboard: ', LOG_PID, LOG_USER);
 function log_msg(string $message, int $error_level = LOG_INFO, int $mode = LOG_MODE_PHP): void{
 

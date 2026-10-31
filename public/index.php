@@ -142,6 +142,7 @@ if( isset($_SESSION['USER']) ){
                 break;
             }
             $job_id_view = (int)$_GET['job_id'];
+            $job_sections = [];
 
             # SLURM QUEUE information
             // Title will also set <h1>
@@ -158,7 +159,7 @@ if( isset($_SESSION['USER']) ){
                 }
                 else {
                     $dependency_resolver = new \client\utils\DependencyResolver($dao);
-                    $contents .= \view\actions\get_slurm_jobinfo($query, $dependency_resolver->renderDependencyListHTML($job_id_view) ?? '');
+                    $job_sections['Job queue information'] = \view\actions\get_slurm_jobinfo($query, $dependency_resolver->renderDependencyListHTML($job_id_view) ?? '');
                     $in_slurm_queue = TRUE;
                 }
             } catch (\exceptions\RequestFailedException $e) {
@@ -181,7 +182,7 @@ if( isset($_SESSION['USER']) ){
                     }
                 }
                 else {
-                    $contents .= \view\actions\get_slurmdb_jobinfo($query);
+                    $job_sections['Slurmdb information'] = \view\actions\get_slurmdb_jobinfo($query);
                 }
             } catch (\exceptions\RequestFailedException $e) {
                 addError('Job history information: ' . $e->get_html_message());
@@ -192,6 +193,8 @@ if( isset($_SESSION['USER']) ){
                 // Otherwise, at least the queue information worked and the user will see
                 // that information along with the error message.
             }
+
+            $contents .= \view\actions\get_job_sections($job_sections);
 
             break;
 
@@ -600,69 +603,80 @@ if( isset($_SESSION['USER']) ){
     </script>
 
     <link rel="stylesheet" href="/style.css" crossorigin="anonymous">
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+    <script src="/theme.js"></script>
     <script src="/multiselect.js"></script>
+    <script src="/table-header.js"></script>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#2457A6">
 </head>
 <body>
 
-<?php if(isset($_SESSION['USER'])): ?>
-    <nav class="navbar navbar-expand-lg navbar-light bg-light fixed-top">
+<?php if(isset($_SESSION['USER'])):
+    $nav_items = ['usage' => 'Cluster Usage', 'jobs' => 'Queue', 'job_history' => 'Job history'];
+    if( \auth\current_user_is_privileged() )
+        $nav_items['users'] = 'Users';
+
+    // Pages without an own menu entry highlight the entry they belong to.
+    // $action is not a string for requests like ?action[]=x.
+    $current_action = is_string($action ?? NULL) ? $action : '';
+    $nav_active = [
+        'job' => 'jobs', 'cancel-job' => 'jobs', 'edit-job' => 'jobs', 'node-set-state' => 'usage'
+    ][$current_action] ?? $current_action;
+    $user_e = htmlspecialchars($_SESSION['USER'], ENT_QUOTES, 'UTF-8');
+?>
+    <nav class="navbar navbar-expand-lg sticky-top">
         <div class="container-fluid">
+            <a class="navbar-brand" href="?action=usage"><?php print htmlspecialchars(dashboard_brand_name(), ENT_QUOTES, 'UTF-8'); ?></a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNavDropdown" aria-controls="navbarNavDropdown" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarNavDropdown">
-                <ul class="navbar-nav me-auto mb-2 mb-lg-0 justify-content-center">
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+<?php foreach($nav_items as $nav_action => $nav_label): ?>
                     <li class="nav-item">
-                        <a class="nav-link" href="?action=usage">Cluster Usage</a>
+                        <a class="nav-link<?php print $nav_action === $nav_active ? ' active" aria-current="page' : ''; ?>" href="?action=<?php print $nav_action; ?>"><?php print $nav_label; ?></a>
                     </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="?action=jobs">Queue</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="?action=job_history">Job history</a>
-                    </li>
-<?php
-    if( \auth\current_user_is_privileged() ):
-?>
-                    <li class="nav-item">
-                        <a class="nav-link" href="?action=users">Users</a>
-                    </li>
-<?php
-    endif;
-?>
+<?php endforeach; ?>
                 </ul>
-                <div class="text-end">
-                    <div class="small float-lg-start" style="margin-right: 5px">Logged in as<br> <a href="?action=users&user_name=<?php print htmlspecialchars($_SESSION['USER'], ENT_QUOTES, 'UTF-8'); ?>"><i><?php print htmlspecialchars($_SESSION['USER'], ENT_QUOTES, 'UTF-8'); ?></a></i></div>
-                    <a href="?action=logout"><button type="button" class="btn btn-warning">Logout</button></a>
+                <div class="d-flex align-items-center gap-2">
+                    <span class="navbar-user">Logged in as <a href="?action=users&user_name=<?php print $user_e; ?>"><?php print $user_e; ?></a></span>
+                    <button type="button" class="btn btn-sm btn-outline-secondary" id="themeToggle" title="Switch between light and dark theme" aria-label="Switch between light and dark theme"><svg width="14" height="14" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="7" fill="none" stroke="currentColor" stroke-width="2"/><path d="M8 1a7 7 0 0 1 0 14z" fill="currentColor"/></svg></button>
+                    <a href="?action=logout" class="btn btn-sm btn-outline-secondary">Logout</a>
                 </div>
             </div>
         </div>
     </nav>
 <?php endif; ?>
 
-<div id="content">
-    <div class="alert alert-danger" role="alert" style="display: <?php echo !empty($errormsg) ? "block" : "none"; ?>">
+<?php $is_login_page = !isset($_SESSION['USER']) && ($_GET['action'] ?? '') !== 'about'; ?>
+<main id="content" class="container-fluid<?php print $is_login_page ? ' login-page' : ''; ?>">
+<?php if(!empty($errormsg)): ?>
+    <div class="alert alert-danger" role="alert">
         <strong>Error:</strong>
         <ul>
             <?php print $errormsg; ?>
         </ul>
     </div>
-    <div class="alert alert-success" role="alert" style="display: <?php echo !empty($successmsg) ? "block" : "none"; ?>">
+<?php endif; ?>
+<?php if(!empty($successmsg)): ?>
+    <div class="alert alert-success" role="alert">
         <strong>Success:</strong>
         <ul>
             <?php print $successmsg; ?>
         </ul>
     </div>
+<?php endif; ?>
 
+<?php if(!$is_login_page): ?>
     <h1><?php print (!empty($title) ? $title : "Slurm Dashboard"); ?></h1>
+<?php endif; ?>
 
     <?php
     print $contents;
     ?>
-</div>
+</main>
 
-    <hr>
     <footer>
         &copy; 2024-2026 by <a href="https://suess.dev/" target="_blank">Nikolaus Süß</a>, University of Vienna<br>
         Source code available on <a href="https://github.com/nikolaussuess/slurm-dashboard" target="_blank">GitHub</a>.

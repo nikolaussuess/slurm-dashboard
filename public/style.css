@@ -1,13 +1,239 @@
+/* ------------------------------------------------------------------
+ * THEME: one calm accent color; green, yellow and red are reserved for
+ * states (job states, node states, unusable resources). Colors are defined
+ * here and mapped onto Bootstrap's variables, so that the dark theme only
+ * has to redefine this block. public/theme.js sets data-bs-theme.
+ * ------------------------------------------------------------------ */
+
+:root {
+    --dash-accent: #2457A6;
+    --dash-accent-dark: #1B4482;
+    --dash-accent-soft: #5A86CC;
+    --dash-accent-text: #2457A6;
+    --dash-zebra: #F6F7F9;
+    --dash-row-hover: #EBF0F8;
+    --dash-page-gutter: clamp(1.5rem, 6vw, 6rem); /* Space left and right of the page contents */
+
+    --bs-primary: var(--dash-accent);
+    --bs-primary-rgb: 36, 87, 166;
+    --bs-link-color: var(--dash-accent-text);
+    --bs-link-color-rgb: 36, 87, 166;
+    --bs-link-hover-color: var(--dash-accent-dark);
+    --bs-link-hover-color-rgb: 27, 68, 130;
+    --bs-border-color: #E1E4E8;
+}
+
+[data-bs-theme=dark] {
+    --dash-accent: #2F6FCC;
+    --dash-accent-dark: #2559A6;
+    --dash-accent-soft: #1F4F99;
+    --dash-accent-text: #8AB8FF;
+    --dash-zebra: rgba(255, 255, 255, .04);
+    --dash-row-hover: rgba(138, 184, 255, .13);
+
+    --bs-primary: var(--dash-accent);
+    --bs-primary-rgb: 47, 111, 204;
+    --bs-link-color: var(--dash-accent-text);
+    --bs-link-color-rgb: 138, 184, 255;
+    --bs-link-hover-color: #B5D1FF;
+    --bs-link-hover-color-rgb: 181, 209, 255;
+    --bs-border-color: #3A4047;
+}
+
+/* ------------------------------------------------------------------
+ * BASE AND PAGE LAYOUT
+ * ------------------------------------------------------------------ */
+
+html {
+    font-size: 106.25%; /* 17px with the default browser setting; all rem sizes scale along */
+    scroll-padding-top: 5rem; /* Anchors must not end up below the sticky navbar */
+}
+
+body {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+h1, h2, h3, h4, .h1, .h2, .h3, .h4 {
+    font-weight: 600;
+    letter-spacing: -.01em;
+}
+
+h1, .h1 {
+    font-size: 1.6rem;
+    margin-bottom: 1rem;
+}
+
+h2, .h2 {
+    font-size: 1.3rem;
+    margin-top: 1.25rem;
+}
+
+h3, .h3 {
+    font-size: 1.1rem;
+}
+
+a {
+    text-decoration: none;
+}
+
+a:hover {
+    text-decoration: underline;
+}
+
+.btn:hover, .nav-link:hover, .navbar-brand:hover, .dropdown-item:hover {
+    text-decoration: none;
+}
+
+#content {
+    flex: 1;
+    width: 100%;
+    max-width: calc(1140px + 2 * var(--dash-page-gutter)); /* Bootstrap's xl container width plus the gutters */
+    padding: 1.5rem var(--dash-page-gutter);
+}
+
+footer {
+    margin-top: 1rem;
+    padding: 1rem;
+    border-top: 1px solid var(--bs-border-color);
+    color: var(--bs-secondary-color);
+    font-size: .8rem;
+    text-align: center;
+}
+
+/* --- Navigation: thin accent line, the current page is highlighted --- */
+
+.navbar {
+    background-color: var(--bs-body-bg);
+    border-bottom: 3px solid var(--dash-accent);
+}
+
+.navbar > .container-fluid {
+    padding-left: var(--dash-page-gutter);
+    padding-right: var(--dash-page-gutter);
+}
+
+.navbar-brand {
+    color: var(--dash-accent-text);
+    font-weight: 600;
+}
+
+.navbar-brand:hover, .navbar-brand:focus {
+    color: var(--dash-accent-text);
+}
+
+.navbar .nav-link:hover {
+    color: var(--dash-accent-text);
+}
+
+.navbar .nav-link.active {
+    color: var(--dash-accent-text);
+    font-weight: 600;
+}
+
+.navbar-user {
+    font-size: .875rem;
+    color: var(--bs-secondary-color);
+}
+
+/* --- Bootstrap components that do not use the variables of the theme --- */
+
+.btn-primary {
+    --bs-btn-bg: var(--dash-accent);
+    --bs-btn-border-color: var(--dash-accent);
+    --bs-btn-hover-bg: var(--dash-accent-dark);
+    --bs-btn-hover-border-color: var(--dash-accent-dark);
+    --bs-btn-active-bg: var(--dash-accent-dark);
+    --bs-btn-active-border-color: var(--dash-accent-dark);
+    --bs-btn-disabled-bg: var(--dash-accent);
+    --bs-btn-disabled-border-color: var(--dash-accent);
+    --bs-btn-focus-shadow-rgb: var(--bs-primary-rgb);
+}
+
+.btn-outline-primary {
+    --bs-btn-color: var(--dash-accent-text);
+    --bs-btn-border-color: var(--dash-accent-text);
+    --bs-btn-hover-bg: var(--dash-accent);
+    --bs-btn-hover-border-color: var(--dash-accent);
+    --bs-btn-active-bg: var(--dash-accent-dark);
+    --bs-btn-active-border-color: var(--dash-accent-dark);
+    --bs-btn-focus-shadow-rgb: var(--bs-primary-rgb);
+}
+
+.btn-outline-secondary {
+    --bs-btn-color: var(--bs-secondary-color);
+}
+
+.btn-link {
+    --bs-btn-color: var(--dash-accent-text);
+    --bs-btn-hover-color: var(--dash-accent-text);
+}
+
+.progress {
+    --bs-progress-bar-bg: var(--dash-accent);
+}
+
+.dropdown-menu {
+    --bs-dropdown-link-active-bg: var(--dash-accent);
+}
+
+.form-check-input:checked {
+    background-color: var(--dash-accent);
+    border-color: var(--dash-accent);
+}
+
+.form-control:focus, .form-select:focus, .form-check-input:focus {
+    border-color: var(--dash-accent);
+    box-shadow: 0 0 0 .2rem rgba(var(--bs-primary-rgb), .2);
+}
+
+.alert {
+    border-radius: .75rem;
+}
+
+.alert ul {
+    margin-bottom: 0;
+}
+
+/* ------------------------------------------------------------------
+ * TABLES
+ * ------------------------------------------------------------------ */
+
+.table {
+    font-size: .9rem;
+    font-variant-numeric: tabular-nums;
+}
+
+.table > :not(caption) > * > * {
+    padding: .5rem .75rem;
+}
+
+.table td ul {
+    margin-bottom: 0;
+    padding-left: 1.1rem;
+}
+
 .tableFixHead table {
     width: max-content;
     min-width: 100%;
     border-collapse: collapse;
 }
 
+/* public/table-header.js moves the header along while the page scrolls */
 .tableFixHead thead {
-    position: sticky;
-    top: 0;
+    position: relative;
     z-index: 2; /* Needed in Bootstrap tables */
+}
+
+/* The background must be opaque, because the rows scroll below the header */
+.tableFixHead thead th {
+    background-color: var(--bs-secondary-bg);
+    box-shadow: inset 0 -2px 0 var(--dash-accent);
+    font-size: .8rem;
+    font-weight: 600;
+    color: var(--bs-emphasis-color);
+    white-space: nowrap;
 }
 
 .tableFixHead .breakable {
@@ -19,86 +245,70 @@
 
 .tableFixHead {
     max-width: 100%;
-    overflow-x: scroll;
-    overflow-y: scroll;
-    max-height: 80vh;       /* or any height */
+    overflow-x: auto;
+    border: 1px solid var(--bs-border-color);
+    border-radius: .5rem;
 }
 
-table  {
-    border-collapse: collapse;
+.tableFixHead .table {
+    margin-bottom: 0;
 }
 
-th, td {
-    padding: 8px 16px;
+.tableFixHead .table > :not(caption) > * > * {
+    padding-left: .6rem;
+    padding-right: .6rem;
 }
 
-.alert {
-    max-width: 1140px;
-    margin:auto;
-    position: relative;
-    border-radius: 20px;
+/* Zebra stripes; a job of the compact view consists of two rows */
+#jobtable-compact tbody tr:nth-child(4n+1) td,
+#jobtable-compact tbody tr:nth-child(4n+2) td,
+#jobtable-table tbody tr:nth-child(2n+1) td,
+#usertable-table tbody tr:nth-child(2n+1) td {
+    background-color: var(--dash-zebra);
 }
 
-h1, h2, h3, h4 {
-    margin-left: auto;
-    margin-right: auto;
-    margin-top: 10px;
+#jobtable-table tbody tr:hover td,
+#usertable-table tbody tr:hover td,
+#jobtable-compact tbody tr:nth-child(2n+1):hover td,
+#jobtable-compact tbody tr:nth-child(2n+1):hover + tr td,
+#jobtable-compact tbody tr:nth-child(2n+1):has(+ tr:hover) td,
+#jobtable-compact tbody tr:nth-child(2n):hover td {
+    background-color: var(--dash-row-hover);
 }
 
-body {
-    font-size: 14pt;
-    padding: 10px;
+/* The two rows of a job belong together, so there is no line between them */
+#jobtable-compact thead tr:first-child th:not([rowspan]),
+#jobtable-compact tbody tr:nth-child(2n+1) td:not([rowspan]) {
+    border-bottom: 0;
+    box-shadow: none;
 }
 
-#content {
-    padding-bottom: 50px;
-    max-width: 1140px;
-    margin-left: auto;
-    margin-right: auto;
-    width: auto;
-    padding-top: 100px;
+/* Deleted users: muted text, badge and a thin red edge */
+#usertable-table tr.deleted-user td, #usertable-table tr.deleted-user a {
+    color: var(--bs-secondary-color);
 }
 
-select {
-    width: 100%;
+#usertable-table tr.deleted-user td:first-child {
+    box-shadow: inset 3px 0 0 var(--bs-danger-border-subtle);
 }
 
-@media (max-width: 1140px) {
-    body {
-        font-size: 1.5em;
-        padding: 5px;
-    }
-    #content {
-        max-width: 100%;
-        margin-left: 10px;
-        margin-right: 10px;
-    }
-    h1, h2, h3, h4 {
-        margin-left: 25px;
-        margin-right: 25px;
-    }
-    .alert{
-        max-width: 100%;
-        margin-left: 25px;
-        margin-right: 25px;
-    }
+.badge-deleted {
+    background-color: var(--bs-danger-bg-subtle);
+    color: var(--bs-danger-text-emphasis);
+    font-weight: 600;
 }
 
-footer {
-    font-size: 0.7em;
-    text-align: center;
-    display: block;
+.nodes-cell {
+    word-break: break-word;
+    max-width: 220px;
 }
 
-.nav-link {
-    color: black;
-}
-.nav-item:hover {
-    background-color: #B9B9B9;
-}
+/* ------------------------------------------------------------------
+ * SMALL COMPONENTS
+ * ------------------------------------------------------------------ */
 
 .feature, .monospaced {
-    background-color: #eff0f1;
+    background-color: var(--bs-tertiary-bg);
     border-radius: 4px;
     font-family: monospace;
     font-weight: normal;
@@ -108,25 +318,53 @@ footer {
     display: none;
 }
 
-button, input, select {
-    padding: 10px; /* Make them easier to tap */
-    font-size: 1rem; /* Ensure readability */
-}
-
 .node-count {
-    color: gray;
+    color: var(--bs-secondary-color);
 }
 
-#jobtable-compact tr:nth-child(4n+1) td,
-#jobtable-compact tr:nth-child(4n+2) td {
-    background-color: #fffae9;
-}
-#jobtable-table tr:nth-child(2n+1) td, #usertable-table tr:not(.deleted-user):nth-child(2n+1) td {
-    background-color: #fffae9;
+/* Value of a job field that is about to be changed */
+.current-value {
+    background-color: var(--bs-danger-bg-subtle);
 }
 
-#usertable-table tr td.deleted-user, .deleted-user td {
-    background-color: #e4e4e4;
+/* Label with an information icon, its tooltip opens on click */
+.info-btn {
+    display: flex;
+    align-items: flex-start;
+    gap: .25em;
+}
+
+.info-btn, .table .btn.p-0 {
+    font-size: inherit;
+}
+
+.info-icon {
+    flex-shrink: 0;
+}
+
+.tooltip-inner {
+    text-align: left;
+}
+
+/* Login: one narrow column in the middle of the page */
+#content.login-page {
+    max-width: calc(26rem + 2 * var(--dash-page-gutter));
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.login-title {
+    font-size: 1.4rem;
+    text-align: center;
+    color: var(--dash-accent-text);
+    margin: .25rem 0 1.25rem;
+}
+
+.login-info {
+    margin: 1rem 0 0;
+    font-size: .875rem;
+    text-align: center;
 }
 
 @media (min-width: 768px) {
@@ -137,37 +375,225 @@ button, input, select {
     .intent-left-level2 {
         margin-left: 50px;
     }
-    /* Keine Symbole auf Desktop */
+    /* No symbols on desktops */
     .intent-left-level1::before,
     .intent-left-level2::before {
         content: none;
     }
 }
-/* Mobile: kleiner als 768px */
+/* Phones: smaller than 768px */
 @media (max-width: 767px) {
     .intent-left-level1,
     .intent-left-level2 {
-        margin-left: 0; /* kein Einrücken */
+        margin-left: 0; /* no indentation */
     }
 
-    /* Pfeil vor dem Text einfügen */
+    /* Arrow in front of the text */
     .intent-left-level1::before {
-        content: "\25B8"; /* Unicode für ▶ */
+        content: "\25B8"; /* Unicode for a small triangle */
         display: inline-block;
         width: 1em;
         margin-right: 5px;
-        color: #0dcaf0; /* optional Farbe */
+        color: var(--dash-accent-text);
     }
 }
 
-
-.tooltip-inner {
-    text-align: left;
+/* About page */
+.about-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
+    gap: 1rem;
 }
 
-.nodes-cell {
-    word-break: break-word;
-    max-width: 220px;
+.about-card h2, .about-card h3 {
+    margin-top: 0;
+    font-size: 1.1rem;
+}
+
+.command-line {
+    display: block;
+    width: fit-content;
+    max-width: 100%;
+    margin-top: .35rem;
+    padding: .35rem .6rem;
+    border-radius: .35rem;
+    background-color: var(--bs-tertiary-bg);
+    color: var(--bs-body-color);
+    overflow-wrap: anywhere;
+}
+
+/* Job details: the tabs stay reachable below the sticky navbar while scrolling */
+.job-tabs {
+    position: sticky;
+    top: 3.7rem;
+    z-index: 3;
+    margin-bottom: 1rem;
+    padding-top: .5rem;
+    background-color: var(--bs-body-bg);
+}
+
+.job-tabs .nav-link {
+    color: var(--bs-secondary-color);
+}
+
+.job-tabs .nav-link.active {
+    color: var(--dash-accent-text);
+    font-weight: 600;
+}
+
+/* Job details: foldable sections. The fixed layout keeps the columns of all sections aligned. */
+.job-section > summary {
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+    font-weight: 600;
+    cursor: pointer;
+    list-style: none;
+}
+
+.job-section > summary::-webkit-details-marker {
+    display: none;
+}
+
+/* Chevron drawn with borders: arrow characters depend on the font and may turn into emojis */
+.job-section > summary::before {
+    content: "";
+    width: .5em;
+    height: .5em;
+    margin: 0 .2em;
+    border-right: 2px solid var(--dash-accent-text);
+    border-bottom: 2px solid var(--dash-accent-text);
+    transform: rotate(-45deg);
+}
+
+.job-section[open] > summary::before {
+    transform: rotate(45deg);
+}
+
+.job-section:not([open]) > summary {
+    border-bottom: 0;
+    border-radius: var(--bs-card-inner-border-radius);
+}
+
+.job-section .table {
+    margin-bottom: 0;
+}
+
+.job-table {
+    table-layout: fixed;
+}
+
+.job-table td {
+    overflow-wrap: anywhere;
+}
+
+.job-label {
+    width: 16rem;
+}
+
+@media (max-width: 575.98px) {
+    .job-label {
+        width: 40%;
+    }
+}
+
+/* ------------------------------------------------------------------
+ * CLUSTER USAGE
+ * ------------------------------------------------------------------ */
+
+.stat-tiles {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+    gap: .75rem;
+    margin-bottom: 1rem;
+}
+
+.stat-tile {
+    border: 1px solid var(--bs-border-color);
+    border-radius: .75rem;
+    padding: .8rem 1rem;
+}
+
+.stat-label, .stat-note {
+    font-size: .8rem;
+    color: var(--bs-secondary-color);
+}
+
+.stat-value {
+    font-size: 1.75rem;
+    font-weight: 600;
+    line-height: 1.2;
+    font-variant-numeric: tabular-nums;
+}
+
+.summary-label {
+    white-space: nowrap;
+}
+
+.summary-bar {
+    width: 99%;
+}
+
+.progress-tall {
+    height: 22px;
+}
+
+/* White line between the segments of a stacked bar */
+.progress-segment {
+    border-right: 2px solid rgba(255, 255, 255, .55);
+}
+
+.progress-bar-plow {
+    background: repeating-linear-gradient(45deg, var(--dash-accent), var(--dash-accent) 6px, var(--dash-accent-soft) 6px, var(--dash-accent-soft) 12px);
+    text-shadow: 0 0 3px rgba(0, 0, 0, .9); /* White percentage on light stripes */
+}
+
+/* p_low jobs of a user. Fixed colors: dark text on light stripes stays readable in both themes. */
+.plow-stripes {
+    background: repeating-linear-gradient(45deg, #ADB5BD, #ADB5BD 6px, #CED4DA 6px, #CED4DA 12px);
+    color: #212529;
+}
+
+.legend-swatch {
+    display: inline-block;
+    width: 14px;
+    height: 14px;
+    vertical-align: middle;
+    border: 1px solid var(--bs-border-color);
+}
+
+.legend-swatch-plow {
+    background: repeating-linear-gradient(45deg, var(--dash-accent), var(--dash-accent) 4px, var(--dash-accent-soft) 4px, var(--dash-accent-soft) 8px);
+}
+
+.legend-swatch-unusable {
+    background: repeating-linear-gradient(45deg, #ffc107, #ffc107 4px, #fff3cd 4px, #fff3cd 8px);
+}
+
+.text-unusable {
+    color: var(--bs-warning-text-emphasis);
+    font-weight: 700;
+}
+
+.node-card .card-header h3 {
+    margin: 0;
+}
+
+.nodeinfo-label {
+    width: 100px;
+}
+
+/* State of a node. Bootstrap paints table cells with --bs-table-bg. */
+.node-state-ok {
+    --bs-table-bg: var(--bs-success-bg-subtle);
+}
+
+.node-state-bad {
+    --bs-table-bg: var(--bs-danger-bg-subtle);
+}
+
+.node-state-other {
+    --bs-table-bg: var(--bs-warning-bg-subtle);
 }
 
 /* --- Active filter chip bar --- */
@@ -188,8 +614,8 @@ button, input, select {
     display: inline-flex;
     align-items: center;
     gap: 5px;
-    background-color: #e9ecef;
-    border: 1px solid #ced4da;
+    background-color: var(--bs-secondary-bg);
+    border: 1px solid var(--bs-border-color);
     border-radius: 20px;
     padding: 3px 10px;
     font-size: 0.85rem;
@@ -203,11 +629,11 @@ button, input, select {
     cursor: pointer;
     font-size: 1rem;
     line-height: 1;
-    color: #6c757d;
+    color: var(--bs-secondary-color);
 }
 
 .filter-chip-remove:hover {
-    color: #dc3545;
+    color: var(--bs-danger);
 }
 
 /* --- Searchable multi-select widget (multiselect.js) --- */
@@ -240,7 +666,7 @@ button, input, select {
     display: inline-flex;
     align-items: center;
     gap: 4px;
-    background-color: #0d6efd;
+    background-color: var(--dash-accent);
     color: #fff;
     border-radius: 4px;
     padding: 2px 6px;
@@ -265,6 +691,7 @@ button, input, select {
     outline: none;
     padding: 2px 4px;
     font-size: 1rem;
+    color: inherit;
     background: transparent;
 }
 
@@ -276,8 +703,8 @@ button, input, select {
     left: 0;
     right: 0;
     z-index: 1050;
-    background: #fff;
-    border: 1px solid #dee2e6;
+    background: var(--bs-body-bg);
+    border: 1px solid var(--bs-border-color);
     border-radius: 4px;
     max-height: 220px;
     overflow-y: auto;
@@ -301,21 +728,21 @@ button, input, select {
 }
 
 .ms-option:hover {
-    background-color: #f0f4ff;
+    background-color: var(--dash-row-hover);
 }
 
 /* Highlight already-selected items in the dropdown. */
 .ms-option.ms-selected {
-    background-color: #cfe2ff;
+    background-color: var(--bs-primary-bg-subtle);
     font-weight: 600;
 }
 
 .ms-option.ms-selected:hover {
-    background-color: #b6d4fe;
+    background-color: var(--bs-primary-border-subtle);
 }
 
 .ms-option.ms-no-results {
-    color: #6c757d;
+    color: var(--bs-secondary-color);
     cursor: default;
     font-style: italic;
 }
@@ -325,34 +752,31 @@ button, input, select {
     font-size: 0.75rem;
     font-weight: 700;
     text-transform: uppercase;
-    color: #6c757d;
+    color: var(--bs-secondary-color);
     cursor: default;
     letter-spacing: 0.05em;
 }
 
 .ms-option.ms-disabled {
-    color: #adb5bd;
+    color: var(--bs-tertiary-color);
     cursor: default;
 }
 
-.filter-chip.state-fail    { background-color: #ffe4e4; border-color: #f5c6cb; }
-.filter-chip.state-success { background-color: #e4ffec; border-color: #b7e4c7; }
-.filter-chip.state-other   { background-color: #fff8d0; border-color: #ffe58f; }
+.filter-chip.state-fail    { background-color: var(--bs-danger-bg-subtle); border-color: var(--bs-danger-border-subtle); }
+.filter-chip.state-success { background-color: var(--bs-success-bg-subtle); border-color: var(--bs-success-border-subtle); }
+.filter-chip.state-other   { background-color: var(--bs-warning-bg-subtle); border-color: var(--bs-warning-border-subtle); }
 
-.ms-option.state-fail                        { background-color: #fff0f0; }
-.ms-option.state-fail:hover                  { background-color: #ffe4e4; }
-.ms-option.state-fail.ms-selected            { background-color: #ffe0e0; }
-.ms-option.state-fail.ms-selected:hover      { background-color: #ffd5d5; }
+.ms-option.state-fail { background-color: color-mix(in srgb, var(--bs-danger-bg-subtle) 50%, var(--bs-body-bg)); }
+.ms-option.state-fail:hover, .ms-option.state-fail.ms-selected { background-color: var(--bs-danger-bg-subtle); }
+.ms-option.state-fail.ms-selected:hover { background-color: var(--bs-danger-border-subtle); }
 
-.ms-option.state-success                     { background-color: #f0fff4; }
-.ms-option.state-success:hover               { background-color: #e4ffec; }
-.ms-option.state-success.ms-selected         { background-color: #dcffe8; }
-.ms-option.state-success.ms-selected:hover   { background-color: #d0ffde; }
+.ms-option.state-success { background-color: color-mix(in srgb, var(--bs-success-bg-subtle) 50%, var(--bs-body-bg)); }
+.ms-option.state-success:hover, .ms-option.state-success.ms-selected { background-color: var(--bs-success-bg-subtle); }
+.ms-option.state-success.ms-selected:hover { background-color: var(--bs-success-border-subtle); }
 
-.ms-option.state-other                       { background-color: #fffde7; }
-.ms-option.state-other:hover                 { background-color: #fff8d0; }
-.ms-option.state-other.ms-selected           { background-color: #fff5c0; }
-.ms-option.state-other.ms-selected:hover     { background-color: #fff0b0; }
+.ms-option.state-other { background-color: color-mix(in srgb, var(--bs-warning-bg-subtle) 50%, var(--bs-body-bg)); }
+.ms-option.state-other:hover, .ms-option.state-other.ms-selected { background-color: var(--bs-warning-bg-subtle); }
+.ms-option.state-other.ms-selected:hover { background-color: var(--bs-warning-border-subtle); }
 
 /* "Show more" / "Show less" label of the unusable-nodes list */
 .unusable-nodes-toggle.collapsed .label-less,

@@ -20,39 +20,43 @@ if (!isset($exception) || !($exception instanceof Throwable)) {
     <script src="/lib/bootstrap/js/bootstrap.min.js" integrity="sha384-0pUGZvbkm6XF6gxjEnlmuGrJXVbNuzT9qBBavbLwCsOGabYfZo0T0to5eqruptLy" crossorigin="anonymous"></script>
 
     <link rel="stylesheet" href="/style.css" crossorigin="anonymous">
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+    <script src="/theme.js"></script>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#2457A6">
 </head>
 <body>
 
-    <nav class="navbar navbar-expand-lg navbar-light bg-light fixed-top">
+    <nav class="navbar navbar-expand-lg sticky-top">
         <div class="container-fluid">
+            <a class="navbar-brand" href="/index.php"><?php print htmlspecialchars(dashboard_brand_name(), ENT_QUOTES, 'UTF-8'); ?></a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNavDropdown" aria-controls="navbarNavDropdown" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarNavDropdown">
-                <ul class="navbar-nav me-auto mb-2 mb-lg-0 justify-content-center">
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
                     <li class="nav-item">
                         <a class="nav-link" href="/index.php">Go to front page</a>
                     </li>
                 </ul>
-                <div class="text-end">
+                <div class="d-flex align-items-center gap-2">
 <?php if(isset($_SESSION['USER'])): ?>
-                    <div class="small float-lg-start" style="margin-right: 5px">Angemeldet als<br> <i><?php print htmlspecialchars($_SESSION['USER'], ENT_QUOTES, 'UTF-8'); ?></i></div>
-                    <a href="?action=logout"><button type="button" class="btn btn-warning">Logout</button></a>
+                    <span class="navbar-user">Angemeldet als <?php print htmlspecialchars($_SESSION['USER'], ENT_QUOTES, 'UTF-8'); ?></span>
+                    <a href="?action=logout" class="btn btn-sm btn-outline-secondary">Logout</a>
 <?php else: ?>
-                    <div class="small float-lg-start" style="margin-right: 5px">Nicht angemeldet</div>
+                    <span class="navbar-user">Nicht angemeldet</span>
 <?php endif; ?>
                 </div>
             </div>
         </div>
     </nav>
 
-<div id="content">
+<main id="content" class="container-fluid">
 
     <h1>500 Internal Server Error on the Slurm Dashboard</h1>
 <?php if($exception instanceof \exceptions\BaseException || $exception instanceof \exceptions\BaseError): ?>
     <p>An internal server error occurred because of the following reason:</p>
-    <div class="alert alert-danger" role="alert" style="display: block">
+    <div class="alert alert-danger" role="alert">
         <?php print $exception->get_html_message(); ?>
     </div>
 <?php else: ?>
@@ -60,10 +64,8 @@ if (!isset($exception) || !($exception instanceof Throwable)) {
 <?php endif; ?>
     <p>The dashboard is currently not available. If the error persists, please write an email to <?php print config('ADMIN_EMAIL'); ?>.</p>
 
-    <p></p>
-</div>
+</main>
 
-<hr>
 <footer>
     &copy; 2024-2026 by <a href="https://suess.dev/" target="_blank">Nikolaus Süß</a>, University of Vienna<br>
     Source code available on <a href="https://github.com/nikolaussuess/slurm-dashboard" target="_blank">GitHub</a>.

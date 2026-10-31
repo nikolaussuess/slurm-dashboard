@@ -1,5 +1,8 @@
-<div class="table-responsive">
-    <table class="table">
+<details class="card job-section mb-3" open>
+    <summary class="card-header">General</summary>
+    <div class="table-responsive">
+            <table class="table job-table">
+                <colgroup><col class="job-label"><col></colgroup>
         <tr>
             <td>
                 Job ID
@@ -157,9 +160,15 @@
 
 
         <tr></tr>
-        <tr>
-            <th colspan="2">Nodes</th>
-        </tr>
+    </table>
+    </div>
+</details>
+
+<details class="card job-section mb-3" open>
+    <summary class="card-header">Nodes</summary>
+    <div class="table-responsive">
+            <table class="table job-table">
+                <colgroup><col class="job-label"><col></colgroup>
         <tr>
             <td>Nodes</td>
             <td>{{NODES}}</td>
@@ -167,9 +176,15 @@
 
 
         <tr></tr>
-        <tr>
-            <th colspan="2">Resources</th>
-        </tr>
+    </table>
+    </div>
+</details>
+
+<details class="card job-section mb-3" open>
+    <summary class="card-header">Resources</summary>
+    <div class="table-responsive">
+            <table class="table job-table">
+                <colgroup><col class="job-label"><col></colgroup>
         <tr>
             <td>
                 GRES detail
@@ -200,9 +215,15 @@
         </tr>
 
         <tr></tr>
-        <tr>
-            <th colspan="2">Time</th>
-        </tr>
+    </table>
+    </div>
+</details>
+
+<details class="card job-section mb-3" open>
+    <summary class="card-header">Time</summary>
+    <div class="table-responsive">
+            <table class="table job-table">
+                <colgroup><col class="job-label"><col></colgroup>
         <tr>
             <td>
                 Submit time
@@ -280,12 +301,18 @@
 
 
         <tr></tr>
-        <tr>
-            <th colspan="2">Container settings</th>
-        </tr>
+    </table>
+    </div>
+</details>
+
+<details class="card job-section mb-3">
+    <summary class="card-header">Container settings</summary>
+    <div class="table-responsive">
+            <table class="table job-table">
+                <colgroup><col class="job-label"><col></colgroup>
         <tr>
             <td colspan="2">
-                <span style="font-size: 0.8em">
+                <span class="small">
                 This field may not be set if you are using pyxis/docker/enroot containers.
                 </span>
             </td>
@@ -297,9 +324,15 @@
 
 
         <tr></tr>
-        <tr>
-            <th colspan="2">Other information</th>
-        </tr>
+    </table>
+    </div>
+</details>
+
+<details class="card job-section mb-3" open>
+    <summary class="card-header">Other information</summary>
+    <div class="table-responsive">
+            <table class="table job-table">
+                <colgroup><col class="job-label"><col></colgroup>
         <tr>
             <td>
                 Flags
@@ -343,4 +376,5 @@
             <td>{{QOS}}</td>
         </tr>
     </table>
-</div>
+    </div>
+</details>

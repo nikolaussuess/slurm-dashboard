@@ -47,7 +47,7 @@ function get_slurm_queue(array $jobs, $exclude_p_low, string $nonce = '') : stri
 
   <div class="d-flex align-items-center gap-2 ms-auto">
     <b>Order by:</b>
-    <select id="orderBySelect" class="form-select form-select-sm" style="width:auto">
+    <select id="orderBySelect" class="form-select form-select-sm w-auto">
       <option value="job_id">Job ID</option>
       <option value="user_name">Username</option>
       <option value="priority">Priority</option>
@@ -59,7 +59,7 @@ function get_slurm_queue(array $jobs, $exclude_p_low, string $nonce = '') : stri
 EOF;
 
 
-    $contents .= '<div>Found <span style="font-weight: bold">' . count($jobs) . ' jobs</span>.</div>';
+    $contents .= '<div>Found <span class="fw-bold">' . count($jobs) . ' jobs</span>.</div>';
 
     if(isset($_GET['preferred_view']) && ($_GET['preferred_view'] === "compact" || $_GET['preferred_view'] === "table")){
         $preferred_view = $_GET['preferred_view'];
@@ -201,10 +201,10 @@ EOF;
         $contents .= <<<EOF
 <td>
     <div class="btn-group">
-        <a href="?action=job&job_id={$job['job_id']}" class="btn btn-info" type="button">
+        <a href="?action=job&job_id={$job['job_id']}" class="btn btn-sm btn-outline-primary" type="button">
             Details
         </a>
-        <button type="button" class="btn btn-danger dropdown-toggle dropdown-toggle-split" data-bs-toggle="dropdown" aria-expanded="false">
+        <button type="button" class="btn btn-sm btn-outline-secondary dropdown-toggle dropdown-toggle-split" data-bs-toggle="dropdown" aria-expanded="false">
             <span class="visually-hidden">Toggle Dropdown</span>
         </button>
 EOF;
@@ -280,10 +280,10 @@ EOF;
         $contents .= <<<EOF
 <td rowspan="2">
     <div class="btn-group">
-        <a href="?action=job&job_id={$job['job_id']}" class="btn btn-info" type="button">
+        <a href="?action=job&job_id={$job['job_id']}" class="btn btn-sm btn-outline-primary" type="button">
             Details
         </a>
-        <button type="button" class="btn btn-danger dropdown-toggle dropdown-toggle-split" data-bs-toggle="dropdown" aria-expanded="false">
+        <button type="button" class="btn btn-sm btn-outline-secondary dropdown-toggle dropdown-toggle-split" data-bs-toggle="dropdown" aria-expanded="false">
             <span class="visually-hidden">Toggle Dropdown</span>
         </button>
 EOF;

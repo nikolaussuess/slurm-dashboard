@@ -29,7 +29,7 @@
     <!-- Editable fields (stacked full-width) -->
     <div class="mb-3">
         <label for="time_limit" class="form-label">
-            Time Limit (current value: <span class="px-1 py-0 rounded font-monospace" style="background-color:#f8d7da;">{{TIME_LIMIT}}</span>)
+            Time Limit (current value: <span class="px-1 py-0 rounded font-monospace current-value">{{TIME_LIMIT}}</span>)
         </label>
         <input type="text" class="form-control" id="time_limit" name="time_limit"
                placeholder="e.g. 0-02:00 or infinite">
@@ -40,7 +40,7 @@
 
     <div class="mb-3">
         <label for="nice_value" class="form-label">
-            Nice Value (current value: <span class="px-1 py-0 rounded font-monospace" style="background-color:#f8d7da;">{{NICE_VALUE}}</span>)
+            Nice Value (current value: <span class="px-1 py-0 rounded font-monospace current-value">{{NICE_VALUE}}</span>)
         </label>
         <input type="number" class="form-control" id="nice_value" name="nice_value"
                placeholder="0" value="{{NICE_VALUE}}">
@@ -63,7 +63,7 @@
 
         <div class="mb-3">
             <label for="priority" class="form-label">
-                Job Priority (current value: <span class="px-1 py-0 rounded font-monospace" style="background-color:#f8d7da;">{{PRIORITY}}</span>)
+                Job Priority (current value: <span class="px-1 py-0 rounded font-monospace current-value">{{PRIORITY}}</span>)
             </label>
             <input type="number" class="form-control" id="priority" name="priority"
                    placeholder="e.g. 20000" value="">
@@ -72,7 +72,7 @@
 
         <div class="mb-3">
             <label for="qos" class="form-label">
-                QoS (current value: <span class="px-1 py-0 rounded font-monospace" style="background-color:#f8d7da;">{{QOS}}</span>)
+                QoS (current value: <span class="px-1 py-0 rounded font-monospace current-value">{{QOS}}</span>)
             </label>
             <input type="text" class="form-control" id="qos" name="qos" placeholder="e.g. normal, high" value="">
             <div class="form-text">Quality of Service class. Admin-only.</div>
@@ -80,7 +80,7 @@
 
         <div class="mb-3">
             <label for="partition" class="form-label">
-                Partition (current value: <span class="px-1 py-0 rounded font-monospace" style="background-color:#f8d7da;">{{PARTITION}}</span>)
+                Partition (current value: <span class="px-1 py-0 rounded font-monospace current-value">{{PARTITION}}</span>)
             </label>
             <input type="text" class="form-control" id="partition" name="partition" placeholder="e.g. {{ALL_PARTITIONS}}" value="">
             <div class="form-text">Cluster partition. Admin-only changes.</div>

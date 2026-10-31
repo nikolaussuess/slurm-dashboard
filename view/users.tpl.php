@@ -44,7 +44,7 @@ EOF;
         $name_e = htmlspecialchars($user_arr['name'], ENT_QUOTES, 'UTF-8');
         if( $deleted ){
             $contents .= '<tr class="deleted-user" title="User was already deleted.">';
-            $contents .=    '<td><a href="?action=users&user_name=' . $name_e . '">' . $name_e . '</a> (deleted)</td>';
+            $contents .=    '<td><a href="?action=users&user_name=' . $name_e . '">' . $name_e . '</a> <span class="badge badge-deleted">DELETED</span></td>';
         }
         else {
             $contents .= "<tr>";
@@ -113,7 +113,7 @@ EOF;
  * @return string Rendered HTML
  */
 function get_user(string $user_name, array $user_arr, array $shares) : string {
-    $contents = '<a href="?action=users"><button type="button" class="btn btn-secondary">Back to the user table</button></a>';
+    $contents = '<a href="?action=users" class="btn btn-outline-secondary btn-sm mb-2">Back to the user table</a>';
 
     $user_name = htmlspecialchars($user_name);
 
@@ -122,9 +122,9 @@ function get_user(string $user_name, array $user_arr, array $shares) : string {
     if( isset($user_arr['flags']) && is_array($user_arr['flags']))
         $deleted = in_array("DELETED", $user_arr['flags']);
     if($deleted)
-        $status = '<span style="color: red">X</span> deleted';
+        $status = '<span class="text-danger">X</span> deleted';
     else
-        $status = '<span style="color: darkgreen">&#9989;</span> active';
+        $status = '<span class="text-success">&#9989;</span> active';
 
     // Associations
     $accounts = '';
@@ -268,7 +268,7 @@ EOF;
     if(count($shares) == 0){
         $fairshare_table .= <<<EOF
 <tr>
-    <td colspan="2" style="text-align: center"><i>Currently no data available.</i></td>
+    <td colspan="2" class="text-center"><i>Currently no data available.</i></td>
 </tr>
 EOF;
 

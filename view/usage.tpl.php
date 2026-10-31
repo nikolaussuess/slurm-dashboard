@@ -147,7 +147,8 @@ function get_all_nodes_usage(\client\Client $dao, string $nonce = '', bool $show
     }
     ksort($cluster_user_breakdown);
 
-    $contents = _render_cluster_summary(
+    $contents = _render_stat_tiles($cluster_totals, count($node_infos), count($unusable_nodes));
+    $contents .= _render_cluster_summary(
         $cluster_totals,
         $cluster_user_breakdown,
         $can_show_users && $show_users_requested,
@@ -251,6 +252,43 @@ function _build_node_user_breakdown(array $running_jobs, string $node): array {
 }
 
 /**
+ * Renders the row of key figures above the cluster summary.
+ * Resources that the cluster does not have (e.g. GPUs) are left out.
+ *
+ * @param array $totals Cluster totals, see _render_cluster_summary()
+ * @param int $node_count Number of nodes in the cluster
+ * @param int $unusable_node_count Number of nodes with unusable resources
+ * @return string The tiles as HTML string.
+ */
+function _render_stat_tiles(array $totals, int $node_count, int $unusable_node_count): string {
+    $tiles = [['Nodes', number_format($node_count, 0, '.', ','), $unusable_node_count . ' with unusable resources']];
+
+    $resources = [
+        ['CPUs', $totals['cpus_alloc'], $totals['cpus'], 1, ''],
+        ['Memory', $totals['mem_alloc'], $totals['mem_total'], 1024, ' GiB'],
+        ['GPUs', $totals['gpus_used'], $totals['gpus_total'], 1, ''],
+    ];
+    foreach ($resources as [$label, $used, $total, $divisor, $unit]) {
+        if ($total <= 0)
+            continue;
+
+        $tiles[] = [
+            $label,
+            number_format(min(100.0, $used / $total * 100), 0) . '%',
+            number_format($used / $divisor, 0, '.', ',') . ' / ' . number_format($total / $divisor, 0, '.', ',') . $unit . ' in use',
+        ];
+    }
+
+    $html = '<div class="stat-tiles">';
+    foreach ($tiles as [$label, $value, $note]) {
+        $html .= '<div class="stat-tile"><div class="stat-label">' . $label . '</div>'
+               . '<div class="stat-value">' . $value . '</div>'
+               . '<div class="stat-note">' . $note . '</div></div>';
+    }
+    return $html . '</div>' . "\n";
+}
+
+/**
  * Renders the cluster-wide resource summary card.
  * Shows stacked progress bars for CPUs, Memory, and GPUs across all nodes.
  * Striped yellow segments mark free resources on nodes that are unavailable or below the minimum free resources.
@@ -310,9 +348,7 @@ function _render_cluster_summary(array $totals, array $user_breakdown, bool $sho
 
     if (!$show_users && $show_plow && ($totals['cpus_plow'] > 0 || $totals['mem_plow'] > 0 || $totals['gpus_plow'] > 0)) {
         $html .= '<tr><td></td><td><small class="text-muted">'
-               . '<span style="display:inline-block;width:14px;height:14px;vertical-align:middle;'
-               . 'background:repeating-linear-gradient(45deg,#0d6efd,#0d6efd 4px,#9ec5fe 4px,#9ec5fe 8px);'
-               . 'border:1px solid #ccc"></span>'
+               . '<span class="legend-swatch legend-swatch-plow"></span>'
                . ' Striped: <span class="monospaced">p_low</span> partition jobs'
                . '</small></td></tr>' . "\n";
     }
@@ -326,9 +362,7 @@ function _render_cluster_summary(array $totals, array $user_breakdown, bool $sho
             $minimums[] = _format_count(config('unusable_min_free_gpus'), 'GPU');
 
         $html .= '<tr><td></td><td><small class="text-muted">'
-               . '<span style="display:inline-block;width:14px;height:14px;vertical-align:middle;'
-               . 'background:repeating-linear-gradient(45deg,#ffc107,#ffc107 4px,#fff3cd 4px,#fff3cd 8px);'
-               . 'border:1px solid #ccc"></span>'
+               . '<span class="legend-swatch legend-swatch-unusable"></span>'
                . ' Unusable: node unavailable'
                . ($minimums ? ' or fewer than ' . implode(' or ', $minimums) . ' available' : '')
                . '</small></td></tr>' . "\n";
@@ -407,10 +441,10 @@ function _render_cluster_bar_row_html(array $res_def, array $user_breakdown, boo
     $unusable_cap = max(0, min($total - $used, $unusable));
     $pct_unusable = round($unusable_cap / $total * 100, 1);
 
-    $html  = '<tr><td style="white-space:nowrap;padding-right:12px">'
+    $html  = '<tr><td class="summary-label">'
            . htmlspecialchars($label, ENT_QUOTES, 'UTF-8') . ':</td>';
-    $html .= '<td style="width:99%">';
-    $html .= '<div class="progress" style="height:22px">';
+    $html .= '<td class="summary-bar">';
+    $html .= '<div class="progress progress-tall">';
 
     if ($show_users && !empty($user_breakdown)) {
         foreach ($user_breakdown as $user => $res) {
@@ -425,14 +459,14 @@ function _render_cluster_bar_row_html(array $res_def, array $user_breakdown, boo
                 $tip    = $user_e . ($is_pl ? ' (p_low)' : '') . ': '
                         . number_format($val, 0, '.', ',') . $suffix . ' (' . $pct . '%)';
                 if ($is_pl) {
-                    $seg_cls = 'progress-bar progress-bar-striped bg-secondary';
-                    $seg_sty = 'width:' . $pct . '%;border-right:2px solid rgba(255,255,255,0.55)';
+                    $seg_cls = 'progress-bar progress-segment plow-stripes';
+                    $seg_sty = 'width:' . $pct . '%';
                     $seg_txt = $pct >= 10 ? $user_e : '';
                 } else {
                     $color   = _user_color($user);
-                    $seg_cls = 'progress-bar';
+                    $seg_cls = 'progress-bar progress-segment';
                     $seg_sty = 'width:' . $pct . '%;background-color:' . $color['hex']
-                             . ';color:' . $color['text'] . ';border-right:2px solid rgba(255,255,255,0.55)';
+                             . ';color:' . $color['text'];
                     $seg_txt = $pct >= 8 ? $user_e : '';
                 }
                 $html .= '<div class="' . $seg_cls . '" role="progressbar" style="' . $seg_sty . '"'
@@ -457,8 +491,8 @@ function _render_cluster_bar_row_html(array $res_def, array $user_breakdown, boo
         if ($plow > 0) {
             $pct_plow = round($plow / $total * 100, 1);
             $tip_p = 'p_low jobs: ' . number_format($plow, 0, '.', ',') . $suffix . ' (' . $pct_plow . '%)';
-            $html .= '<div class="progress-bar" role="progressbar"'
-                   . ' style="width:' . $pct_plow . '%;background:repeating-linear-gradient(45deg,#0d6efd,#0d6efd 6px,#9ec5fe 6px,#9ec5fe 12px)"'
+            $html .= '<div class="progress-bar progress-bar-plow" role="progressbar"'
+                   . ' style="width:' . $pct_plow . '%"'
                    . ' data-bs-toggle="tooltip" data-bs-trigger="hover focus"'
                    . ' title="' . htmlspecialchars($tip_p, ENT_QUOTES, 'UTF-8') . '">'
                    . $pct_plow . '%</div>';
@@ -479,7 +513,7 @@ function _render_cluster_bar_row_html(array $res_def, array $user_breakdown, boo
            . number_format($used, 0, '.', ',') . ' / ' . number_format($total, 0, '.', ',')
            . $suffix . ' in use (' . $pct_used . '%)';
     if ($pct_unusable > 0) {
-        $html .= ' &mdash; <span class="text-warning fw-bold">'
+        $html .= ' &mdash; <span class="text-unusable">'
                . number_format($unusable_cap, 0, '.', ',') . $suffix . ' unusable</span>';
     }
     $html .= '</small>';
@@ -508,13 +542,13 @@ function _build_user_badges(array $user_breakdown, bool $is_plow, bool $has_mem,
             $det[] = number_format($res['gpus'.$sfx], 0, '.', ',') . ' GPUs';
         $det_str = empty($det) ? '' : ': ' . htmlspecialchars(implode(', ', $det), ENT_QUOTES, 'UTF-8');
         if ($is_plow) {
-            $html .= '<span class="badge bg-secondary progress-bar-striped text-white" style="background-size:1rem 1rem">'
-                   . '<a href="?action=users&user_name=' . $user_e . '" class="text-white" style="text-decoration:none">'
+            $html .= '<span class="badge plow-stripes">'
+                   . '<a href="?action=users&user_name=' . $user_e . '" class="text-reset text-decoration-none">'
                    . $user_e . '</a>' . $det_str . '</span>';
         } else {
             $color = _user_color($user);
             $html .= '<span class="badge" style="background-color:' . $color['hex'] . ';color:' . $color['text'] . '">'
-                   . '<a href="?action=users&user_name=' . $user_e . '" style="color:' . $color['text'] . ';text-decoration:none">'
+                   . '<a href="?action=users&user_name=' . $user_e . '" class="text-decoration-none" style="color:' . $color['text'] . '">'
                    . $user_e . '</a>' . $det_str . '</span>';
         }
     }
@@ -525,13 +559,13 @@ function _build_user_badges(array $user_breakdown, bool $is_plow, bool $has_mem,
  * Renders badge legend rows (regular + p_low) for the cluster summary.
  */
 function _render_cluster_legend_row(array $user_breakdown, bool $has_mem, bool $has_gpu, bool $has_plow): string {
-    $html = '<tr><td style="white-space:nowrap">Users:</td>'
-          . '<td><div style="display:flex;flex-wrap:wrap;gap:4px">'
+    $html = '<tr><td class="summary-label">Users:</td>'
+          . '<td><div class="d-flex flex-wrap gap-1">'
           . _build_user_badges($user_breakdown, FALSE, $has_mem, $has_gpu)
           . '</div></td></tr>' . "\n";
     if ($has_plow) {
-        $html .= '<tr><td style="white-space:nowrap"><span class="monospaced">p_low</span>:</td>'
-               . '<td><div style="display:flex;flex-wrap:wrap;gap:4px">'
+        $html .= '<tr><td class="summary-label"><span class="monospaced">p_low</span>:</td>'
+               . '<td><div class="d-flex flex-wrap gap-1">'
                . _build_user_badges($user_breakdown, TRUE, $has_mem, $has_gpu)
                . '</div></td></tr>' . "\n";
     }
@@ -617,12 +651,12 @@ function _render_user_breakdown(array $user_breakdown, int $cpu_total, int $mem_
         if (!$res_def['show'])
             continue;
         $total = $res_def['total'];
-        $label_btn = '<button type="button" class="btn p-0 text-start" style="display:flex;align-items:flex-start;gap:0.25em" data-bs-toggle="tooltip" data-bs-trigger="click focus" data-bs-placement="top"'
+        $label_btn = '<button type="button" class="btn p-0 text-start info-btn" data-bs-toggle="tooltip" data-bs-trigger="click focus" data-bs-placement="top"'
                    . ' title="' . htmlspecialchars($res_def['tooltip'], ENT_QUOTES, 'UTF-8') . '">'
-                   . '<i style="flex-shrink:0" title="Click here for more information">&#9432;</i>' . $res_def['label']
+                   . '<i class="info-icon" title="Click here for more information">&#9432;</i>' . $res_def['label']
                    . '</button>';
         $html .= '<tr><td>' . $label_btn . '</td><td>';
-        $html .= '<div class="progress" style="height:20px">';
+        $html .= '<div class="progress progress-tall">';
 
         // Regular (colored) segments — one per individual job, with a white divider between jobs
         foreach ($user_breakdown as $user => $res) {
@@ -637,8 +671,8 @@ function _render_user_breakdown(array $user_breakdown, int $cpu_total, int $mem_
                 $pct   = min(100.0, round($val / $total * 100, 1));
                 $val_f = number_format($val, 0, '.', ',');
                 $tooltip = $user_e . ': ' . $val_f . $res_def['suffix'] . ' (' . $pct . '%)';
-                $html .= '<div class="progress-bar" role="progressbar"'
-                       . ' style="width:' . $pct . '%;background-color:' . $color['hex'] . ';color:' . $color['text'] . ';border-right:2px solid rgba(255,255,255,0.55)"'
+                $html .= '<div class="progress-bar progress-segment" role="progressbar"'
+                       . ' style="width:' . $pct . '%;background-color:' . $color['hex'] . ';color:' . $color['text'] . '"'
                        . ' data-bs-toggle="tooltip" data-bs-trigger="hover focus"'
                        . ' title="' . htmlspecialchars($tooltip, ENT_QUOTES, 'UTF-8') . '">'
                        . ($pct >= 12 ? $user_e : '') . '</div>';
@@ -657,8 +691,8 @@ function _render_user_breakdown(array $user_breakdown, int $cpu_total, int $mem_
                 $pct   = min(100.0, round($val / $total * 100, 1));
                 $val_f = number_format($val, 0, '.', ',');
                 $tooltip = $user_e . ' (p_low): ' . $val_f . $res_def['suffix'] . ' (' . $pct . '%)';
-                $html .= '<div class="progress-bar progress-bar-striped bg-secondary" role="progressbar"'
-                       . ' style="width:' . $pct . '%;border-right:2px solid rgba(255,255,255,0.55)"'
+                $html .= '<div class="progress-bar progress-segment plow-stripes" role="progressbar"'
+                       . ' style="width:' . $pct . '%"'
                        . ' data-bs-toggle="tooltip" data-bs-trigger="hover focus"'
                        . ' title="' . htmlspecialchars($tooltip, ENT_QUOTES, 'UTF-8') . '">'
                        . ($pct >= 12 ? $user_e : '') . '</div>';
@@ -670,22 +704,22 @@ function _render_user_breakdown(array $user_breakdown, int $cpu_total, int $mem_
 
     // Legend rows
     $html .= '<tr><td>'
-           . '<button type="button" class="btn p-0 text-start" style="display:flex;align-items:flex-start;gap:0.25em" data-bs-toggle="tooltip" data-bs-trigger="click focus" data-bs-placement="top"'
+           . '<button type="button" class="btn p-0 text-start info-btn" data-bs-toggle="tooltip" data-bs-trigger="click focus" data-bs-placement="top"'
            . ' title="Users with running jobs on this node and their total resource usage (sum of all their jobs).">'
-           . '<i style="flex-shrink:0" title="Click here for more information">&#9432;</i>Normal jobs:'
+           . '<i class="info-icon" title="Click here for more information">&#9432;</i>Normal jobs:'
            . '</button>'
            . '</td>'
-           . '<td><div style="display:flex;flex-wrap:wrap;gap:4px">'
+           . '<td><div class="d-flex flex-wrap gap-1">'
            . _build_user_badges($user_breakdown, FALSE, $has_mem, $has_gpu)
            . '</div></td></tr>';
     if ($has_plow) {
         $html .= '<tr><td>'
-               . '<button type="button" class="btn p-0 text-start" style="display:flex;align-items:flex-start;gap:0.25em" data-bs-toggle="tooltip" data-bs-trigger="click focus" data-bs-placement="top"'
+               . '<button type="button" class="btn p-0 text-start info-btn" data-bs-toggle="tooltip" data-bs-trigger="click focus" data-bs-placement="top"'
                . ' title="Users with running jobs in the low-priority partition (p_low) on this node.">'
-               . '<i style="flex-shrink:0" title="Click here for more information">&#9432;</i><span class="monospaced">p_low</span> jobs:'
+               . '<i class="info-icon" title="Click here for more information">&#9432;</i><span class="monospaced">p_low</span> jobs:'
                . '</button>'
                . '</td>'
-               . '<td><div style="display:flex;flex-wrap:wrap;gap:4px">'
+               . '<td><div class="d-flex flex-wrap gap-1">'
                . _build_user_badges($user_breakdown, TRUE, $has_mem, $has_gpu)
                . '</div></td></tr>';
     }
@@ -739,7 +773,7 @@ function get_usage(array $data, array $user_breakdown = [], string $show_users_t
     ));
 
     $templateBuilder->setParam("STATE", implode(", ", $data["state"] ?? []));
-    $state_color = "#f9c98f"; # orange
+    $state_class = "node-state-other";
     if(
         in_array("IDLE", $data["state"]) ||
         in_array("MIX", $data["state"]) ||
@@ -747,7 +781,7 @@ function get_usage(array $data, array $user_breakdown = [], string $show_users_t
         in_array("ALLOC", $data["state"]) ||
         in_array("ALLOCATED", $data["state"])
     ){
-        $state_color = "#c1dead"; # green
+        $state_class = "node-state-ok";
     }
     elseif (
         in_array("DOWN", $data["state"]) ||
@@ -756,9 +790,9 @@ function get_usage(array $data, array $user_breakdown = [], string $show_users_t
         in_array("DRAINING", $data["state"]) ||
         in_array("FAIL", $data["state"])
     ) {
-        $state_color = "#deadae"; # Red
+        $state_class = "node-state-bad";
     }
-    $templateBuilder->setParam("STATE_COLOR", $state_color);
+    $templateBuilder->setParam("STATE_CLASS", $state_class);
 
     $templateBuilder->setParam("ARCHITECTURE", $data["architecture"] ?? '');
     $templateBuilder->setParam("BOARDS", $data["boards"] ?? '');

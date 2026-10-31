@@ -1,5 +1,8 @@
-<div class="table-responsive">
-    <table class="table">
+<details class="card job-section mb-3" open>
+    <summary class="card-header">General</summary>
+    <div class="table-responsive">
+            <table class="table job-table">
+                <colgroup><col class="job-label"><col></colgroup>
         <tr>
             <td>
                 Job ID
@@ -157,9 +160,15 @@
 
 
         <tr></tr>
-        <tr>
-            <th colspan="2">Nodes</th>
-        </tr>
+    </table>
+    </div>
+</details>
+
+<details class="card job-section mb-3" open>
+    <summary class="card-header">Nodes</summary>
+    <div class="table-responsive">
+            <table class="table job-table">
+                <colgroup><col class="job-label"><col></colgroup>
         <tr>
             <td>
                 Scheduled Nodes
@@ -187,6 +196,20 @@
                 </button>
             </td>
             <td>{{REQNODES}}</td>
+        </tr>
+        <tr>
+            <td>
+                Excluded nodes
+                <button type="button"
+                        class="btn p-0"
+                        data-bs-toggle="tooltip"
+                        data-bs-trigger="click focus"
+                        data-bs-placement="top"
+                        title="Nodes that must not be used for this job (--exclude).">
+                    <i title="Click here for more information">&#9432;</i>
+                </button>
+            </td>
+            <td>{{EXCLUDED_NODES}}</td>
         </tr>
         <tr>
             <td>
@@ -218,9 +241,15 @@
         </tr>
 
         <tr></tr>
-        <tr>
-            <th colspan="2">Resources</th>
-        </tr>
+    </table>
+    </div>
+</details>
+
+<details class="card job-section mb-3" open>
+    <summary class="card-header">Resources</summary>
+    <div class="table-responsive">
+            <table class="table job-table">
+                <colgroup><col class="job-label"><col></colgroup>
         <tr>
             <td>
                 Cores per socket
@@ -335,9 +364,15 @@
         </tr>
 
         <tr></tr>
-        <tr>
-            <th colspan="2">Time</th>
-        </tr>
+    </table>
+    </div>
+</details>
+
+<details class="card job-section mb-3" open>
+    <summary class="card-header">Time</summary>
+    <div class="table-responsive">
+            <table class="table job-table">
+                <colgroup><col class="job-label"><col></colgroup>
         <tr>
             <td>
                 Submit time
@@ -351,6 +386,20 @@
                 </button>
             </td>
             <td>{{SUBMIT_TIME}}</td>
+        </tr>
+        <tr>
+            <td>
+                Start time
+                <button type="button"
+                        class="btn p-0"
+                        data-bs-toggle="tooltip"
+                        data-bs-trigger="click focus"
+                        data-bs-placement="top"
+                        title="Time when the job started. For a pending job, this is the expected start time, if Slurm already knows it.">
+                    <i title="Click here for more information">&#9432;</i>
+                </button>
+            </td>
+            <td>{{START_TIME}}</td>
         </tr>
         <tr>
             <td>
@@ -382,12 +431,18 @@
         </tr>
 
         <tr></tr>
-        <tr>
-            <th colspan="2">Container settings</th>
-        </tr>
+    </table>
+    </div>
+</details>
+
+<details class="card job-section mb-3">
+    <summary class="card-header">Container settings</summary>
+    <div class="table-responsive">
+            <table class="table job-table">
+                <colgroup><col class="job-label"><col></colgroup>
         <tr>
             <td colspan="2">
-                <span style="font-size: 0.8em">
+                <span class="small">
                 These fields may not be set if you are using pyxis/docker/enroot containers.
                 </span>
             </td>
@@ -402,9 +457,15 @@
         </tr>
 
         <tr></tr>
-        <tr>
-            <th colspan="2">Other information</th>
-        </tr>
+    </table>
+    </div>
+</details>
+
+<details class="card job-section mb-3" open>
+    <summary class="card-header">Other information</summary>
+    <div class="table-responsive">
+            <table class="table job-table">
+                <colgroup><col class="job-label"><col></colgroup>
         <tr>
             <td>
                 Features
@@ -446,6 +507,48 @@
                 </button>
             </td>
             <td>{{REQUEUE}}</td>
+        </tr>
+        <tr>
+            <td>
+                Restart count
+                <button type="button"
+                        class="btn p-0"
+                        data-bs-toggle="tooltip"
+                        data-bs-trigger="click focus"
+                        data-bs-placement="top"
+                        title="Number of times the job was restarted, e.g. because it was requeued.">
+                    <i title="Click here for more information">&#9432;</i>
+                </button>
+            </td>
+            <td>{{RESTART_COUNT}}</td>
+        </tr>
+        <tr>
+            <td>
+                Standard output
+                <button type="button"
+                        class="btn p-0"
+                        data-bs-toggle="tooltip"
+                        data-bs-trigger="click focus"
+                        data-bs-placement="top"
+                        title="Path of the file that receives the standard output of the job (--output).">
+                    <i title="Click here for more information">&#9432;</i>
+                </button>
+            </td>
+            <td><span class="monospaced">{{STANDARD_OUTPUT}}</span></td>
+        </tr>
+        <tr>
+            <td>
+                Standard error
+                <button type="button"
+                        class="btn p-0"
+                        data-bs-toggle="tooltip"
+                        data-bs-trigger="click focus"
+                        data-bs-placement="top"
+                        title="Path of the file that receives the standard error of the job (--error).">
+                    <i title="Click here for more information">&#9432;</i>
+                </button>
+            </td>
+            <td><span class="monospaced">{{STANDARD_ERROR}}</span></td>
         </tr>
         <tr>
             <td>
@@ -518,4 +621,5 @@
             <td>{{NICE}}</td>
         </tr>
     </table>
-</div>
+    </div>
+</details>

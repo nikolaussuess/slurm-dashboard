@@ -25,6 +25,7 @@ function get_login_form() : string {
 
     $templateBuilder = new TemplateLoader("loginForm.html");
     $templateBuilder->setParam("action", "login");
+    $templateBuilder->setParam("brand", htmlspecialchars(dashboard_brand_name(), ENT_QUOTES, 'UTF-8'));
     $templateBuilder->setParam("buttontext", "Login");
     $templateBuilder->setParam("methods", $methods_string);
     $templateBuilder->setParam("CSRF_TOKEN", \auth\get_csrf_token());

@@ -12,7 +12,7 @@ namespace view\actions;
 function render_job_action_dropdown(int $job_id, bool $disabled, string $tooltip = '') : string {
     if (!$disabled) {
         return '<ul class="dropdown-menu">'
-             . '<li><a class="dropdown-item" href="?action=cancel-job&job_id=' . $job_id . '">Cancel job</a></li>'
+             . '<li><a class="dropdown-item text-danger" href="?action=cancel-job&job_id=' . $job_id . '">Cancel job</a></li>'
              . '<li><a class="dropdown-item" href="?action=edit-job&job_id=' . $job_id . '">Edit job</a></li>'
              . '</ul>';
     }

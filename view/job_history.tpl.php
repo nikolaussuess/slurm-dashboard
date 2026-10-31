@@ -269,7 +269,7 @@ function get_filtered_jobs_from_slurmdb(array $jobs, array $filter = []) : strin
         ? '<div class="active-filter-chips"><span class="filter-chips-label">Active filters:</span> ' . $chips . '</div>'
         : '';
 
-    $contents .= '<div>Found <span style="font-weight: bold">' . count($jobs) . ' jobs</span>.</div>';
+    $contents .= '<div>Found <span class="fw-bold">' . count($jobs) . ' jobs</span>.</div>';
 
     $contents .= <<<EOF
 <div id="jobtable-table" class="table-responsive tableFixHead">
@@ -315,8 +315,8 @@ EOF;
         $contents .=    "<td class='nodes-cell'>" . $nodes_e . "</td>";
 
         $contents .= '<td><div class="btn-group">';
-        $contents .= '<a href="?action=job&job_id=' . $job['job_id'] . '" class="btn btn-info" type="button">Details</a>';
-        $contents .= '<button type="button" class="btn btn-danger dropdown-toggle dropdown-toggle-split"'
+        $contents .= '<a href="?action=job&job_id=' . $job['job_id'] . '" class="btn btn-sm btn-outline-primary" type="button">Details</a>';
+        $contents .= '<button type="button" class="btn btn-sm btn-outline-secondary dropdown-toggle dropdown-toggle-split"'
                    . ' data-bs-toggle="dropdown" aria-expanded="false">'
                    . '<span class="visually-hidden">Toggle Dropdown</span></button>';
 

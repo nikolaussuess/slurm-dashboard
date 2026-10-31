@@ -1,12 +1,8 @@
-
-<div class="alert alert-info" role="alert" style="margin-top: 10px; margin-bottom: 10px;">
-    For more information click <a href="?action=about">here</a>.
-</div>
-
-<form method="post" action="?action={{ACTION}}" class="container mt-4">
-    <fieldset class="border p-2">
-        <legend class="w-auto">{{BUTTONTEXT}}:</legend>
-        <div class="form-outline mb-4">
+<form method="post" action="?action={{ACTION}}">
+    <fieldset class="card card-body">
+        <legend class="visually-hidden">{{BUTTONTEXT}}</legend>
+        <h1 class="login-title">{{BRAND}}</h1>
+        <div class="form-outline mb-3">
             <label for="username" class="form-label">Username:</label>
             <input      type="text"
                         name="username"
@@ -16,7 +12,7 @@
                         required>
         </div>
 
-        <div class="form-group mb-4">
+        <div class="form-group mb-3">
             <label for="password" class="form-label">Password:</label>
             <input      type="password"
                         name="password"
@@ -27,11 +23,11 @@
                         required>
         </div>
 
-        <div class="form-outline mb-4">
+        <div class="form-outline mb-3">
             <label for="method" class="form-label">Login method:</label>
             <select     name="method"
                         id="method"
-                        class="form-control"
+                        class="form-select"
                         required>
                 {{METHODS}}
             </select>
@@ -39,7 +35,9 @@
 
         <input type="hidden" name="csrf_token" value="{{CSRF_TOKEN}}">
         <div class="d-flex justify-content-center mt-4">
-            <button type="submit" class="btn btn-primary btn-block">{{BUTTONTEXT}}</button>
+            <button type="submit" class="btn btn-primary w-100">{{BUTTONTEXT}}</button>
         </div>
     </fieldset>
 </form>
+
+<p class="login-info"><a href="?action=about">More information about this cluster</a></p>

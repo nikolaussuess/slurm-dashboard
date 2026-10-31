@@ -36,25 +36,11 @@
                         data-bs-toggle="tooltip"
                         data-bs-trigger="click focus"
                         data-bs-placement="top"
-                        title="Current status of the job in the scheduler (e.g., PENDING, RUNNING, COMPLETED).">
+                        title="Current status of the job in the scheduler (e.g., PENDING, RUNNING, COMPLETED). For pending jobs, Slurm reports only one reason at a time, even if several apply.">
                     <i title="Click here for more information">&#9432;</i>
                 </button>
             </td>
             <td>{{JOB_STATE}}</td>
-        </tr>
-        <tr>
-            <td>
-                Reason
-                <button type="button"
-                        class="btn p-0"
-                        data-bs-toggle="tooltip"
-                        data-bs-trigger="click focus"
-                        data-bs-placement="top"
-                        title="Why a pending job is not running yet. Slurm reports only one reason at a time, even if several apply.">
-                    <i title="Click here for more information">&#9432;</i>
-                </button>
-            </td>
-            <td>{{JOB_REASON}}</td>
         </tr>
         <tr>
             <td>

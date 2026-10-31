@@ -214,9 +214,16 @@ function merge_live_job_reasons(array $history_jobs, array $live_jobs): array {
 }
 
 # TODO: Should in the future only do the *view* and NOT look into the original job array
-function get_job_state_view(array $job, string $param_name = 'job_state'): string {
+/**
+ * Renders the states of a job as badges.
+ * @param array $job Job array as returned by the client.
+ * @param string $param_name Key of the state array in $job.
+ * @param bool $reason_tooltip Whether the reason of a pending job is shown as a tooltip.
+ * @return string Rendered HTML
+ */
+function get_job_state_view(array $job, string $param_name = 'job_state', bool $reason_tooltip = TRUE): string {
     $job_state_array = $job[$param_name] ?? [];
-    $reason_text = get_job_reason_text($job);
+    $reason_text = $reason_tooltip ? get_job_reason_text($job) : NULL;
 
     $job_state_text = '';
     foreach($job_state_array as $job_state) {

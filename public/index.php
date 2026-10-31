@@ -246,6 +246,16 @@ if( isset($_SESSION['USER']) ){
             $contents .= \view\actions\get_slurmdb_filter_form($filter, $accounts, $users, $nodes, $partitions);
 
             $jobs = $dao->get_jobs_from_slurmdb($filter);
+
+            // slurmdbd does not provide pending reasons, so they are taken from the live queue.
+            if( \utils\has_pending_job($jobs) ) {
+                try {
+                    $jobs = \utils\merge_live_job_reasons($jobs, $dao->get_jobs());
+                } catch (\exceptions\RequestFailedException $e) {
+                    // The reasons are optional: The history still works if slurmctld is down.
+                }
+            }
+
             $contents .= \view\actions\get_filtered_jobs_from_slurmdb($jobs, $filter);
 
             break;
@@ -587,9 +597,13 @@ if( isset($_SESSION['USER']) ){
                 new bootstrap.Tooltip(el, { container: 'body' })
             );
 
+            // Reason of pending jobs: delegated, as a queue can contain thousands of rows.
+            // Opens on click/tap for touch devices; the native title still works on hover.
+            new bootstrap.Tooltip(document.body, { selector: '.job-reason', trigger: 'click', container: 'body' });
+
             // Close tooltip when there is a click outside
             document.addEventListener('click', function(e) {
-                tooltipTriggerList.forEach(function(el) {
+                [...tooltipTriggerList, ...document.querySelectorAll('.job-reason')].forEach(function(el) {
                     if (!el.contains(e.target)) {
                         bootstrap.Tooltip.getInstance(el)?.hide();
                     }

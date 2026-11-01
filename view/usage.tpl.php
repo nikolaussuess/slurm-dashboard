@@ -3,6 +3,27 @@ namespace view\actions;
 
 use TemplateLoader;
 
+// Number of nodes shown in the unusable-nodes list before the rest collapses behind "Show more".
+const UNUSABLE_NODES_VISIBLE = 5;
+
+// Node states that rule out new jobs regardless of free resources, mapped to the displayed reason.
+// If a node has several of these states, the first entry wins.
+const UNUSABLE_NODE_STATES = [
+    'DOWN'             => 'Node DOWN',
+    'FAIL'             => 'Node FAIL',
+    'NOT_RESPONDING'   => 'Node NOT_RESPONDING',
+    'DRAIN'            => 'DRAIN',
+    'DRAINED'          => 'DRAIN',
+    'DRAINING'         => 'DRAIN',
+    'MAINT'            => 'MAINT',
+    'MAINTENANCE'      => 'MAINT', // Spelling used by slurmrestd, scontrol prints MAINT
+    'REBOOT_REQUESTED' => 'REBOOT_REQUESTED',
+    'FUTURE'           => 'FUTURE',
+    'PLANNED'          => 'PLANNED',
+    // Debatable: a RESERVED node is still usable for jobs inside the reservation.
+    'RESERVED'         => 'RESERVED',
+];
+
 /**
  * Renders the full cluster-usage section including all nodes.
  * Fetches running-job summaries once and distributes them per node.
@@ -39,6 +60,7 @@ function get_all_nodes_usage(\client\Client $dao, string $nonce = '', bool $show
     ];
     $cluster_user_breakdown = [];
     $node_infos = [];
+    $unusable_nodes = [];
 
     foreach ($dao->getNodeList() as $node) {
         $node_data    = $dao->get_node_info($node);
@@ -48,15 +70,8 @@ function get_all_nodes_usage(\client\Client $dao, string $nonce = '', bool $show
         $cpu_alloc = (int)$node_data['alloc_cpus'];
         $mem_total = (int)$node_data['mem_total'];
         $mem_alloc = (int)$node_data['mem_alloc'];
-        $gres      = $node_data['gres'];
-        $gres_used = $node_data['gres_used'];
-        if ($gres !== '') {
-            $gpu_total = (int)preg_replace('/.*:(\d+)(?:\(.*\))?$/', '$1', $gres);
-            $gpu_used  = (int)preg_replace('/.*:(\d+)(?:\(.*\))?$/', '$1', $gres_used);
-        } else {
-            $gpu_total = 0;
-            $gpu_used  = 0;
-        }
+        $gpu_total = \utils\count_gpus($node_data['gres']);
+        $gpu_used  = \utils\count_gpus($node_data['gres_used']);
 
         $cluster_totals['cpus']      += $cpu_total;
         $cluster_totals['mem_total'] += $mem_total;
@@ -82,14 +97,29 @@ function get_all_nodes_usage(\client\Client $dao, string $nonce = '', bool $show
         $cluster_totals['mem_alloc']  += $mem_alloc_eff;
         $cluster_totals['gpus_used']  += $gpu_used_eff;
 
-        // A node is blocked when CPUs or memory are fully allocated - no new job can start there.
-        if (
-            ($cpu_total > 0 && $cpu_alloc_eff >= $cpu_total) ||
-            ($mem_total > 0 && $mem_alloc_eff >= $mem_total)
-        ) {
-            $cluster_totals['cpus_unusable'] += max(0, $cpu_total - $cpu_alloc_eff);
-            $cluster_totals['mem_unusable']  += max(0, $mem_total - $mem_alloc_eff);
-            $cluster_totals['gpus_unusable'] += max(0, $gpu_total - $gpu_used_eff);
+        // A node is blocked when its state rules out new jobs or its free resources are below the minimums.
+        $cpus_unusable = max(0, $cpu_total - $cpu_alloc_eff);
+        $mem_unusable  = max(0, $mem_total - $mem_alloc_eff);
+        $gpus_unusable = max(0, $gpu_total - $gpu_used_eff);
+        $unusable_reasons = _get_unusable_reasons(
+            $node_data['state'] ?? [],
+            $cpu_total, $cpus_unusable,
+            $mem_total, $mem_unusable,
+            $gpu_total, $gpus_unusable
+        );
+
+        if (!empty($unusable_reasons)) {
+            $cluster_totals['cpus_unusable'] += $cpus_unusable;
+            $cluster_totals['mem_unusable']  += $mem_unusable;
+            $cluster_totals['gpus_unusable'] += $gpus_unusable;
+
+            // Nodes that are completely allocated have nothing unusable left to report.
+            if ($cpus_unusable > 0 || $mem_unusable > 0 || $gpus_unusable > 0) {
+                $unusable_nodes[] = [
+                    'name' => $node, 'reasons' => $unusable_reasons,
+                    'cpus' => $cpus_unusable, 'mem' => $mem_unusable, 'gpus' => $gpus_unusable,
+                ];
+            }
         }
 
         // p_low cluster totals (always when jobs data is available, for the overview bar)
@@ -123,7 +153,8 @@ function get_all_nodes_usage(\client\Client $dao, string $nonce = '', bool $show
         $can_show_users && $show_users_requested,
         $nonce,
         $can_show_users,
-        $show_plow_overview
+        $show_plow_overview,
+        $unusable_nodes
     );
 
     // Node-level toggle — must navigate to the exact same URLs as the cluster summary checkbox
@@ -139,6 +170,49 @@ function get_all_nodes_usage(\client\Client $dao, string $nonce = '', bool $show
         $contents .= get_usage($node_data, $user_bkd, $node_toggle);
 
     return $contents;
+}
+
+/**
+ * Determines why a node counts as unusable.
+ * A node in one of the UNUSABLE_NODE_STATES is unusable regardless of its free resources. Otherwise a node is
+ * unusable when it falls below a configured minimum. Minimums are capped at the node's total size, so that a
+ * small idle node is not flagged permanently. This also skips the checks for resources the node does not have.
+ *
+ * @param array $state Slurm state flags of the node
+ * @param int $cpus_total Number of CPUs on the node
+ * @param int $cpus_free Number of unallocated CPUs
+ * @param int $mem_total Memory of the node in MiB
+ * @param int $mem_free Unallocated memory in MiB
+ * @param int $gpus_total Number of GPUs on the node
+ * @param int $gpus_free Number of unallocated GPUs
+ * @return array Human-readable reasons, empty if the node is usable
+ */
+function _get_unusable_reasons(array $state, int $cpus_total, int $cpus_free, int $mem_total, int $mem_free, int $gpus_total, int $gpus_free): array {
+    foreach (UNUSABLE_NODE_STATES as $unusable_state => $reason) {
+        if (in_array($unusable_state, $state, TRUE))
+            return [$reason];
+    }
+
+    $reasons = [];
+    if ($cpus_free < min(config('unusable_min_free_cpus'), $cpus_total))
+        $reasons[] = $cpus_free === 0 ? 'CPUs full' : 'only ' . _format_count($cpus_free, 'CPU') . ' free';
+    if ($mem_free < min(config('unusable_min_free_mem_gib') * 1024, $mem_total))
+        $reasons[] = $mem_free === 0 ? 'Memory full' : 'only ' . number_format($mem_free, 0, '.', ',') . ' MiB memory free';
+    if ($gpus_free < min(config('unusable_min_free_gpus'), $gpus_total))
+        $reasons[] = $gpus_free === 0 ? 'GPUs full' : 'only ' . _format_count($gpus_free, 'GPU') . ' free';
+
+    return $reasons;
+}
+
+/**
+ * Formats a count with its noun in singular or plural.
+ *
+ * @param int $count The count
+ * @param string $noun Singular form of the noun
+ * @return string The formatted count, e.g. "2 CPUs"
+ */
+function _format_count(int $count, string $noun): string {
+    return number_format($count, 0, '.', ',') . ' ' . $noun . ($count === 1 ? '' : 's');
 }
 
 /**
@@ -179,7 +253,7 @@ function _build_node_user_breakdown(array $running_jobs, string $node): array {
 /**
  * Renders the cluster-wide resource summary card.
  * Shows stacked progress bars for CPUs, Memory, and GPUs across all nodes.
- * Striped yellow segments mark resources on nodes where all CPUs or memory are already taken.
+ * Striped yellow segments mark free resources on nodes that are unavailable or below the minimum free resources.
  *
  * @param array $totals          Keys: cpus, cpus_alloc, mem_total, mem_alloc,
  *                                     gpus_total, gpus_used, cpus_unusable, mem_unusable, gpus_unusable
@@ -187,8 +261,11 @@ function _build_node_user_breakdown(array $running_jobs, string $node): array {
  * @param bool  $show_users      Whether per-user breakdown is currently active (GET param set)
  * @param string $nonce          CSP nonce for the inline script
  * @param bool  $can_show_users  Whether the current user is allowed to see the per-user breakdown
+ * @param bool  $show_plow       Whether p_low usage is shown in the overview bars
+ * @param array $unusable_nodes  Nodes with unusable resources, see _render_unusable_nodes_row()
+ * @return string The summary card as HTML string.
  */
-function _render_cluster_summary(array $totals, array $user_breakdown, bool $show_users, string $nonce = '', bool $can_show_users = FALSE, bool $show_plow = FALSE): string {
+function _render_cluster_summary(array $totals, array $user_breakdown, bool $show_users, string $nonce = '', bool $can_show_users = FALSE, bool $show_plow = FALSE, array $unusable_nodes = []): string {
     $has_gpu  = $totals['gpus_total'] > 0;
     $has_plow = $show_users && (
         array_sum(array_column($user_breakdown, 'cpus_pl')) +
@@ -240,12 +317,22 @@ function _render_cluster_summary(array $totals, array $user_breakdown, bool $sho
                . '</small></td></tr>' . "\n";
     }
     if ($totals['cpus_unusable'] > 0 || $totals['mem_unusable'] > 0 || $totals['gpus_unusable'] > 0) {
+        $minimums = [];
+        if (config('unusable_min_free_cpus') > 0)
+            $minimums[] = _format_count(config('unusable_min_free_cpus'), 'CPU');
+        if (config('unusable_min_free_mem_gib') > 0)
+            $minimums[] = config('unusable_min_free_mem_gib') . ' GiB RAM';
+        if ($has_gpu && config('unusable_min_free_gpus') > 0)
+            $minimums[] = _format_count(config('unusable_min_free_gpus'), 'GPU');
+
         $html .= '<tr><td></td><td><small class="text-muted">'
                . '<span style="display:inline-block;width:14px;height:14px;vertical-align:middle;'
                . 'background:repeating-linear-gradient(45deg,#ffc107,#ffc107 4px,#fff3cd 4px,#fff3cd 8px);'
                . 'border:1px solid #ccc"></span>'
-               . ' Unusable: free resources on nodes where all CPUs or memory are already allocated'
+               . ' Unusable: node unavailable'
+               . ($minimums ? ' or fewer than ' . implode(' or ', $minimums) . ' available' : '')
                . '</small></td></tr>' . "\n";
+        $html .= _render_unusable_nodes_row($unusable_nodes);
     }
 
     $html .= '</table>' . "\n";
@@ -262,6 +349,46 @@ function _render_cluster_summary(array $totals, array $user_breakdown, bool $sho
     }
 
     return $html;
+}
+
+/**
+ * Renders the table row listing every node with unusable resources and why they are unusable.
+ * Nodes beyond UNUSABLE_NODES_VISIBLE are hidden behind a "Show more" toggle.
+ *
+ * @param array $unusable_nodes List of nodes, each with the keys name, reasons, cpus, mem, gpus
+ * @return string The &lt;tr&gt; as HTML string.
+ */
+function _render_unusable_nodes_row(array $unusable_nodes): string {
+    $items = [];
+    foreach ($unusable_nodes as $node) {
+        $details = [];
+        if ($node['gpus'] > 0)
+            $details[] = _format_count($node['gpus'], 'unusable GPU');
+        if ($node['cpus'] > 0)
+            $details[] = _format_count($node['cpus'], 'unusable CPU');
+        if ($node['mem'] > 0)
+            $details[] = number_format($node['mem'], 0, '.', ',') . ' MiB unusable memory';
+
+        $name_e = htmlspecialchars($node['name'], ENT_QUOTES, 'UTF-8');
+        $items[] = '<li><a href="#node-' . $name_e . '" class="monospaced">' . $name_e . '</a>: '
+                 . implode(', ', $details) . ' (' . implode(', ', $node['reasons']) . ')</li>';
+    }
+
+    $html = '<tr><td></td><td><small class="text-muted">Nodes with unusable resources:'
+          . '<ul class="mb-0">' . implode('', array_slice($items, 0, UNUSABLE_NODES_VISIBLE)) . '</ul>';
+
+    if (count($items) > UNUSABLE_NODES_VISIBLE) {
+        // Bootstrap keeps the .collapsed class of the button in sync; style.css swaps the label based on it.
+        $html .= '<ul class="mb-0 collapse" id="unusableNodesMore">'
+               . implode('', array_slice($items, UNUSABLE_NODES_VISIBLE)) . '</ul>'
+               . '<button class="btn btn-link btn-sm p-0 unusable-nodes-toggle collapsed" type="button" data-bs-toggle="collapse"'
+               . ' data-bs-target="#unusableNodesMore" aria-expanded="false" aria-controls="unusableNodesMore">'
+               . '<span class="label-more">Show more</span>'
+               . '<span class="label-less">Show less</span>'
+               . '</button>';
+    }
+
+    return $html . '</small></td></tr>' . "\n";
 }
 
 /**
@@ -339,7 +466,7 @@ function _render_cluster_bar_row_html(array $res_def, array $user_breakdown, boo
     }
 
     if ($pct_unusable > 0) {
-        $tip_u = 'Unusable (CPU-full nodes): '
+        $tip_u = 'Unusable (node unavailable or below the minimum free resources): '
                . number_format($unusable_cap, 0, '.', ',') . $suffix . ' (' . $pct_unusable . '%)';
         $html .= '<div class="progress-bar progress-bar-striped bg-warning text-dark" role="progressbar"'
                . ' style="width:' . $pct_unusable . '%"'
@@ -599,22 +726,9 @@ function get_usage(array $data, array $user_breakdown = [], string $show_users_t
     $templateBuilder->setParam("ALLOC_MEM_PERCENTAGE", number_format($data["mem_total"] > 0 ? $data["mem_alloc"]/$data["mem_total"]*100 : 0, 2));
     $templateBuilder->setParam("ALLOC_MEM", number_format($data["mem_alloc"], 0, '.', ','));
 
-    $gres = $data["gres"];
-    $gres_used = $data["gres_used"];
-    if($gres == ""){
-        $gpus = 0;
-        $gpus_used = 0;
-        $gpus_percentage = 0;
-    }
-    else {
-
-        $gpus = preg_replace('/.*:(\d+)(?:\(.*\))?$/', '$1', $gres);
-        $gpus_used = preg_replace('/.*:(\d+)(?:\(.*\))?$/', '$1', $gres_used);
-        // For debugging
-        //echo "GPUs='$gpus', gpus_used='$gpus_used', gres='$gres', gres_used='$gres_used'";
-        $gpus_percentage = (int)$gpus > 0 ? (int)$gpus_used / (int)$gpus * 100 : 0;
-    }
-    $templateBuilder->setParam("GPU_PERCENTAGE", number_format($gpus_percentage, 2));
+    $gpus = \utils\count_gpus($data["gres"]);
+    $gpus_used = \utils\count_gpus($data["gres_used"]);
+    $templateBuilder->setParam("GPU_PERCENTAGE", number_format($gpus > 0 ? $gpus_used / $gpus * 100 : 0, 2));
     $templateBuilder->setParam("GPU_USED", $gpus_used);
     $templateBuilder->setParam("GPU_TOTAL", $gpus);
 

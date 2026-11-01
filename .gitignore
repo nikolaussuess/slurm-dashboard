@@ -1,4 +1,7 @@
 /repodata.txt
+/add_user.md
+/endpoints.MD
+/reproduce_user_bug.sh
 
 # Wiki database files (SQLite WAL files included)
 *.db
@@ -12,3 +15,7 @@
 *.sqlite3-shm
 # Wiki upload directory
 /external-files/
+
+# Docker
+/docker-compose.yml
+/docker/docker-compose.yml

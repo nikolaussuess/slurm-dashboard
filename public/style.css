@@ -165,6 +165,11 @@ button, input, select {
     text-align: left;
 }
 
+/* Overrides the 1rem of the button rule, so that the badge inside has the same size as other badges */
+.job-reason {
+    font-size: inherit;
+}
+
 .nodes-cell {
     word-break: break-word;
     max-width: 220px;
@@ -353,3 +358,9 @@ button, input, select {
 .ms-option.state-other:hover                 { background-color: #fff8d0; }
 .ms-option.state-other.ms-selected           { background-color: #fff5c0; }
 .ms-option.state-other.ms-selected:hover     { background-color: #fff0b0; }
+
+/* "Show more" / "Show less" label of the unusable-nodes list */
+.unusable-nodes-toggle.collapsed .label-less,
+.unusable-nodes-toggle:not(.collapsed) .label-more {
+    display: none;
+}

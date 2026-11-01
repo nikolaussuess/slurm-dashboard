@@ -99,6 +99,33 @@ function get_slurmdb_filter_form_evaluation() : array {
 
 
 /**
+ * Gets the non-disabled state values belonging to a SLURM_JOB_STATE_GROUP_META group.
+ * @param string $group Group label (key of \utils\SLURM_JOB_STATE_GROUP_META)
+ * @return array Array of state name strings
+ */
+function get_enabled_states_of_group(string $group) : array {
+    $states = [];
+    foreach (\utils\SLURM_JOB_STATES as $val => $attrs) {
+        if ($attrs['group'] === $group && !$attrs['disabled']) {
+            $states[] = $val;
+        }
+    }
+    return $states;
+}
+
+/**
+ * Checks whether two lists of strings contain exactly the same values, ignoring order.
+ * @param array $a First list
+ * @param array $b Second list
+ * @return bool TRUE if both lists contain the same values
+ */
+function is_same_value_set(array $a, array $b) : bool {
+    sort($a);
+    sort($b);
+    return $a === $b;
+}
+
+/**
  * Renders the job history filter form.
  * @param array $filter Current filter values
  * @param array $accounts List of account names for the filter dropdown
@@ -175,6 +202,23 @@ function get_slurmdb_filter_form(array $filter, array $accounts, array $users, a
     $templateBuilder->setParam("ACTION", 'action=job_history&do=search');
     $templateBuilder->setParam("TIME_MIN_VALUE", htmlspecialchars($filter['start_time_value'] ?? '', ENT_QUOTES, 'UTF-8'));
     $templateBuilder->setParam("TIME_MAX_VALUE", htmlspecialchars($filter['end_time_value'] ?? '', ENT_QUOTES, 'UTF-8'));
+    $templateBuilder->setParam("CURRENT_USER", htmlspecialchars($_SESSION['USER'] ?? '', ENT_QUOTES, 'UTF-8'));
+
+    // Highlight a shortcut button if the current filter matches it exactly.
+    $set_active_params = function (TemplateLoader $builder, string $name, bool $is_active) {
+        $builder->setParam("ACTIVE_$name", $is_active ? ' active' : '');
+        $builder->setParam("PRESSED_$name", $is_active ? 'true' : 'false');
+    };
+
+    $current_states = $filter['state'] ?? [];
+    $set_active_params($templateBuilder, 'COMPLETED', is_same_value_set($current_states, ['COMPLETED']));
+    $set_active_params($templateBuilder, 'RUNNING', is_same_value_set($current_states, ['COMPLETING', 'CONFIGURING', 'RUNNING']));
+    $set_active_params($templateBuilder, 'FAILED', is_same_value_set($current_states, get_enabled_states_of_group('Fail states')));
+    $set_active_params($templateBuilder, 'WAITING', is_same_value_set($current_states, get_enabled_states_of_group('Other states')));
+
+    $current_users = $filter['users'] ?? [];
+    $set_active_params($templateBuilder, 'OWN_USER', is_same_value_set($current_users, [$_SESSION['USER'] ?? '']));
+
     return $templateBuilder->build();
 }
 
@@ -282,28 +326,16 @@ EOF;
                    . ' data-bs-toggle="dropdown" aria-expanded="false">'
                    . '<span class="visually-hidden">Toggle Dropdown</span></button>';
 
-        if (\client\utils\jwt\JwtAuthentication::is_supported() && !empty(array_intersect($job['job_state'], $active_states))) {
-            $contents .= '<ul class="dropdown-menu">'
-                       . '<li><a class="dropdown-item" href="?action=cancel-job&job_id=' . $job['job_id'] . '">Cancel job</a></li>'
-                       . '<li><a class="dropdown-item" href="?action=edit-job&job_id=' . $job['job_id'] . '">Edit job</a></li>'
-                       . '</ul>';
-        } elseif (!\client\utils\jwt\JwtAuthentication::is_supported()) {
-            $tooltip = 'This feature is not supported by the current configuration.';
-            $contents .= '<ul class="dropdown-menu"><li>'
-                       . '<span class="dropdown-item" data-bs-toggle="tooltip" data-bs-placement="right" title="' . $tooltip . '">'
-                       . '<a class="dropdown-item disabled" href="?action=cancel-job&job_id=' . $job['job_id'] . '" aria-disabled="true">Cancel job</a></span>'
-                       . '<span class="dropdown-item" data-bs-toggle="tooltip" data-bs-placement="right" title="' . $tooltip . '">'
-                       . '<a class="dropdown-item disabled" href="?action=edit-job&job_id=' . $job['job_id'] . '" aria-disabled="true">Edit job</a></span>'
-                       . '</li></ul>';
-        } else {
-            $tooltip = 'Job is no longer active.';
-            $contents .= '<ul class="dropdown-menu"><li>'
-                       . '<span class="dropdown-item" data-bs-toggle="tooltip" data-bs-placement="right" title="' . $tooltip . '">'
-                       . '<a class="dropdown-item disabled" href="?action=cancel-job&job_id=' . $job['job_id'] . '" aria-disabled="true">Cancel job</a></span>'
-                       . '<span class="dropdown-item" data-bs-toggle="tooltip" data-bs-placement="right" title="' . $tooltip . '">'
-                       . '<a class="dropdown-item disabled" href="?action=edit-job&job_id=' . $job['job_id'] . '" aria-disabled="true">Edit job</a></span>'
-                       . '</li></ul>';
-        }
+        // $job['user_name'] may be empty if the user does not exist on slurmrestd host —
+        // in this case the configuration does not allow to determine the user name.
+        if (\client\utils\jwt\JwtAuthentication::is_supported() && !empty(array_intersect($job['job_state'], $active_states)) && !empty($job['user_name']) && (\auth\current_user_is_admin() || $job['user_name'] === $_SESSION['USER']))
+            $contents .= render_job_action_dropdown($job['job_id'], FALSE);
+        elseif (!\client\utils\jwt\JwtAuthentication::is_supported() || empty($job['user_name']))
+            $contents .= render_job_action_dropdown($job['job_id'], TRUE, 'This feature is not supported by the current configuration.');
+        elseif (empty(array_intersect($job['job_state'], $active_states)))
+            $contents .= render_job_action_dropdown($job['job_id'], TRUE, 'Job is no longer active.');
+        else
+            $contents .= render_job_action_dropdown($job['job_id'], TRUE, 'You are not authorized to cancel or edit this job.');
 
         $contents .= '</div></td>';
         $contents .= '</tr>';

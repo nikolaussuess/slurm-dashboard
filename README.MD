@@ -18,6 +18,7 @@ However, any slurm version `>= 23.11.x` should work. If you encounter any issues
 
 ## Current features
 - Display cluster usage information (state, CPUs, memory, gpus per node).
+- List nodes with unusable resources and the reason (e.g. CPUs full, `DRAIN`); the minimum free resources are configurable via `UNUSABLE_MIN_FREE_CPUS`, `UNUSABLE_MIN_FREE_MEM_GIB` and `UNUSABLE_MIN_FREE_GPUS`.
 - Display cluster usage information (CPUs, memory, gpus per node) per node and user. (This feature is disabled per default and can be enabled for all users or for privileged users only.)
 - Display the current job queue, including a job detail page.
 - Authentication via LDAP or local, and it additionally checks whether the user exists in the accounting database.
@@ -207,6 +208,14 @@ However, any slurm version `>= 23.11.x` should work. If you encounter any issues
     # SetEnv FEATURE_P_LOW_IN_CLUSTER_OVERVIEW   "disabled" # possible values: disabled, enabled
     # Built-in wiki (requires php-sqlite3). Relative paths are resolved from the project root.
     # SetEnv FEATURE_WIKI_DB                     "wiki.db"
+
+    # OPTIONAL CLUSTER USAGE CONFIGURATION
+    # Minimum free resources a node needs for a new job. Below any of them, its remaining free resources
+    # are shown as unusable. Unavailable nodes (e.g. DOWN, FAIL, DRAIN, MAINT) always count as unusable.
+    # Set a value to 0 to disable that check.
+    # SetEnv UNUSABLE_MIN_FREE_CPUS     "2"
+    # SetEnv UNUSABLE_MIN_FREE_MEM_GIB  "8"
+    # SetEnv UNUSABLE_MIN_FREE_GPUS     "0" # disabled by default: CPU-only jobs can still start on nodes without free GPUs
 </VirtualHost>
 ```
 5) Make sure that your apache2 config file is not readable by other users (especially if it contains passwords)!
@@ -235,7 +244,7 @@ Once you have set up the dashboard, you can use the following bash script to upg
 ```bash
 #!/bin/bash
 
-# TODO: REPLACE THE FOLLOWING VARIABLES or leave the value "TO_BE_REPLACED"
+# TODO: REPLACE THE FOLLOWING VARIABLES
 # Replace by your web directory
 WEB_DIRECTORY="/var/www/slurm-dashboard"
 DASHBOARD_USER="slurm-dashboard"
@@ -297,6 +306,26 @@ if [[ $REPLY =~ ^[Yy]$ ]]; then
     find $WEB_DIRECTORY -type f -exec chmod 640 {} \;
 fi
 ```
+
+### Docker
+We also provide a Dockerfile for running the dashboard in a docker container. All Docker-related files are in `docker/`. The image is based on `php:8.4-apache` and includes all required PHP extensions (`curl`, `apcu`, `ldap`, `ssh2`). Build and run from the project root:
+
+```bash
+docker compose -f docker/docker-compose.yml up -d
+```
+
+Configure the dashboard via environment variables in `docker-compose.yml` (use `docker-compose.example.yml` for reference). For sensitive values like `LDAP_ADMIN_PASSWORD`, Docker Secrets are supported via the `_FILE` convention:
+
+```yaml
+environment:
+  LDAP_ADMIN_PASSWORD_FILE: LDAP_ADMIN_PASSWORD  # reads /run/secrets/LDAP_ADMIN_PASSWORD
+```
+
+If using a Unix socket, the UID/GID of the `slurm-dashboard` container user (default: **994**) must match the owner of the socket. Override with `--build-arg DASHBOARD_UID=...`. Additionally, you must mount the directory with the unix socket as a volume.
+
+For more information see `docker/docker-compose.example.yml`.
+
+In a production environment, you likely want to combine this docker setup with a reverse proxy and enable SSL. This can be done, e.g., with [`nginx-proxy`](https://github.com/nginx-proxy/nginx-proxy) and [`acme-companion`](https://github.com/nginx-proxy/acme-companion), see [here (incl. references)](https://github.com/nginx-proxy/acme-companion/blob/main/docs/Docker-Compose.md).
 
 ## Wiki feature
 

@@ -83,6 +83,8 @@ abstract class AbstractClient implements Client {
                 'job_name'   => $json_job['name'],      // String
                 'partition'  => $json_job['partition'],
                 'job_state'  => $json_job['job_state'], // Array of strings
+                'state_reason' => $json_job['state_reason'] ?? NULL,
+                'state_description' => $json_job['state_description'] ?? NULL,
                 'user_name'  => $json_job['user_name'],
                 'user_id'    => $json_job['user_id'],
                 'nodes'      => $this->get_nodes($json_job),
@@ -285,6 +287,8 @@ abstract class AbstractClient implements Client {
                 'job_id'     => $json_job['job_id'],    // Int
                 'job_name'   => $json_job['name'],      // String
                 'job_state'  => $json_job['job_state'], // Array of strings
+                'state_reason' => $json_job['state_reason'] ?? NULL,
+                'state_description' => $json_job['state_description'] ?? NULL,
                 'user_name'  => $json_job['user_name'],
                 'user_id'    => $json_job['user_id'],
                 'group_name' => $json_job['group_name'],
@@ -358,7 +362,7 @@ abstract class AbstractClient implements Client {
                 'container'  => $json_job['container'],
                 'flags'      => $json_job['flags'] ?? array(),
 
-                'gres'       => $json_job['jobs'][0]['used_gres'] ?? NULL,
+                'gres'       => $json_job['used_gres'] ?? NULL,
                 'tres'       => $json_job['tres'],
 
                 'time_submit'=> $this->_get_date_from_unix($json_job['time'], 'submission'),
@@ -454,7 +458,7 @@ abstract class AbstractClient implements Client {
             'tres_used' => $json["nodes"][0]["tres_used"],
             'boot_time' => $this->_get_date_from_unix_if_defined($json["nodes"][0], "boot_time"),
             'last_busy' => $this->_get_date_from_unix_if_defined($json["nodes"][0], "last_busy"),
-            'partitions' => $json["nodes"][0]["partitions"] ?? array(),
+            'partitions' => $this->_issue33_bugfix_get_partition_list_for_node($nodename, $json["nodes"][0]["partitions"] ?? array()),
             'reservation' => $json["nodes"][0]["reservation"] ??'',
             'slurm_version' => $json["nodes"][0]["version"] ?? '',
         );
@@ -790,6 +794,46 @@ abstract class AbstractClient implements Client {
             }
             return FALSE;
         }));
+    }
+
+    /**
+     * [ISSUE 33]
+     * This is a bugfix for the slurmrestd upstream bug https://support.schedmd.com/show_bug.cgi?id=18678
+     * The list of partitions a node is part of is wrong for the /slurm/{version}/node/{nodename} endpoint,
+     * but it is correct for /slurm/{version}/nodes. This function thus calls /slurm/{version}/nodes and
+     * just extracts the partition list for a certain node.
+     * It is quite inefficient to do it like this on the client (calling two endpoints to receive essentially
+     * the same information), but I hope that this bug will be fixed server-side and we can just remove
+     * this code again. And usually the call should be cached anyway ...
+     * Errors are only logged and not thrown, so that the node info can still be shown if only the
+     * partition list is unavailable.
+     * See https://github.com/nikolaussuess/slurm-dashboard/issues/33
+     * @param string $node_name Name of the node
+     * @param array $fallback Partition list to use if the node is not contained in the /nodes response,
+     *                        e.g. the (possibly wrong) list from /node/{nodename}.
+     * @return array Partition names of the node; $fallback if the node is not found in the /nodes response;
+     *               array('?') if GET /nodes fails or its response is malformed.
+     */
+    protected function _issue33_bugfix_get_partition_list_for_node(string $node_name, array $fallback) : array {
+        try {
+            $json = RequestFactory::newRequest()->request_json("nodes", "slurm", static::api_version, 300);
+        }
+        catch (RequestFailedException $e) {
+            log_msg("GET /nodes: could not retrieve partition list for node '$node_name': " . $e->getMessage());
+            return array('?');
+        }
+        log_errors_and_warnings_in_slurmrestd_response($json, 'GET /slurm/nodes: ');
+        if ( ! array_key_exists('nodes', $json) || empty($json['nodes']) ) {
+            log_msg("GET /nodes: 'nodes' key missing or empty, partition list for node '$node_name' unknown. " . $this->_response_debug_info($json));
+            return array('?');
+        }
+
+        foreach($json['nodes'] as $node){
+            if(($node['name'] ?? NULL) === $node_name)
+                return $node['partitions'] ?? array();
+        }
+
+        return $fallback;
     }
 
     /**

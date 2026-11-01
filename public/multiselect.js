@@ -245,8 +245,94 @@
         });
     }
 
+    /**
+     * Wires up the "Show own jobs only" button: sets the user filter to the
+     * current user and submits the form. Clicking it again (it is rendered
+     * with the "active" class when the filter already matches) clears the
+     * user filter instead.
+     */
+    function initOwnJobsOnlyButton() {
+        var btn = document.getElementById('btn-own-jobs-only');
+        if (!btn) return;
+
+        btn.addEventListener('click', function () {
+            var form = btn.closest('form');
+            var select = form.querySelector('[name="form_user[]"]');
+            if (!select) return;
+
+            if (btn.classList.contains('active')) {
+                Array.from(select.options).forEach(function (opt) {
+                    opt.selected = false;
+                });
+                form.submit();
+                return;
+            }
+
+            var currentUser = btn.dataset.currentUser;
+            var found = false;
+            Array.from(select.options).forEach(function (opt) {
+                opt.selected = (opt.value === currentUser);
+                if (opt.value === currentUser) found = true;
+            });
+
+            // The user list may not include the current user (e.g. not present
+            // in the dropdown source); add it so the filter still works.
+            if (!found && currentUser) {
+                var opt = document.createElement('option');
+                opt.value = currentUser;
+                opt.text = currentUser;
+                opt.selected = true;
+                select.appendChild(opt);
+            }
+
+            form.submit();
+        });
+    }
+
+    /**
+     * Wires up the state-filter shortcut buttons: sets the state filter to
+     * either an explicit list of states (data-states, comma-separated) or all
+     * (non-disabled) states of a group (data-state-class), then submits the
+     * form. The user filter is left untouched. Clicking an already-active
+     * shortcut (rendered with the "active" class) clears the state filter
+     * instead of re-applying it.
+     */
+    function initStateOnlyButtons() {
+        document.querySelectorAll('[data-states], [data-state-class]').forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                var form = btn.closest('form');
+                var select = form.querySelector('[name="form_state[]"]');
+                if (!select) return;
+
+                if (btn.classList.contains('active')) {
+                    Array.from(select.options).forEach(function (opt) {
+                        opt.selected = false;
+                    });
+                    form.submit();
+                    return;
+                }
+
+                if (btn.dataset.states) {
+                    var states = btn.dataset.states.split(',');
+                    Array.from(select.options).forEach(function (opt) {
+                        opt.selected = !opt.disabled && states.indexOf(opt.value) !== -1;
+                    });
+                } else {
+                    var stateClass = btn.dataset.stateClass;
+                    Array.from(select.options).forEach(function (opt) {
+                        opt.selected = !opt.disabled && opt.classList.contains(stateClass);
+                    });
+                }
+
+                form.submit();
+            });
+        });
+    }
+
     document.addEventListener('DOMContentLoaded', function () {
         document.querySelectorAll('select.multiselect-search').forEach(buildWidget);
         initFilterChips();
+        initOwnJobsOnlyButton();
+        initStateOnlyButtons();
     });
 })();

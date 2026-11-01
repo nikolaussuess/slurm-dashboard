@@ -8,8 +8,24 @@
 const TO_BE_REPLACED = '<TO BE REPLACED>';
 /**
  * Helper to read environment vars with fallback.
+ * Supports the Docker Secrets _FILE convention: if FOO_FILE is set to a secret name,
+ * the value is read from /run/secrets/<secret_name> (the standard Docker mount point).
+ * Example: LDAP_ADMIN_PASSWORD_FILE=LDAP_ADMIN_PASSWORD reads /run/secrets/LDAP_ADMIN_PASSWORD.
+ *
+ * @param string $name Environment variable name
+ * @param string $default Value returned when neither FOO_FILE nor FOO is set
+ * @return string The resolved configuration value
  */
 function cfg_env(string $name, string $default = TO_BE_REPLACED) : string {
+    // Docker Secrets: FOO_FILE holds the secret name; Docker mounts it at /run/secrets/<name>
+    $secret_name = getenv($name . '_FILE');
+    if ($secret_name !== FALSE && $secret_name !== '') {
+        $secret_path = '/run/secrets/' . $secret_name;
+        if (is_readable($secret_path)) {
+            return trim(file_get_contents($secret_path));
+        }
+    }
+    // Plain environment variable fallback
     $value = getenv($name);
     return ($value !== FALSE && $value !== '') ? $value : $default;
 }
@@ -80,6 +96,13 @@ $config = [
      * Leave TO_BE_REPLACED to use the system CA store.
      */
     'SLURM_TCP_CA_CERT' => cfg_env('SLURM_TCP_CA_CERT'),
+
+    /**
+     * If you want to use HTTP instead of HTTPS with TCP, set SLURM_TCP_PROTOCOL to 'http'.
+     * @note This is unsafe and should only be done in test environments.
+     * @internal
+     */
+    'SLURM_TCP_PROTOCOL' => cfg_env('SLURM_TCP_PROTOCOL', 'https'),
 
     /**
      * OpenAPI version to use for communication with slurmrestd.
@@ -199,6 +222,20 @@ $config = [
     )
         ? cfg_env('FEATURE_RESOURCES_PER_USER', 'disabled')
         : 'disabled',
+
+    // ------------------------------------------------------------------
+    // CLUSTER USAGE
+    // ------------------------------------------------------------------
+
+    /**
+     * Minimum free resources a node needs for a new job. Below any of these values, the node's remaining
+     * free resources are shown as unusable on the cluster usage page.
+     * Minimums above a node's total size are capped at that size. Set a value to 0 to disable that check.
+     * The GPU check is disabled by default, because CPU-only jobs can still start on nodes without free GPUs.
+     */
+    'unusable_min_free_cpus' => (int)cfg_env('UNUSABLE_MIN_FREE_CPUS', '2'),
+    'unusable_min_free_mem_gib' => (int)cfg_env('UNUSABLE_MIN_FREE_MEM_GIB', '8'),
+    'unusable_min_free_gpus' => (int)cfg_env('UNUSABLE_MIN_FREE_GPUS', '0'),
 ];
 
 function config($key = null) {

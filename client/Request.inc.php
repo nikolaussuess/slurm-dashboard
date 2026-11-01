@@ -294,7 +294,16 @@ class TcpRequest extends AbstractRequest {
                 "Wrong configuration: SLURM_TCP_PORT is invalid."
             );
         }
-        return 'https://' . config('SLURM_TCP_HOST') . ':' . $port;
+        $protocol = config('SLURM_TCP_PROTOCOL');
+        if( $protocol !== 'https' && $protocol !== 'http' ){
+            throw new \exceptions\ConfigurationError(
+                "Invalid protocol.",
+                "SLURM_TCP_PROTOCOL must be https or http, got: " . $protocol,
+                "Wrong configuration: SLURM_TCP_PROTOCOL is invalid."
+            );
+        }
+
+        return $protocol . '://' . config('SLURM_TCP_HOST') . ':' . $port;
     }
 
     protected function apply_transport(\CurlHandle $ch): void {

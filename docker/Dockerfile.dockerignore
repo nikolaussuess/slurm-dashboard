@@ -5,3 +5,16 @@ imgs
 README.MD
 Dockerfile
 docker-compose.yml
+
+# Wiki database files (SQLite WAL files included)
+**/*.db
+**/*.db-wal
+**/*.db-shm
+**/*.sqlite
+**/*.sqlite-wal
+**/*.sqlite-shm
+**/*.sqlite3
+**/*.sqlite3-wal
+**/*.sqlite3-shm
+# Wiki upload directory
+external-files

@@ -519,8 +519,8 @@ if( isset($_SESSION['USER']) ){
                     }
                 }
 
-                // Skip updating nice value if field is empty.
-                if(isset($_POST['nice_value']) && !empty($_POST['nice_value'])){
+                // Skip updating nice value if field is empty. Note that "0" is a valid value.
+                if(isset($_POST['nice_value']) && $_POST['nice_value'] !== ''){
                     $new_job_data['nice'] = $_POST['nice_value'];
                 }
                 // Always update job comment.

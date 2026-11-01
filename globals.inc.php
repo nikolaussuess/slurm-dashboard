@@ -172,6 +172,12 @@ $config = [
 
     'PRIV_USERS' => explode(',', getenv('PRIV_USERS') ?: ''),
 
+    /**
+     * Comma-separated IP addresses or CIDR ranges of reverse proxies.
+     * X-Forwarded-For is only trusted for requests coming from these addresses.
+     */
+    'TRUSTED_PROXIES' => array_filter(array_map('trim', explode(',', getenv('TRUSTED_PROXIES') ?: ''))),
+
     // ------------------------------------------------------------------
     // WIKI CONFIGURATION
     // ------------------------------------------------------------------
@@ -320,6 +326,21 @@ function internalServerError(Throwable $exception) : void {
     }
     http_response_code(500);
     include __DIR__ . '/error.php';
+}
+
+/**
+ * Starts the session with a protected session cookie.
+ * The Secure flag also considers X-Forwarded-Proto for proxies that terminate TLS.
+ * A forged header is harmless: It only prevents the sender's own browser from returning the cookie.
+ */
+function start_session(): void {
+    session_set_cookie_params([
+        'httponly' => TRUE,
+        'samesite' => 'Lax',
+        'secure'   => (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')
+                      || ($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '') === 'https',
+    ]);
+    session_start();
 }
 
 set_exception_handler('internalServerError');

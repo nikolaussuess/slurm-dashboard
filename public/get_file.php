@@ -5,9 +5,9 @@
  * and eventually transmits the file.
  */
 
-session_start();
-
 require_once __DIR__ . '/../globals.inc.php';
+start_session();
+
 require_once __DIR__ . '/../auth/auth.inc.php';
 require_once __DIR__ . '/../wiki/Wiki.inc.php';
 require_once __DIR__ . '/../wiki/WikiFiles.inc.php';

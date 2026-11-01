@@ -134,6 +134,71 @@ namespace auth {
     }
 
     /**
+     * Checks whether an IP address matches an address or a CIDR range.
+     * @param string $ip IP address to check.
+     * @param string $range IP address or CIDR range, e.g. "10.0.0.1" or "172.16.0.0/12".
+     * @return bool TRUE if the address is covered, FALSE otherwise or if an argument is invalid.
+     */
+    function ip_in_range(string $ip, string $range): bool {
+        [$subnet, $prefix] = array_pad(explode('/', $range, 2), 2, NULL);
+        if (filter_var($ip, FILTER_VALIDATE_IP) === FALSE || filter_var($subnet, FILTER_VALIDATE_IP) === FALSE) {
+            return FALSE;
+        }
+        $ip_bin     = inet_pton($ip);
+        $subnet_bin = inet_pton($subnet);
+        if (strlen($ip_bin) !== strlen($subnet_bin)) {
+            return FALSE;
+        }
+        $bits = $prefix === NULL ? strlen($ip_bin) * 8 : (int)$prefix;
+        $full_bytes = intdiv($bits, 8);
+        if (substr($ip_bin, 0, $full_bytes) !== substr($subnet_bin, 0, $full_bytes)) {
+            return FALSE;
+        }
+        if ($bits % 8 === 0) {
+            return TRUE;
+        }
+        $mask = 0xFF << (8 - $bits % 8) & 0xFF;
+        return (ord($ip_bin[$full_bytes]) & $mask) === (ord($subnet_bin[$full_bytes]) & $mask);
+    }
+
+    /**
+     * Checks whether an IP address belongs to a configured reverse proxy.
+     * @param string $ip IP address to check.
+     * @return bool TRUE if the address is covered by TRUSTED_PROXIES, FALSE otherwise.
+     */
+    function is_trusted_proxy(string $ip): bool {
+        foreach (config('TRUSTED_PROXIES') as $range) {
+            if (ip_in_range($ip, $range)) {
+                return TRUE;
+            }
+        }
+        return FALSE;
+    }
+
+    /**
+     * Determines the address of the client.
+     * X-Forwarded-For is only evaluated for requests from a trusted proxy, and from right to left,
+     * because clients can forge all entries that are left of the ones added by trusted proxies.
+     * @return string Address of the client, REMOTE_ADDR if no other address can be determined.
+     */
+    function client_ip(): string {
+        $remote_addr = $_SERVER['REMOTE_ADDR'];
+        if (!is_trusted_proxy($remote_addr)) {
+            return $remote_addr;
+        }
+        $hops = array_reverse(array_map('trim', explode(',', $_SERVER['HTTP_X_FORWARDED_FOR'] ?? '')));
+        foreach ($hops as $hop) {
+            if (filter_var($hop, FILTER_VALIDATE_IP) === FALSE) {
+                return $remote_addr;
+            }
+            if (!is_trusted_proxy($hop)) {
+                return $hop;
+            }
+        }
+        return $remote_addr;
+    }
+
+    /**
      * Rate limit for user logins.
      * @return bool TRUE if the limit is reached (and thus the login is NOT permitted), FALSE otherwise.
      */
@@ -146,7 +211,8 @@ namespace auth {
             );
             return FALSE;
         }
-        $key = 'login_attempts_from_' . md5($_SERVER['REMOTE_ADDR']);
+        $client_ip = client_ip();
+        $key = 'login_attempts_from_' . md5($client_ip);
         $max_attempts = 3;
 
         $cache = \cache\CacheWrapper::getInstance();
@@ -156,7 +222,7 @@ namespace auth {
 
         if ($attempts > $max_attempts) {
             log_msg(
-                "REMOTE_ADDR " . $_SERVER['REMOTE_ADDR'] .
+                "Client " . $client_ip .
                 " has reached the rate limit and has been restricted for 60 seconds.",
                 LOG_INFO,
                 LOG_MODE_PHP|LOG_MODE_SYSLOG

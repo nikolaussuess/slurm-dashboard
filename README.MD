@@ -197,6 +197,11 @@ However, any slurm version `>= 23.11.x` should work. If you encounter any issues
     # Privileged users can view the full user list, all user profiles, and per-user resource breakdowns.
     # SetEnv PRIV_USERS        "user1,user2"
 
+    # Reverse proxies (OPTIONAL)
+    # Comma-separated IP addresses or CIDR ranges. X-Forwarded-For is only trusted from these addresses.
+    # Required behind a proxy: otherwise, all users share one login rate limit.
+    # SetEnv TRUSTED_PROXIES   "172.16.0.0/12"
+
     # OPTIONAL CACHE CONFIGURATION
     # Cache backend. Possible values: apcu (default, strongly recommended), no (disables caching).
     # Set to "no" if php-apcu is not installed. Note: disabling the cache also disables rate limiting.

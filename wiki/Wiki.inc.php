@@ -110,11 +110,13 @@ function add_heading_anchors(string $html): array {
             $content = $m[3];
             $level   = (int)$tag[1];
             $text    = strip_tags($content);
+            // build_toc() escapes the text, so entities of the source HTML have to be decoded first.
+            $tocText = html_entity_decode($text, ENT_QUOTES | ENT_HTML5, 'UTF-8');
 
             if (preg_match('/\bid\s*=\s*(?:"([^"]*)"|\'([^\']*)\'|([^\s>]*))/i', $attrs, $idm)) {
                 // Already has an id — keep the element unchanged, but include in TOC.
                 $existingId = $idm[1] !== '' ? $idm[1] : ($idm[2] !== '' ? $idm[2] : $idm[3]);
-                $toc[] = ['level' => $level, 'id' => $existingId, 'text' => $text];
+                $toc[] = ['level' => $level, 'id' => $existingId, 'text' => $tocText];
                 return $m[0];
             }
 
@@ -130,7 +132,7 @@ function add_heading_anchors(string $html): array {
                 $id = $slug . '-' . $n++;
             }
             $seen[$id] = TRUE;
-            $toc[] = ['level' => $level, 'id' => $id, 'text' => $text];
+            $toc[] = ['level' => $level, 'id' => $id, 'text' => $tocText];
             return '<' . $tag . $attrs . ' id="' . htmlspecialchars($id, ENT_QUOTES, 'UTF-8') . '">'
                  . $content . '</' . $tag . '>';
         },
@@ -163,6 +165,17 @@ function build_toc(array $toc): string {
          . '</nav>';
 }
 
+
+/**
+ * Builds the redirect URL of an alias.
+ *
+ * @param array $alias Alias with the keys 'target_url' and 'anchor'.
+ * @return string Relative URL for the Location header.
+ */
+function alias_redirect_url(array $alias): string {
+    return '?action=wiki&url=' . urlencode($alias['target_url'])
+         . ($alias['anchor'] !== '' ? '#' . rawurlencode($alias['anchor']) : '');
+}
 
 /**
  * Checks whether the current user may read a page with the given visibility.

@@ -228,13 +228,15 @@ class WikiDatabase {
      */
     public function getChildPages(string $parentUrl, array $allowedVisibilities): array {
         $placeholders = implode(',', array_fill(0, count($allowedVisibilities), '?'));
+        // Page URLs can contain "_", which is a wildcard in LIKE.
+        $prefix = addcslashes($parentUrl, '\\%_');
         $stmt = $this->pdo->prepare(
             "SELECT url, title FROM TBL_PAGES
-             WHERE url LIKE ? AND url NOT LIKE ?
+             WHERE url LIKE ? ESCAPE '\\' AND url NOT LIKE ? ESCAPE '\\'
                AND visibility IN ($placeholders)
              ORDER BY title"
         );
-        $params = array_merge([$parentUrl . '/%', $parentUrl . '/%/%'], array_values($allowedVisibilities));
+        $params = array_merge([$prefix . '/%', $prefix . '/%/%'], array_values($allowedVisibilities));
         $stmt->execute($params);
         return $stmt->fetchAll(\PDO::FETCH_ASSOC);
     }
@@ -337,6 +339,54 @@ class WikiDatabase {
         $stmt->bindValue(':p', $pageUrl);
         $stmt->execute();
         return $stmt->fetchAll(\PDO::FETCH_ASSOC);
+    }
+
+    /**
+     * Follows a chain of aliases until it reaches an existing page or its last alias.
+     *
+     * @param string $url Source URL of the first alias.
+     * @return ?array Last alias of the chain with 'target_url' and 'anchor', or NULL if there is no alias or the chain is a loop.
+     */
+    public function resolveAlias(string $url): ?array {
+        $visited = [$url];
+        $alias   = $this->getAlias($url);
+        while ($alias !== NULL) {
+            $target = $alias['target_url'];
+            if (in_array($target, $visited, TRUE)) {
+                return NULL;
+            }
+            $next = $this->pageExists($target) ? NULL : $this->getAlias($target);
+            if ($next === NULL) {
+                return $alias;
+            }
+            $visited[] = $target;
+            $alias     = $next;
+        }
+        return NULL;
+    }
+
+    /**
+     * Checks whether a new alias would create a redirect loop.
+     *
+     * @param string $sourceUrl Source URL of the new alias.
+     * @param string $targetUrl Target URL of the new alias.
+     * @return bool TRUE if following the target leads back to the source or into another loop, FALSE otherwise.
+     */
+    public function aliasWouldLoop(string $sourceUrl, string $targetUrl): bool {
+        $visited = [];
+        $url     = $targetUrl;
+        while (!$this->pageExists($url)) {
+            if ($url === $sourceUrl || in_array($url, $visited, TRUE)) {
+                return TRUE;
+            }
+            $visited[] = $url;
+            $alias     = $this->getAlias($url);
+            if ($alias === NULL) {
+                return FALSE;
+            }
+            $url = $alias['target_url'];
+        }
+        return FALSE;
     }
 
     /**

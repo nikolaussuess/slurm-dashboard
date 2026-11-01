@@ -13,7 +13,6 @@ else {
     ini_set('display_errors', '0');
 }
 
-session_start();
 date_default_timezone_set('Europe/Vienna');
 // Nonce for CSP to allow secure inline JS.
 $csp_nonce = base64_encode(random_bytes(16));
@@ -28,6 +27,7 @@ if (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') {
 
 require_once __DIR__ . '/../TemplateLoader.inc.php';
 require_once __DIR__ . '/../globals.inc.php';
+start_session();
 require_once __DIR__ . '/../cache/CacheWrapper.inc.php';
 require_once __DIR__ . '/../client/Client.inc.php';
 require_once __DIR__ . '/../client/utils/DependencyResolver.inc.php';
@@ -89,7 +89,14 @@ if( ! isset($_SESSION['USER']) ) {
     if ($wiki_enabled && isset($_GET['action']) && $_GET['action'] === 'wiki' && isset($_GET['url'])) {
         $wiki_url = trim($_GET['url']);
         if (\wiki\is_valid_wiki_url($wiki_url)) {
-            $wiki_page = \wiki\WikiDatabase::getInstance()->getPage($wiki_url);
+            $wiki_db   = \wiki\WikiDatabase::getInstance();
+            $wiki_page = $wiki_db->getPage($wiki_url);
+            // Only redirect to public pages, so that aliases do not reveal the URLs of other pages.
+            $alias = $wiki_page === NULL ? $wiki_db->resolveAlias($wiki_url) : NULL;
+            if ($alias !== NULL && ($wiki_db->getPage($alias['target_url'])['visibility'] ?? NULL) === \wiki\WikiDatabase::VISIBILITY_PUBLIC) {
+                header('Location: ' . \wiki\alias_redirect_url($alias));
+                exit;
+            }
             if ($wiki_page !== NULL && $wiki_page['visibility'] === \wiki\WikiDatabase::VISIBILITY_PUBLIC) {
                 [$wiki_status, $wiki_title, $wiki_html] = \view\wiki\get_wiki_page($wiki_url, $csp_nonce);
                 http_response_code($wiki_status);
@@ -155,6 +162,10 @@ if( isset($_SESSION['USER']) ){
     // END of maintenance
 
     switch($action){
+
+        case "about":
+            // The content was already added above, as the page is also available without login.
+            break;
 
         case "usage":
             $title = 'Cluster usage';
@@ -785,6 +796,11 @@ if( isset($_SESSION['USER']) ){
                     addError("Invalid anchor (allowed: a-z, 0-9, hyphens, underscores; max 64 chars).");
                     break;
                 }
+                if (\wiki\WikiDatabase::getInstance()->aliasWouldLoop($alias_source, $alias_target)) {
+                    http_response_code(400);
+                    addError("This alias would create a redirect loop.");
+                    break;
+                }
                 \wiki\WikiDatabase::getInstance()->saveAlias($alias_source, $alias_target, $alias_anchor);
                 log_msg("User '{$_SESSION['USER']}' saved wiki alias '$alias_source' → '$alias_target" . ($alias_anchor ? "#$alias_anchor" : '') . "'",
                     LOG_INFO, LOG_MODE_PHP|LOG_MODE_SYSLOG);
@@ -935,13 +951,9 @@ if( isset($_SESSION['USER']) ){
                 // If no page exists at this URL, check for an alias and redirect.
                 $wiki_db_inst = \wiki\WikiDatabase::getInstance();
                 if (!$wiki_db_inst->pageExists($wiki_url)) {
-                    $alias = $wiki_db_inst->getAlias($wiki_url);
+                    $alias = $wiki_db_inst->resolveAlias($wiki_url);
                     if ($alias !== NULL) {
-                        $redir = '?action=wiki&url=' . urlencode($alias['target_url']);
-                        if ($alias['anchor'] !== '') {
-                            $redir .= '#' . rawurlencode($alias['anchor']);
-                        }
-                        header('Location: ' . $redir);
+                        header('Location: ' . \wiki\alias_redirect_url($alias));
                         exit;
                     }
                 }

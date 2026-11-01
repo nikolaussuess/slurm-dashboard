@@ -44,6 +44,7 @@ services:
 
       # --- Misc ---
       # PRIV_USERS: "user1,user2"
+      # TRUSTED_PROXIES: "172.16.0.0/12"             # addresses of reverse proxies, required for the login rate limit
       # USE_CACHE: apcu                              # apcu (default) | no
       # FEATURE_RESOURCES_PER_USER: disabled         # disabled | privileged | all
       # FEATURE_P_LOW_IN_CLUSTER_OVERVIEW: disabled  # disabled | enabled

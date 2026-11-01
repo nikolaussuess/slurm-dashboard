@@ -311,9 +311,12 @@ function internalServerError(Throwable $exception) : void {
 
 set_exception_handler('internalServerError');
 set_error_handler(function($errno, $errstr, $errfile, $errline) {
-    // error_reporting() === 0 means the error was suppressed via @, respect that
-    if (error_reporting() === 0) {
-        return false;
+    // Respect errors that were suppressed via @.
+    // Since PHP 8.0, error_reporting() does not return 0 in this case. Instead, @ restricts it to the
+    // error types below, which it cannot suppress. So no other type must be enabled here.
+    $unsuppressible_errors = E_ERROR | E_CORE_ERROR | E_COMPILE_ERROR | E_USER_ERROR | E_RECOVERABLE_ERROR | E_PARSE;
+    if ((error_reporting() & ~$unsuppressible_errors) === 0) {
+        return FALSE;
     }
     throw new ErrorException($errstr, 0, $errno, $errfile, $errline);
 });

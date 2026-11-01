@@ -323,6 +323,8 @@ environment:
 
 If using a Unix socket, the UID/GID of the `slurm-dashboard` container user (default: **994**) must match the owner of the socket. Override with `--build-arg DASHBOARD_UID=...`. Additionally, you must mount the directory with the unix socket as a volume.
 
+To use the wiki, set `FEATURE_WIKI_DB` to `/var/www/html/wiki-db/wiki.db` and mount one volume at `/var/www/html/wiki-db` and one at `/var/www/html/external-files` (uploads). Bind-mounted directories must be writable by the UID above.
+
 For more information see `docker/docker-compose.example.yml`.
 
 In a production environment, you likely want to combine this docker setup with a reverse proxy and enable SSL. This can be done, e.g., with [`nginx-proxy`](https://github.com/nginx-proxy/nginx-proxy) and [`acme-companion`](https://github.com/nginx-proxy/acme-companion), see [here (incl. references)](https://github.com/nginx-proxy/acme-companion/blob/main/docs/Docker-Compose.md).

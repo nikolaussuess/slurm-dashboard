@@ -56,6 +56,12 @@ RUN chown root:slurm-dashboard /var/www/html \
  && find /var/www/html -type f -exec chmod 640 {} \; \
  && find /var/www/html -type d -exec chmod 755 {} \;
 
+# Writable wiki directories. Mount a volume on each of them to persist the data.
+# The database needs its own directory because SQLite creates -wal/-shm files next to it.
+RUN install -d -m 750 -o slurm-dashboard -g slurm-dashboard \
+      /var/www/html/external-files \
+      /var/www/html/wiki-db
+
 EXPOSE 80
 
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
@@ -64,4 +70,6 @@ HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
 # Mount unix socket dir and/or JWT key at runtime, e.g.:
 #   -v /run/slurmrestd:/run/slurmrestd
 #   -v /var/lib/slurm-dashboard/jwt.key:/var/lib/slurm-dashboard/jwt.key:ro
+#   -v wiki-db:/var/www/html/wiki-db
+#   -v wiki-files:/var/www/html/external-files
 CMD ["apache2-foreground"]

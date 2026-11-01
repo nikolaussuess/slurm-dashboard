@@ -51,6 +51,10 @@ services:
       # UNUSABLE_MIN_FREE_MEM_GIB: 8
       # UNUSABLE_MIN_FREE_GPUS: 0                    # disabled by default
 
+      # --- Wiki (optional) ---
+      # Uncomment together with the wiki volumes below.
+      # FEATURE_WIKI_DB: /var/www/html/wiki-db/wiki.db
+
     volumes:
       # Unix socket: mount the directory that contains slurmrestd.socket.
       # Add this volume when using CONNECTION_MODE=udp.
@@ -59,4 +63,13 @@ services:
       # JWT key (read-only). Uncomment when JWT_PATH is set above.
       # - /var/lib/slurm-dashboard/jwt.key:/var/lib/slurm-dashboard/jwt.key:ro
 
+      # Wiki database and uploads. Uncomment when FEATURE_WIKI_DB is set above.
+      # - wiki-db:/var/www/html/wiki-db
+      # - wiki-files:/var/www/html/external-files
+
     restart: unless-stopped
+
+# Uncomment together with the wiki volumes above.
+# volumes:
+#   wiki-db:
+#   wiki-files:

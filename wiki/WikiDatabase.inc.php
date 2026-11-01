@@ -340,6 +340,19 @@ class WikiDatabase {
     }
 
     /**
+     * Moves all file records of a page to another page, e.g. after a rename.
+     *
+     * @param string $fromUrl URL of the page that currently owns the files.
+     * @param string $toUrl   URL of the page that owns the files afterwards.
+     */
+    public function moveFiles(string $fromUrl, string $toUrl): void {
+        $stmt = $this->pdo->prepare("UPDATE TBL_FILES SET page_url = :to WHERE page_url = :from");
+        $stmt->bindValue(':to', $toUrl);
+        $stmt->bindValue(':from', $fromUrl);
+        $stmt->execute();
+    }
+
+    /**
      * Deletes a file record by its stored name.
      * Does not remove the file from disk; the caller is responsible for that.
      *

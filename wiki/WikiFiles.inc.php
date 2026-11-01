@@ -45,6 +45,40 @@ function get_file_path(string $storedName): string {
 }
 
 /**
+ * Removes a stored file from disk and from the database.
+ * The name must not contain path components, and the resolved path must be inside the
+ * upload directory. The latter also rejects symlinks that point out of the directory.
+ *
+ * @param string $storedName 32-char lowercase hex identifier of the file.
+ * @throws \RuntimeException If the name is invalid or the file is outside of the upload directory.
+ */
+function delete_stored_file(string $storedName): void {
+    if (!is_valid_stored_name($storedName)) {
+        throw new \RuntimeException('Refusing to delete file with invalid stored name.');
+    }
+    $filePath = realpath(get_file_path($storedName));
+    if ($filePath !== FALSE) {
+        if (!str_starts_with($filePath, realpath(get_upload_dir()) . DIRECTORY_SEPARATOR)) {
+            throw new \RuntimeException('Refusing to delete file outside of the upload directory.');
+        }
+        unlink($filePath);
+    }
+    WikiDatabase::getInstance()->deleteFile($storedName);
+}
+
+/**
+ * Removes all files attached to a page from disk and from the database.
+ *
+ * @param string $pageUrl URL of the wiki page whose files should be removed.
+ * @throws \RuntimeException If a file has an invalid name or is outside of the upload directory.
+ */
+function delete_page_files(string $pageUrl): void {
+    foreach (WikiDatabase::getInstance()->getFilesForPage($pageUrl) as $file) {
+        delete_stored_file($file['stored_name']);
+    }
+}
+
+/**
  * Validates that a stored_name is a 32-char lowercase hex string (bin2hex of 16 random bytes).
  *
  * @param string $name Value to validate.

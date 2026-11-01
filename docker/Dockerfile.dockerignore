@@ -5,6 +5,7 @@ imgs
 README.MD
 Dockerfile
 docker-compose.yml
+docker/docker-compose.yml
 
 # Wiki database files (SQLite WAL files included)
 **/*.db

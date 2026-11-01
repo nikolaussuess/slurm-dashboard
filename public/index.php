@@ -51,6 +51,12 @@ if ($wiki_enabled) {
     require_once __DIR__ . '/../wiki/wiki.tpl.php';
 }
 
+// Errors that were stored before a redirect. The value must already be escaped.
+if (isset($_SESSION['flash_error'])) {
+    addError($_SESSION['flash_error']);
+    unset($_SESSION['flash_error']);
+}
+
 $dao = \client\ClientFactory::newClient();
 $title = "Clusterinfo " . config('CLUSTER_NAME');
 $contents = "";
@@ -604,6 +610,13 @@ if( isset($_SESSION['USER']) ){
             if ( ! $wiki_enabled || $wiki_handled )
                 break;
 
+            // PHP discards the whole request body if it exceeds post_max_size.
+            if ($_SERVER['REQUEST_METHOD'] === 'POST' && empty($_POST) && (int)($_SERVER['CONTENT_LENGTH'] ?? 0) > 0) {
+                http_response_code(413);
+                addError("The request exceeds the server limit post_max_size.");
+                break;
+            }
+
             $wiki_do  = $_POST['do']  ?? $_GET['do']  ?? '';
             $wiki_url = trim($_GET['url'] ?? '');
 
@@ -674,7 +687,7 @@ if( isset($_SESSION['USER']) ){
                 }
                 $result = \wiki\handle_upload($_FILES['file'] ?? [], $upload_page_url, $_SESSION['USER']);
                 if (!$result['ok']) {
-                    addError(htmlspecialchars($result['error'], ENT_QUOTES, 'UTF-8'));
+                    $_SESSION['flash_error'] = htmlspecialchars($result['error'], ENT_QUOTES, 'UTF-8');
                 } else {
                     log_msg("User '{$_SESSION['USER']}' uploaded file to wiki page '$upload_page_url'",
                         LOG_INFO, LOG_MODE_PHP|LOG_MODE_SYSLOG);
@@ -709,11 +722,7 @@ if( isset($_SESSION['USER']) ){
                         addError("403 Forbidden.");
                         break;
                     }
-                    $filePath = \wiki\get_file_path($del_stored);
-                    if (is_file($filePath)) {
-                        unlink($filePath);
-                    }
-                    $wiki_db->deleteFile($del_stored);
+                    \wiki\delete_stored_file($del_stored);
                     log_msg("User '{$_SESSION['USER']}' deleted wiki file '$del_stored' ({$fileRow['filename']}) from page '{$fileRow['page_url']}'",
                         LOG_INFO, LOG_MODE_PHP|LOG_MODE_SYSLOG);
                     $del_page = $del_page !== '' && \wiki\is_valid_wiki_url($del_page)
@@ -809,7 +818,10 @@ if( isset($_SESSION['USER']) ){
                         break;
                     }
                     $wiki_db = \wiki\WikiDatabase::getInstance();
-                    if ($wiki_db->deletePage($del_url)) {
+                    if ($wiki_db->pageExists($del_url)) {
+                        // Files first: if one is refused, the page stays intact.
+                        \wiki\delete_page_files($del_url);
+                        $wiki_db->deletePage($del_url);
                         log_msg("User '{$_SESSION['USER']}' deleted wiki page '$del_url'",
                             LOG_INFO, LOG_MODE_PHP|LOG_MODE_SYSLOG);
                         // Redirect to main wiki page
@@ -869,12 +881,29 @@ if( isset($_SESSION['USER']) ){
                 }
 
                 $wiki_db = \wiki\WikiDatabase::getInstance();
+                // Only the page itself may be saved at its URL; never replace another page.
+                if ($original_url !== $save_url && $wiki_db->pageExists($save_url)) {
+                    http_response_code(409);
+                    addError("A page with this URL already exists.");
+                    $title     = $original_url !== '' ? 'Edit: ' . htmlspecialchars($original_url, ENT_QUOTES, 'UTF-8') : 'New wiki page';
+                    $contents .= \view\wiki\get_wiki_edit_form($original_url, \auth\get_csrf_token(), $csp_nonce, [
+                        'url'          => $save_url,
+                        'title'        => $save_title,
+                        'content'      => $save_content,
+                        'visibility'   => $save_visibility,
+                        'show_in_nav'  => $save_show_in_nav,
+                        'rename_alias' => !empty($_POST['rename_alias']),
+                    ]);
+                    break;
+                }
+
                 // Save new URL first so data is never lost even if the delete below fails.
                 $wiki_db->savePage(
                     $save_url, $save_title, $save_content, $save_visibility, $save_show_in_nav, $_SESSION['USER']
                 );
 
                 if ($is_rename) {
+                    $wiki_db->moveFiles($original_url, $save_url);
                     $wiki_db->deletePage($original_url);
                     if (!empty($_POST['rename_alias'])) {
                         $wiki_db->saveAlias($original_url, $save_url, '');
@@ -948,6 +977,14 @@ if( isset($_SESSION['USER']) ){
     <script src="/lib/popper.js/popper.min.js" integrity="sha384-I7E8VVD/ismYTF4hNIPjVp/Zjvgyol6VFvRkX/vR+Vc4jQkC+hVqc2pM8ODewa9r" crossorigin="anonymous"></script>
     <script src="/lib/bootstrap/js/bootstrap.min.js" integrity="sha384-0pUGZvbkm6XF6gxjEnlmuGrJXVbNuzT9qBBavbLwCsOGabYfZo0T0to5eqruptLy" crossorigin="anonymous"></script>
     <script nonce="<?php echo $csp_nonce; ?>">
+        // Delegated, because the CSP blocks inline onclick handlers.
+        document.addEventListener('click', (event) => {
+            const button = event.target.closest('[data-confirm]');
+            if (button && !confirm(button.dataset.confirm)) {
+                event.preventDefault();
+            }
+        });
+
         document.addEventListener('DOMContentLoaded', () => {
             const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
             const tooltipList = [...tooltipTriggerList].map(el =>

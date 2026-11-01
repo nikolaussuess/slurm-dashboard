@@ -131,7 +131,7 @@ function get_wiki_alias_manager(string $csrfToken): string {
                . '<input type="hidden" name="do" value="delete_alias">'
                . '<input type="hidden" name="source_url" value="' . $src . '">'
                . '<button type="submit" class="btn btn-sm btn-outline-danger"'
-               . ' onclick="return confirm(\'Delete alias ' . $src . '?\')">Delete</button>'
+               . ' data-confirm="Delete alias ' . $src . '?">Delete</button>'
                . '</form>'
                . '</td>'
                . '</tr>';
@@ -456,17 +456,20 @@ function get_node_slurm_block(array $node_data): string {
  * @param string $url       Wiki page URL to edit, or empty string when creating a new page.
  * @param string $csrfToken CSRF token to embed in the form.
  * @param string $cspNonce  CSP nonce added to inline <script> tags.
+ * @param ?array $draft     Submitted values that replace the stored ones after a failed save, with the
+ *                          keys 'url', 'title', 'content', 'visibility', 'show_in_nav' and 'rename_alias'.
  * @return string Full HTML of the edit form, including the Quill editor and image picker modal.
  */
-function get_wiki_edit_form(string $url, string $csrfToken, string $cspNonce): string {
+function get_wiki_edit_form(string $url, string $csrfToken, string $cspNonce, ?array $draft = NULL): string {
     $db    = \wiki\WikiDatabase::getInstance();
     $page  = $url !== '' ? $db->getPage($url) : NULL;
     $isNew = ($page === NULL);
 
-    $title      = $isNew ? '' : htmlspecialchars($page['title'],   ENT_QUOTES, 'UTF-8');
-    $content    = $isNew ? '' : htmlspecialchars($page['content'], ENT_QUOTES, 'UTF-8');
-    $visibility = $isNew ? \wiki\WikiDatabase::VISIBILITY_USERS : $page['visibility'];
-    $showInNav  = $isNew ? 0 : (int)$page['show_in_nav'];
+    $formUrl    = $draft['url'] ?? $url;
+    $title      = htmlspecialchars($draft['title']   ?? $page['title']   ?? '', ENT_QUOTES, 'UTF-8');
+    $content    = htmlspecialchars($draft['content'] ?? $page['content'] ?? '', ENT_QUOTES, 'UTF-8');
+    $visibility = $draft['visibility'] ?? $page['visibility'] ?? \wiki\WikiDatabase::VISIBILITY_USERS;
+    $showInNav  = (int)($draft['show_in_nav'] ?? $page['show_in_nav'] ?? 0);
 
     $visibilityOptions = '';
     foreach (\wiki\allowed_visibilities() as $v) {
@@ -498,10 +501,12 @@ function get_wiki_edit_form(string $url, string $csrfToken, string $cspNonce): s
     if (!$isNew) {
         $deleteButton = '<button type="submit" name="do" value="delete"'
                       . ' class="btn btn-danger ms-2"'
-                      . ' onclick="return confirm(\'Delete this page?\')">Delete</button>';
-        $renameHint = '<div class="mb-2 form-check" id="wiki-rename-alias-wrap" style="display:none">'
+                      . ' data-confirm="Delete this page?">Delete</button>';
+        $renameHint = '<div class="mb-2 form-check" id="wiki-rename-alias-wrap"'
+                    . ($formUrl !== $url ? '' : ' style="display:none"') . '>'
                     . '<input type="checkbox" class="form-check-input" id="wiki-rename-alias"'
-                    . ' name="rename_alias" value="1" checked>'
+                    . ' name="rename_alias" value="1"'
+                    . ($draft === NULL || !empty($draft['rename_alias']) ? ' checked' : '') . '>'
                     . '<label class="form-check-label" for="wiki-rename-alias">'
                     . 'Create alias from old URL to new URL</label>'
                     . '</div>';
@@ -553,7 +558,7 @@ function get_wiki_edit_form(string $url, string $csrfToken, string $cspNonce): s
   <div class="mb-3">
     <label for="wiki-url" class="form-label">URL <small class="text-muted">(e.g. <code>feature/module-nvhpc</code>)</small></label>
     <input type="text" class="form-control" id="wiki-url" name="url"
-           value="{$url}" pattern="[a-z0-9][a-z0-9_\\-]*(/[a-z0-9][a-z0-9_\\-]*)*" maxlength="128" required>
+           value="{$formUrl}" pattern="[a-z0-9][a-z0-9_\\-]*(/[a-z0-9][a-z0-9_\\-]*)*" maxlength="128" required>
   </div>
 
   {$renameHint}
@@ -809,7 +814,7 @@ function get_wiki_edit_form(string $url, string $csrfToken, string $cspNonce): s
         var urlInput    = document.getElementById('wiki-url');
         var aliasWrap   = document.getElementById('wiki-rename-alias-wrap');
         if (!urlInput || !aliasWrap) return;
-        var originalUrl = urlInput.defaultValue;
+        var originalUrl = document.querySelector('input[name="original_url"]').value;
         urlInput.addEventListener('input', function () {
             aliasWrap.style.display = this.value !== originalUrl ? '' : 'none';
         });
@@ -900,7 +905,7 @@ function get_wiki_files_page(string $url, string $csrfToken): string {
                . '<input type="hidden" name="stored_name" value="' . $stored_e . '">'
                . '<input type="hidden" name="page_url" value="' . $url_e . '">'
                . '<button type="submit" class="btn btn-sm btn-outline-danger"'
-               . ' onclick="return confirm(\'Delete ' . $fname_e . '?\')">Delete</button>'
+               . ' data-confirm="Delete ' . $fname_e . '?">Delete</button>'
                . '</form>'
                . '</td>'
                . '</tr>';

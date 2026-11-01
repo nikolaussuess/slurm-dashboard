@@ -36,7 +36,15 @@ RUN printf 'ServerTokens Prod\nServerSignature Off\n' \
       > /etc/apache2/conf-available/docker-security.conf \
  && a2enconf docker-security
 
-RUN echo 'expose_php = Off' > /usr/local/etc/php/conf.d/docker-security.ini
+# display_errors must already be off at startup: ini_set() in index.php is too late for startup
+# warnings, which would be sent before the session cookie and all other headers.
+RUN printf 'expose_php = Off\ndisplay_errors = Off\ndisplay_startup_errors = Off\n' \
+      > /usr/local/etc/php/conf.d/docker-security.ini
+
+# Wiki uploads: 10 MB per file (MAX_FILE_SIZE in wiki/WikiFiles.inc.php). The request needs some
+# additional space for the multipart overhead.
+RUN printf 'upload_max_filesize = 10M\npost_max_size = 12M\n' \
+      > /usr/local/etc/php/conf.d/docker-uploads.ini
 
 # Apache configuration
 RUN a2enmod env rewrite headers \

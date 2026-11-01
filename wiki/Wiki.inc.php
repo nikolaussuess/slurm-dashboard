@@ -187,6 +187,21 @@ function user_can_read(string $visibility): bool {
 }
 
 /**
+ * Checks whether the current user may edit a page and manage its files.
+ * Requires a privileged user who is also allowed to read the page.
+ *
+ * @param string $url Wiki page URL.
+ * @return bool TRUE if the user is privileged and the page is readable for them or does not exist, FALSE otherwise.
+ */
+function user_can_manage_page(string $url): bool {
+    if (!\auth\current_user_is_privileged()) {
+        return FALSE;
+    }
+    $page = WikiDatabase::getInstance()->getPage($url);
+    return $page === NULL || user_can_read($page['visibility']);
+}
+
+/**
  * Returns the visibility values the current user is allowed to read.
  *
  * @return string[] Subset of WikiDatabase::VALID_VISIBILITIES the current user may access.

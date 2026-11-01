@@ -618,7 +618,7 @@ if( isset($_SESSION['USER']) ){
                 // Returns JSON array of image files for the image picker in the editor.
                 // No CSRF needed — read-only, same visibility rules as page access.
                 header('Content-Type: application/json; charset=utf-8');
-                if (!\auth\current_user_is_privileged() || $wiki_url === '') {
+                if ($wiki_url === '' || !\wiki\user_can_manage_page($wiki_url)) {
                     echo '[]';
                     exit;
                 }
@@ -636,7 +636,7 @@ if( isset($_SESSION['USER']) ){
 
             } elseif ($wiki_do === 'files') {
 
-                if (!\auth\current_user_is_privileged()) {
+                if (!\wiki\user_can_manage_page($wiki_url)) {
                     http_response_code(403);
                     addError("403 Forbidden.");
                     break;
@@ -665,6 +665,11 @@ if( isset($_SESSION['USER']) ){
                 if (!\wiki\is_valid_wiki_url($upload_page_url)) {
                     http_response_code(400);
                     addError("Invalid wiki URL.");
+                    break;
+                }
+                if (!\wiki\user_can_manage_page($upload_page_url)) {
+                    http_response_code(403);
+                    addError("403 Forbidden.");
                     break;
                 }
                 $result = \wiki\handle_upload($_FILES['file'] ?? [], $upload_page_url, $_SESSION['USER']);
@@ -699,6 +704,11 @@ if( isset($_SESSION['USER']) ){
                 $wiki_db  = \wiki\WikiDatabase::getInstance();
                 $fileRow  = $wiki_db->getFile($del_stored);
                 if ($fileRow !== NULL) {
+                    if (!\wiki\user_can_manage_page($fileRow['page_url'])) {
+                        http_response_code(403);
+                        addError("403 Forbidden.");
+                        break;
+                    }
                     $filePath = \wiki\get_file_path($del_stored);
                     if (is_file($filePath)) {
                         unlink($filePath);
@@ -715,8 +725,8 @@ if( isset($_SESSION['USER']) ){
 
             } elseif ($wiki_do === 'edit') {
 
-                // Only privileged users may edit wiki pages
-                if ( ! \auth\current_user_is_privileged()) {
+                // Only privileged users may edit wiki pages, and only those they can read
+                if ( ! \wiki\user_can_manage_page($wiki_url)) {
                     http_response_code(403);
                     addError("403 Forbidden.");
                     break;
@@ -793,6 +803,11 @@ if( isset($_SESSION['USER']) ){
                         addError("Invalid wiki URL.");
                         break;
                     }
+                    if (!\wiki\user_can_manage_page($del_url)) {
+                        http_response_code(403);
+                        addError("403 Forbidden.");
+                        break;
+                    }
                     $wiki_db = \wiki\WikiDatabase::getInstance();
                     if ($wiki_db->deletePage($del_url)) {
                         log_msg("User '{$_SESSION['USER']}' deleted wiki page '$del_url'",
@@ -843,6 +858,13 @@ if( isset($_SESSION['USER']) ){
                 if ($is_rename && !\wiki\is_valid_wiki_url($original_url)) {
                     http_response_code(400);
                     addError("Invalid original URL.");
+                    break;
+                }
+                if (!in_array($save_visibility, \wiki\allowed_visibilities(), TRUE)
+                    || !\wiki\user_can_manage_page($save_url)
+                    || ($is_rename && !\wiki\user_can_manage_page($original_url))) {
+                    http_response_code(403);
+                    addError("403 Forbidden.");
                     break;
                 }
 

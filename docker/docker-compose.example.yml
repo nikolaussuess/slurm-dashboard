@@ -57,8 +57,8 @@ services:
 
     volumes:
       # Unix socket: mount the directory that contains slurmrestd.socket.
-      # Add this volume when using CONNECTION_MODE=udp.
-      #- /run/slurmrestd:/run/slurmrestd
+      # Remove this volume when using CONNECTION_MODE=tcp.
+      - /run/slurmrestd:/run/slurmrestd
 
       # JWT key (read-only). Uncomment when JWT_PATH is set above.
       # - /var/lib/slurm-dashboard/jwt.key:/var/lib/slurm-dashboard/jwt.key:ro

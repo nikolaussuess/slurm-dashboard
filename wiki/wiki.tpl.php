@@ -469,7 +469,7 @@ function get_wiki_edit_form(string $url, string $csrfToken, string $cspNonce): s
     $showInNav  = $isNew ? 0 : (int)$page['show_in_nav'];
 
     $visibilityOptions = '';
-    foreach (\wiki\WikiDatabase::VALID_VISIBILITIES as $v) {
+    foreach (\wiki\allowed_visibilities() as $v) {
         $selected           = ($v === $visibility) ? ' selected' : '';
         $visibilityOptions .= '<option value="' . $v . '"' . $selected . '>'
                             . ucfirst($v) . '</option>';
